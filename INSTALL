@@ -1,0 +1,58 @@
+
+					 Ruby-WordNet Installation Instructions
+									  $Id: INSTALL,v 1.1 2002/01/05 13:29:40 deveiant Exp $
+
+These instructions are also decidedly Unix-biased. I apologize to those of you
+trying to run this on some other platform. Suggestions or patches for
+other-platform compatibility are welcome at <ged@FaerieMUD.org>.
+
+
+Prerequisites
+-------------
+
+Versions listed are the ones I've tested with. Earlier versions may work, but
+your mileage may vary.
+
+* Ruby (>= 1.6.5)
+  Home page: http://www.ruby-lang.org/
+  Download: ftp://ftp.ruby-lang.org/pub/ruby/ruby-1.6.5.tar.gz
+
+* WordNet (>= 1.7)
+  Home page: http://www.cogsci.princeton.edu/~wn/
+  Download: http://www.cogsci.princeton.edu/~wn/obtain/
+
+* Lingua::Wordnet (for now)
+  CPAN: http://search.cpan.org/search?dist=Lingua-Wordnet
+
+* bdb (>=0.2.5)
+  RAA: http://www.ruby-lang.org/en/raa-list.rhtml?name=bdb
+  Download: ftp://moulon.inra.fr/pub/ruby/
+
+
+Installation
+------------
+
+These instructions assume that you've already installed the prerequisite
+packages, unpacked the distribution somewhere, and have changed your working
+directory to the resultant subdirectory.
+
+To run unit tests (requires RUnit and walkit):
+
+  $ ruby test.rb
+
+To install:
+
+  $ ruby install.rb
+
+
+Documentation
+-------------
+
+If you have Rdoc installed, you can create HTML documentation thusly:
+
+ $ rdoc lib
+
+This will leave HTML documentation in 'doc'.
+
+
+
