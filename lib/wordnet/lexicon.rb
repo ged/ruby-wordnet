@@ -1,7 +1,5 @@
-#!/usr/bin/ruby
-# = Name
-# 
-# Lexicon - WordNet lexicon object class
+#
+# WordNet lexicon object class
 # 
 # = Synopsis
 # 
@@ -22,9 +20,12 @@
 # software under the terms of the Perl Artistic License. (See
 # http://language.perl.com/misc/Artistic.html)
 # 
+# Much of this code was inspired by/ported from the Lingua::Wordnet Perl module
+# by Dan Brian.
+# 
 # = Version
 #
-# $Id: lexicon.rb,v 1.1 2002/01/04 21:52:22 deveiant Exp $
+# $Id: lexicon.rb,v 1.2 2002/01/14 13:41:27 deveiant Exp $
 # 
 
 require "bdb"
@@ -55,8 +56,8 @@ module WordNet
 
 		##
 		# Class constants
-		Version = /([\d\.]+)/.match( %q$Revision: 1.1 $ )[1]
-		Rcsid = %q$Id: lexicon.rb,v 1.1 2002/01/04 21:52:22 deveiant Exp $
+		Version = /([\d\.]+)/.match( %q$Revision: 1.2 $ )[1]
+		Rcsid = %q$Id: lexicon.rb,v 1.2 2002/01/14 13:41:27 deveiant Exp $
 
 		### Public methods
 		public
@@ -109,12 +110,21 @@ module WordNet
 
 		##
 		# Unlock the lexicon to allow files to be written when data is
-		# added/edited/deleted.
+		# added/edited/deleted. If a block is given, it will be called with the
+		# lexicon unlocked, and then be locked again when the block exits.
 		def unlock
 			raise LexiconError, "Can't reuse inactive lexicon object" unless @active
-			@mutex.synchronize( Sync::EX ) {
-				@locked = false
-			}
+			if block_given?
+				@mutex.synchronize( Sync::EX ) {
+					@locked = false
+					yield
+					@locked = true
+				}
+			else
+				@mutex.synchronize( Sync::EX ) {
+					@locked = false
+				}
+			end
 		end
 
 		##
@@ -125,59 +135,62 @@ module WordNet
 
 		##
 		# Returns an integer of the familiarity/polysemy count for _word_ as a
-		# _pos_. Given a third value _polyCount_, sets the polysemy count for
-		# _word_ as a _pos_. In this module, this is a value which must be
+		# _partOfSpeech_. Given a third value _polyCount_, sets the polysemy count for
+		# _word_ as a _partOfSpeech_. In this module, this is a value which must be
 		# updated by the user, and is not automatically modified. This makes it
 		# useful for recording familiarity or frequency counts outside of the
 		# Wordnet lexicons. Note that polysemy can be identified for a given
 		# word by counting the synsets returned by #lookupSynsets.
-		def familiarity( word, pos, polyCount=nil )
+		def familiarity( word, partOfSpeech, polyCount=nil )
 			raise LexiconError, "Can't reuse inactive lexicon object" unless @active
 			@mutex.synchronize( Sync::SH ) {
-				@indexDb[ "#{word}%#{pos}" ].split(Regexp.escape WordNet::DELIM)[0].to_i
+				@indexDb[ "#{word}%#{partOfSpeech}" ].split(Regexp.escape WordNet::DELIM)[0].to_i
 			}
 		end
 
 
 		##
-		# Returns an Array of synsets (Wordnet::Synset objects) matching _text_
-		# as a _pos_, where _pos_ is one of +NOUN+, +VERB+, +ADJECTIVE+,
-		# +THING+, or +ADVERB+. Without _sense_, #lookupSynsets will return all
-		# matches that are a _pos_. If specified, _sense_ is the sequential order of
-		# the desired synset.
-		def lookupSynsets( word, pos, sense=nil )
+		# Look up sysets (Wordnet::Synset objects) matching _text_ as a
+		# _partOfSpeech_, where _partOfSpeech_ is one of +WordNet::NOUN+,
+		# +WordNet::VERB+, +WordNet::ADJECTIVE+, or +WordNet::ADVERB+. Without
+		# _sense_, #lookupSynsets will return all matches that are a
+		# _partOfSpeech_ as an Array object. If _sense_ is specified, only the
+		# synset object that matches that particular _partOfSpeech_ and _sense_
+		# is returned.
+		def lookupSynsets( word, partOfSpeech, sense=nil )
 			raise LexiconError, "Can't reuse inactive lexicon object" unless @active
 			poly, offsets = nil, nil
-			synsets = []
+
+			test = :test
 
 			# Serialize access to the database
 			@mutex.synchronize( Sync::SH ) {
 
 				# If the database doesn't have the specified word, try to morph
 				# it and look it up again.
-				if ! @indexDb.has_key?( "#{word}%#{pos}" )
-					word = self.morph( word, pos )
-					if ! word || ! @indexDb.has_key?( "#{word}%#{pos}" )
-						return []
+				if ! @indexDb.has_key?( "#{word}%#{partOfSpeech}" )
+					word = self.morph( word, partOfSpeech )
+					if ! word || ! @indexDb.has_key?( "#{word}%#{partOfSpeech}" )
+						return sense ? nil : []
 					end
 				end
 
-				poly, offsets = @indexDb[ "#{word}%#{pos}" ].split( Regexp.escape WordNet::DELIM )
+				poly, offsets = @indexDb[ "#{word}%#{partOfSpeech}" ].split( Regexp.escape WordNet::DELIM )
 			}
 
 			# If we got a sense, just return that particular synset
 			if sense
-				offset = offsets.split( Regexp.escape WordNet::SUBDELIM )[ sense - 1 ] + "%#{pos}"
-				synsets.push lookupSynsetByOffset( offset )
+				offset = offsets.split( Regexp.escape WordNet::SUBDELIM )[ sense - 1 ] + "%#{partOfSpeech}"
+				return lookupSynsetByOffset( offset )
 
 			# Otherwise, return all of 'em
 			else
+				synsets = []
 				offsets.split( Regexp.escape WordNet::SUBDELIM ).each {|off|
-					synsets.push lookupSynsetByOffset( "#{off}%#{pos}" )
+					synsets.push lookupSynsetByOffset( "#{off}%#{partOfSpeech}" )
 				}
+				return synsets
 			end
-
-			return synsets
 		end
 		alias :lookup_synset :lookupSynsets
 		alias :lookupSynset :lookupSynsets
@@ -191,21 +204,21 @@ module WordNet
 					@dataDb.has_key?( offset )
 
 				data = @dataDb[ offset ]
-				pos = offset[-1]
-				return WordNet::Synset::new( self, offset, pos, nil, data )
+				partOfSpeech = offset[-1,1]
+				return WordNet::Synset::new( self, offset, partOfSpeech, nil, data )
 			}
 		end
 		alias :lookup_synset_offset :lookupSynsetByOffset
 		alias :lookupSynsetOffset :lookupSynsetByOffset
 
 		##
-		# Returns a form of _word_ as a part of speech _pos_, as found in the
+		# Returns a form of _word_ as a part of speech _partOfSpeech_, as found in the
 		# WordNet morph files. The #lookupSynsets method perfoms morphological
 		# conversion automatically, so a call to #morph is not required.
-		def morph( word, pos )
+		def morph( word, partOfSpeech )
 			raise LexiconError, "Can't reuse inactive lexicon object" unless @active
 			@mutex.synchronize( Sync::SH ) {
-				return @morphDb[ "#{word}%#{pos}" ]
+				return @morphDb[ "#{word}%#{partOfSpeech}" ]
 			}
 		end
 
@@ -244,10 +257,10 @@ module WordNet
 
 		##
 		# Factory method: Creates and returns a new WordNet::Synset object in
-		# this lexicon for the specified _word_ and _pos_.
-		def createSynset( word, pos )
+		# this lexicon for the specified _word_ and _partOfSpeech_.
+		def createSynset( word, partOfSpeech )
 			raise LexiconError, "Can't reuse inactive lexicon object" unless @active
-			return WordNet::Synset::new( self, '', pos, word )
+			return WordNet::Synset::new( self, '', partOfSpeech, word )
 		end
 		alias :new_synset :createSynset
 		alias :newSynset :createSynset
@@ -259,16 +272,16 @@ module WordNet
 			raise LockError, "Cannot write to a locked lexicon." if @locked
 
 			strippedOffset = nil
-			pos = synset.pos
+			partOfSpeech = synset.partOfSpeech
 
 			@mutex.synchronize( Sync::EX ) {
 			
 				# If this is a new synset, generate an offset for it
 				if synset.offset =~ /^1%(\w)$/
-					pos = $1
-					@dataDb['offsetcount'] += 1
+					partOfSpeech = $1
+					@dataDb['offsetcount'] = @dataDb['offsetcount'].to_i + 1
 					strippedOffset = @dataDb['offsetcount']
-					synset.offset = strippedOffset + "%#{pos}"
+					synset.offset = strippedOffset + "%#{partOfSpeech}"
 				else
 					strippedOffset = synset.offset.gsub( /%\w/, '' )
 				end
@@ -277,15 +290,15 @@ module WordNet
 				@dataDb[ synset.offset ] = synset.serialize
 					
 				# Write the index entries
-				synset.words.collect {|word| word + "%" + pos }.each {|word|
+				synset.words.collect {|word| word + "%" + partOfSpeech }.each {|word|
 
 					# If the index already has this word, but not this synset, add it
-					if @dbIndex.has_key?( word )
-						unless @dbIndex[ word ] =~ strippedOffset
-							@dbIndex[ word ] << WordNet::SUBDELIM << strippedOffset
+					if @indexDb.has_key?( word )
+						unless @indexDb[ word ] =~ strippedOffset
+							@indexDb[ word ] << WordNet::SUBDELIM << strippedOffset
 						end
 					else
-						@dbIndex[ word ] = "1" << WordNet::DELIM << strippedOffset
+						@indexDb[ word ] = "1" << WordNet::DELIM << strippedOffset
 					end
 				}
 			}
