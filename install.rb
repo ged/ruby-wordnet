@@ -1,6 +1,6 @@
 # install.rb
 #
-# $Date: 2002/01/04 21:52:22 $
+# $Date: 2002/01/14 13:33:24 $
 # Copyright (c) 2000 Masatoshi SEKI
 #
 # install.rb is copyrighted free software by Masatoshi SEKI.
@@ -12,74 +12,117 @@ require 'ftools'
 
 include Config
 
+CheckDb = 'lingua_wordnet.data'
+
 class Installer
-  protected
-  def install(from, to, mode = nil, verbose = false)
-    str = "install '#{from}' to '#{to}'"
-    str += ", mode=#{mode}" if mode
-    puts str if verbose
-  end
+	protected
+	def install(from, to, mode = nil, verbose = false)
+		str = "install '#{from}' to '#{to}'"
+		str += ", mode=#{mode}" if mode
+		puts str if verbose
+	end
 
-  protected
-  def makedirs(*dirs)
-    for d in dirs
-      puts "mkdir #{d}"
-    end
-  end
+	protected
+	def makedirs(*dirs)
+		for d in dirs
+			puts "mkdir #{d}"
+		end
+	end
 
-  def initialize(test=false)
-    @version = CONFIG["MAJOR"]+"."+CONFIG["MINOR"]
-    @libdir = File.join(CONFIG["libdir"], "ruby", @version)
-    @sitelib = find_site_libdir
-    @ftools = (test) ? self : File
-  end
-  public
-  attr_reader(:libdir, :sitelib)
+	def initialize(test=false)
+		@version = CONFIG["MAJOR"]+"."+CONFIG["MINOR"]
+		@libdir = File.join(CONFIG["libdir"], "ruby", @version)
+		@sitelib = find_site_libdir
+		@ftools = (test) ? self : File
+	end
+	public
+	attr_reader(:libdir, :sitelib)
 
-  private
-  def find_site_libdir
-    site_libdir = $:.find {|x| x =~ /site_ruby$/}
-    if !site_libdir
-      site_libdir = File.join(@libdir, "site_ruby")
-    elsif site_libdir !~ Regexp.quote(@version)
-      site_libdir = File.join(site_libdir, @version)
-    end
-    site_libdir
-  end
+	private
+	def find_site_libdir
+		site_libdir = $:.find {|x| x =~ /site_ruby$/}
+		if !site_libdir
+			site_libdir = File.join(@libdir, "site_ruby")
+		elsif site_libdir !~ Regexp.quote(@version)
+			site_libdir = File.join(site_libdir, @version)
+		end
+		site_libdir
+	end
 
-  public
-  def files_in_dir(dir)
-    list = []
-    Find.find(dir) do |f|
-      list.push(f)
-    end
-    list
-  end
+	public
+	def files_in_dir(dir)
+		list = []
+		Find.find(dir) do |f|
+			list.push(f)
+		end
+		list
+	end
 
-  public
-  def install_files(srcdir, files, destdir=@sitelib)
-    path = []
-    dir = []
+	public
+	def install_files(srcdir, files, destdir=@sitelib)
+		path = []
+		dir = []
 
-    for f in files
-      next if (f = f[srcdir.length+1..-1]) == nil
-      path.push f if File.ftype(File.join(srcdir, f)) == 'file'
-      dir |= [ File.dirname(File.join(destdir, f)) ]
-    end
-    @ftools.makedirs(*dir)
-    for f in path
-      @ftools.install(File.join(srcdir, f), File.join(destdir, f), nil, true)
-    end
-  end
+		for f in files
+			next if (f = f[srcdir.length+1..-1]) == nil
+			path.push f if File.ftype(File.join(srcdir, f)) == 'file'
+			dir |= [ File.dirname(File.join(destdir, f)) ]
+		end
+		@ftools.makedirs(*dir)
+		for f in path
+			@ftools.install(File.join(srcdir, f), File.join(destdir, f), nil, true)
+		end
+	end
 
-  public
-  def install_rb
-    install_files('lib', files_in_dir('lib'))
-  end
+	public
+	def install_rb
+		install_files('lib', files_in_dir('lib'))
+	end
+end
+
+def promptWithDefault( prompt, default )
+	print "#{prompt}: [#{default}] "
+	answer = ( $stdin.gets || '' ).chomp
+	answer = default if answer.empty?
+	return answer
+end
+
+def rewriteWordnetPath
+	path = promptWithDefault( "Path to your installation of Lingua::Wordnet databases",
+							  '/usr/local/wordnet1.7/lingua-wordnet' )
+	if ! File.exists?( path )
+		$stderr.puts "Hrmmm... '#{path}' doesn't seem to exist, \n" +
+			"but I'll assume you know what you're doing."
+	elsif ! File.directory?( path )
+		$stderr.puts "Hrmmm... '#{path}' doesn't seem to be a directory, \n" +
+			"but I'll assume you know what you're doing."
+	elsif ! File.exists?( "#{path}/#{CheckDb}" )
+		$stderr.puts "Hrmmm... I couldn't find the #{CheckDb} database under '#{path}', \n" +
+			"but I'll assume you know what you're doing."
+	else
+		puts "Lingua::Wordnet databases found. Everything looks good."
+	end
+
+	print "Rewriting lib/Wordnet.rb..."
+	newFile = "lib/WordNet.rb.#{Process.pid}"
+	File.open( "lib/WordNet.rb", File::RDONLY ) {|inputf|
+		File.open( newFile, File::WRONLY|File::TRUNC|File::CREAT ) {|outputf|
+			inputf.each {|line|
+				if /DICTDIR =/ =~ line
+					line.gsub!(/'[^']+'/, %{'#{path}'})
+				end
+				outputf.print line
+			}
+		}
+	}
+	File.delete( "lib/WordNet.rb" )
+	File.rename( newFile, "lib/WordNet.rb" )
+	puts "done."
 end
 
 if __FILE__ == $0
-  inst = Installer.new(ARGV.shift == '-n')
-  inst.install_rb
+	rewriteWordnetPath()
+	inst = Installer.new(ARGV.shift == '-n')
+	inst.install_rb
 end
 
