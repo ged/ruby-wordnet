@@ -5,7 +5,9 @@
 # == Synopsis
 # 
 #   ss = lexicon.lookupSynset( "word", WordNet::Noun, 1 )
-# 
+#	puts "Definition: %s" % ss.gloss
+#   coords = ss.coordinates
+#
 # == Description
 # 
 # Instances of this class encapsulate the data for a synonym set ('synset') in a
@@ -27,7 +29,7 @@
 # 
 # == Version
 #
-#  $Id: synset.rb,v 1.3 2003/08/06 08:08:14 deveiant Exp $
+#  $Id: synset.rb,v 1.4 2003/09/03 06:41:39 deveiant Exp $
 # 
 
 require 'sync'
@@ -42,52 +44,220 @@ module WordNet
 	### lexical database that are interchangeable in some context, and provides
 	### methods for accessing its relationships.
 	class Synset
-		include Constants
+		include WordNet::Constants
+		include CrossCase if defined?( CrossCase )
 
-		### Class constants
-		Version = /([\d\.]+)/.match( %q{$Revision: 1.3 $} )[1]
-		Rcsid = %q$Id: synset.rb,v 1.3 2003/08/06 08:08:14 deveiant Exp $
+		# CVS version tag
+		Version = /([\d\.]+)/.match( %q{$Revision: 1.4 $} )[1]
+
+		# CVS id tag
+		Rcsid = %q$Id: synset.rb,v 1.4 2003/09/03 06:41:39 deveiant Exp $
+
+		# The "pointer" type that encapsulates relationships between one synset
+		# and another.
+		class Pointer
+			include WordNet::Constants
+			include CrossCase if defined?( CrossCase )
+
+			#########################################################
+			###	C L A S S   M E T H O D S
+			#########################################################
+
+			### Make an Array of WordNet::Synset::Pointer objects out of the
+			### given +pointerList+. The pointerlist is a string of pointers
+			### delimited by Constants::SubDelim. Pointers are in the form:
+			###   "<pointer_symbol> <synset_offset>%<pos> <source/target>"
+			def self::parse( pointerString )
+				type, offsetPos, ptrNums = pointerString.split(/\s+/)
+				offset, pos = offsetPos.split( /%/, 2 )
+				new( type, offset, pos, ptrNums[0,2], ptrNums[2,2] )
+			end
+
+
+			#########################################################
+			###	I N S T A N C E   M E T H O D S
+			#########################################################
+
+			### Create a new synset pointer with the given arguments. The
+			### +ptrType+ is the type of the link between synsets, and must be
+			### either a key or a value of WordNet::Constants::PointerTypes. The
+			### +offset+ is the unique identifier of the target synset, and
+			### +pos+ is its part-of-speech, which must be either a key or value
+			### of WordNet::Constants::SyntacticCategories. The +sourceWn+ and
+			### +targetWn+ are numerical values which distinguish lexical and
+			### semantic pointers. +sourceWn+ indicates the word number in the
+			### current (source) synset, and +targetWn+ indicates the word
+			### number in the target synset. If both are 0 (the default) it
+			### means that the pointer type of the pointer represents a semantic
+			### relation between the current (source) synset and the target
+			### synset indicated by +offset+.
+			def initialize( type, offset, pos=Noun, sourceWn=0, targetWn=0 )
+
+				# Allow type = '!', 'antonym', or :antonym. Also handle
+				# splitting of :memberMeronym and '%m' into their correct
+				# type/subtype parts.
+				@type = @subtype = nil
+				if type.to_s.length == 1
+					@type = PointerSymbols[ type[0,1] ]
+				elsif type.to_s.length == 2
+					@type = PointerSymbols[ type[0,1] ]
+					@subtype = PointerSubTypes[ @type ].index( type )
+				else
+					if PointerTypes.key?( type.to_s.intern )
+						@type = type.to_s.intern
+					elsif /([a-z]+)([A-Z][a-z]+)/ =~ type.to_s
+						subtype, maintype = $1, $2.downcase
+						@type = maintype.intern if
+							PointerTypes.key?( maintype.intern )
+						@subtype = subtype.intern
+					end
+				end
+				raise ArgumentError, "No such pointer type %p" % type if
+					@type.nil?
+
+				# Allow pos = 'n', 'noun', or :noun
+				@partOfSpeech = nil
+				if pos.to_s.length == 1
+					@partOfSpeech = SyntacticSymbols[ pos ]
+				else
+					@partOfSpeech = pos.to_s.intern if
+						SyntacticCategories.key?( pos.to_s.intern )
+				end
+				raise ArgumentError, "No such part of speech %p" % pos if
+					@partOfSpeech.nil?
+
+				# Other attributes
+				@offset		= offset
+				@sourceWn	= sourceWn
+				@targetWn	= targetWn
+			end
+
+
+			######
+			public
+			######
+
+			# The type of the pointer. Will be one of the keys of
+			# WordNet::PointerTypes (e.g., :meronym).
+			attr_accessor :type
+
+			# The subtype of the pointer, if any. Will be one of the keys of one
+			# of the hashes in PointerSubTypes (e.g., :portion).
+			attr_accessor :subtype
+
+			# The offset of the target synset
+			attr_accessor :offset
+
+			# The part-of-speech of the target synset. Will be one of the keys
+			# of WordNet::SyntacticCategories.
+			attr_accessor :partOfSpeech
+
+			# The word number in the source synset
+			attr_accessor :sourceWn
+
+			# The word number in the target synset
+			attr_accessor :targetWn
+
+
+			### Return the Pointer as a human-readable String suitable for
+			### debugging.
+			def inspect
+				"#<%s:0x%08x %s %s>" % [
+					self.class.name,
+					self.object_id,
+					@subtype ? "#@type(#@subtype)" : @type,
+					self.synset,
+				]
+			end
+
+
+			### Return the synset key of the target synset (i.e.,
+			### <offset>%<pos symbol>).
+			def synset
+				self.offset + "%" + self.pos
+			end
+
+
+			### Return the syntactic category symbol for this pointer
+			def pos
+				return SyntacticCategories[ @partOfSpeech ]
+			end
+
+
+			### Return the pointer type symbol for this pointer
+			def typeSymbol
+				unless @subtype
+					return PointerTypes[ @type ]
+				else
+					return PointerSubTypes[ @type ][ @subtype ]
+				end
+			end
+
+
+			### Comparison operator. Pointer are equivalent if they point at the
+			### same synset and are of the same type.
+			def ==( other )
+				return false unless other.is_a?( self.class )
+				other.offset == self.offset &&
+					other.type == self.type
+			end
+
+
+			### Return the pointer in its stringified form.
+			def to_s
+				"%s %d%%%s %02x%02x" % [ 
+					ptr.typeSymbol,
+					ptr.offset,
+					ptr.posSymbol,
+					ptr.sourceWn,
+					ptr.targetWn,
+				]
+			end
+		end # class Pointer
+
 
 		#############################################################
 		###	C L A S S   M E T H O D S
 		#############################################################
 
 		### Define a group of pointer methods based on +symbol+ that will fetch,
-		### add, and delete pointer synsets of the type indicated by
-		### +pointerType+. If +fetchOnly+ is true, create only the 'get'
-		def self::def_pointer_methods( symbol, pointerType, fetchOnly=false ) # :nodoc:
+		### add, and delete pointer synsets of the type indicated by +type+. If
+		### the given +type+ has subtypes (according to
+		### WordNet::PointerSubTypes), accessors/mutators for the subtypes will
+		### be generated as well.
+		def self::def_pointer_methods( symbol, type ) # :nodoc:
 			name = symbol.id2name
-   			ubname = name.gsub( /([a-z])([A-Z])/ ) {|match| $1 + '_' + $2.downcase}
-			ptype = Regexp.escape( pointerType )
+			casename = name.dup
+			casename[ 0,1 ] = casename[ 0,1 ].upcase
 
 			# Define the accessor
 			define_method( name.intern ) {
-				self.fetchSynsetPointers( pointerType ).flatten
+				self.fetchSynsetPointers( type )
 			}
-			alias_method ubname.intern, name.intern
 
-			# If this isn't a fetch-only method, define mutators, too.
-			unless fetchOnly
-				casename = name.dup
-				casename[ 0,1 ] = casename[ 0,1 ].upcase
-
-				define_method( "#{name}=" ) {|*synsets|
-					self.setSynsetPointers( pointerType, *synsets )
-				}
-				define_method( "add#{casename}" ) {|*synsets|
-					self.addSynsetPointers( pointerType, *synsets )
-				}
-				define_method( "delete#{casename}" ) {|*synsets|
-					self.deleteSynsetPointers( pointerType, *synsets )
-				}
-
-				# Provide underbarred aliases if they're needed
-				unless name == ubname
-					alias_method "#{ubname}=", "#{name}="
-					alias_method "add_#{ubname}", "add#{casename}"
-					alias_method "delete_#{ubname}", "delete#{casename}"
-				end
+			# If the pointer is one that has subtypes, make the variants list
+			# out of the subtypes. If it doesn't have subtypes, make the only
+			# variant nil, which will cause the mutators to be defined for the
+			# main pointer type.
+			if PointerSubTypes.key?( type )
+				variants = PointerSubTypes[ type ].keys
+			else
+				variants = [nil]
 			end
+
+			# Define a set of methods for each variant, or for the main method
+			# if the variant is nil.
+			variants.each {|var|
+				varname = var ? var.to_s + casename : name
+				varcname = var ? var.to_s.capitalize + casename : casename
+
+				define_method( varname ) {
+					self.fetchSynsetPointers( type, var )
+				} unless var.nil?
+				define_method( "#{varname}=" ) {|*synsets|
+					self.setSynsetPointers( type, synsets, var )
+				}
+			}
 		end
 
 
@@ -101,17 +271,20 @@ module WordNet
 		### shouldn't be called directly: you should use one of the Lexicon
 		### class's factory methods: #createSynset, #lookupSynsets, or
 		### #lookupSynsetsByOffset.
-		def initialize( lexicon, offset, partOfSpeech, word=nil, data=nil )
-			@lexicon		= lexicon
-			@partOfSpeech	= partOfSpeech.to_s
+		def initialize( lexicon, offset, pos, word=nil, data=nil )
+			@lexicon		= lexicon or
+				raise ArgumentError, "%p is not a WordNet::Lexicon" % lexicon
+			@partOfSpeech	= SyntacticSymbols[ pos ] or
+				raise ArgumentError, "No such part of speech %p" % pos
 			@mutex			= Sync::new
+			@pointers		= []
 
 			if data
-				@offset = offset
+				@offset = offset.to_i
 				@filenum, @wordlist, @pointerlist,
-					@frameslist, @gloss = data.split( WordNet::DelimRe )
+					@frameslist, @gloss = data.split( DelimRe )
 			else
-				@offset = "1%#{partOfSpeech}"
+				@offset = 1
 				@wordlist = word ? word : ''
 				@filenum, @pointerlist, @frameslist, @gloss = [''] * 4
 			end
@@ -122,15 +295,71 @@ module WordNet
 		public
 		######
 
-		### Attribute accessor
-		attr_accessor :lexicon,
-			:partOfSpeech,
-			:offset,
-			:filenum,
-			:wordlist,
-			:pointerlist,
-			:frameslist,
-			:gloss
+		# The WordNet::Lexicon that was used to look up this synset
+		attr_reader :lexicon
+
+		# The syntactic category of this Synset. Will be one of the keys of
+		# WordNet::SyntacticCategories.
+		attr_accessor :partOfSpeech
+
+		# The original byte offset of the synset in the data file; acts as the
+		# unique identifier (when combined with #partOfSpeech) of this Synset in
+		# the database.
+		attr_accessor :offset
+
+		# The number corresponding to the lexicographer file name containing the
+		# synset. Calling #lexInfo will return the actual filename.
+		attr_accessor :filenum
+
+		# The raw list of word/lex_id pairs associated with this synset
+		attr_accessor :wordlist
+
+		# The list of raw pointers to related synsets
+		attr_accessor :pointerlist
+
+		# The list of raw verb sentence frames for this synset.
+		attr_accessor :frameslist
+		
+		# Definition and/or example sentences for the Synset.
+		attr_accessor :gloss
+
+
+		### Return a human-readable representation of the Synset suitable for
+		### debugging.
+		def inspect
+			pointerCounts = self.pointerMap.collect {|type,ptrs|
+				"#{type}s: #{ptrs.length}"
+			}.join( ", " )
+
+			%q{#<%s:0x%08x %s (%s): "%s" (%s)>} % [
+				self.class.name,
+				self.object_id * 2,
+				self.words.join(", "),
+				self.partOfSpeech,
+				self.gloss,
+				pointerCounts,
+			]
+		end
+
+
+		### Returns the Synset's unique identifier, made up of its offset and
+		### syntactic category catenated together with a '%' symbol.
+		def key
+			"%d%%%s" % [ self.offset, self.pos ]
+		end
+
+
+		### The symbol which represents this synset's syntactic category
+		def pos
+			return SyntacticCategories[ @partOfSpeech ]
+		end
+
+
+		### Return each of the sentences of the gloss for this synset as an
+		### array.
+		def glosses
+			return self.gloss.split( /\s*;\s*/ )
+		end
 
 
 		### Returns true if the receiver and otherSyn are identical according to
@@ -141,18 +370,23 @@ module WordNet
 		end
 
 
-		### Returns the words in this synset's wordlist as an +Array+
+
+		### Returns an Array of words and/or collocations associated with this
+		### synset.
 		def words
 			@mutex.synchronize( Sync::SH ) {
-				@wordlist.split( WordNet::SubDelimRe )
+				self.wordlist.split( SubDelimRe ).collect do |word|
+					word.gsub( /_/, ' ' ).sub( /%.*$/, '' )
+				end
 			}
 		end
+		alias_method :synonyms, :words
 
 
 		### Set the words in this synset's wordlist to +newWords+
 		def words=( *newWords )
 			@mutex.synchronize( Sync::EX ) {
-				@wordlist = newWords.join( WordNet::SubDelim )
+				@wordlist = newWords.join( SubDelim )
 			}
 		end
 
@@ -181,7 +415,7 @@ module WordNet
 		def to_s
 			@mutex.synchronize( Sync::SH ) {
 				wordlist = self.words.join(", ").gsub( /%\d/, '' ).gsub( /_/, ' ' )
-				return "#{wordlist} -- (#{self.gloss})"
+				return "#{wordlist} [#{self.partOfSpeech}] -- (#{self.gloss})"
 			}
 		end
 		alias_method :overview, :to_s
@@ -196,6 +430,14 @@ module WordNet
 			}
 		end
 		alias_method :write, :store
+
+
+		### Removes this synset from the database.
+		def remove
+			@mutex.synchronize( Sync::EX ) {
+				self.lexicon.removeSynset( self )
+			}
+		end
 
 
 		### Returns the synset's data in a form suitable for storage in the
@@ -214,46 +456,174 @@ module WordNet
 
 
 		### Auto-generate synset pointer methods for the various types
-		def_pointer_methods :antonyms,		Antonym
-		def_pointer_methods :hypernyms,		Hypernym
-		def_pointer_methods :entailment,	Entailment
-		def_pointer_methods :hyponyms,		Hyponym
-		def_pointer_methods :causes,		Cause
-		def_pointer_methods :verbgroups,	VerbGroup
-		def_pointer_methods :similarTo,		SimilarTo
-		def_pointer_methods :participles,	Participle
-		def_pointer_methods :pertainyms,	Pertainym
-		def_pointer_methods :attributes,	Attribute
-		def_pointer_methods :derivedFrom,	DerivedFrom
-		def_pointer_methods :seeAlso,		SeeAlso
-		def_pointer_methods :functions,		Function
 
-		### Meronym synset pointers
-		def_pointer_methods :allMeronyms,		Meronym, true # Fetch-only
-		alias :meronyms :allMeronyms
-		def_pointer_methods :memberMeronyms,	MemberMeronym
-		def_pointer_methods :stuffMeronyms,		StuffMeronym
-		def_pointer_methods :portionMeronyms,	PortionMeronym
-		def_pointer_methods :componentMeronyms,	ComponentMeronym
-		def_pointer_methods :featureMeronyms,	FeatureMeronym
-		def_pointer_methods :phaseMeronyms,		PhaseMeronym
-		def_pointer_methods :placeMeronyms,		PlaceMeronym
-		
-		### Holonym synset pointers
-		def_pointer_methods :allHolonyms,		Holonym, true # Fetch-only
-		alias :holonyms :allHolonyms
-		def_pointer_methods :memberHolonyms,	MemberHolonym
-		def_pointer_methods :stuffHolonyms,		StuffHolonym
-		def_pointer_methods :portionHolonyms,	PortionHolonym
-		def_pointer_methods :componentHolonyms,	ComponentHolonym
-		def_pointer_methods :featureHolonyms,	FeatureHolonym
-		def_pointer_methods :phaseHolonyms,		PhaseHolonym
-		def_pointer_methods :placeHolonyms,		PlaceHolonym
+		# :def: antonyms() - Returns synsets for the receiver's antonyms.
+		# :def: antonyms=( *synsets ) - Set the receiver's antonyms to the given
+		# +synsets+.
+		def_pointer_methods :antonyms,		:antonym
+
+		# :def: antonyms() - Returns synsets for the receiver's antonyms.
+		# :def: antonyms=( *synsets ) - Set the receiver's antonyms to the given
+		# +synsets+.
+		def_pointer_methods :hypernyms,		:hypernym
+
+		# :def: antonyms() - Returns synsets for the receiver's antonyms.
+		# :def: antonyms=( *synsets ) - Set the receiver's antonyms to the given
+		# +synsets+.
+		def_pointer_methods :entailment,	:entailment
+
+		# :def: antonyms() - Returns synsets for the receiver's antonyms.
+		# :def: antonyms=( *synsets ) - Set the receiver's antonyms to the given
+		# +synsets+.
+		def_pointer_methods :hyponyms,		:hyponym
+
+		# :def: antonyms() - Returns synsets for the receiver's antonyms.
+		# :def: antonyms=( *synsets ) - Set the receiver's antonyms to the given
+		# +synsets+.
+		def_pointer_methods :causes,		:cause
+
+		# :def: antonyms() - Returns synsets for the receiver's antonyms.
+		# :def: antonyms=( *synsets ) - Set the receiver's antonyms to the given
+		# +synsets+.
+		def_pointer_methods :verbgroups,	:verbGroup
+
+		# :def: antonyms() - Returns synsets for the receiver's antonyms.
+		# :def: antonyms=( *synsets ) - Set the receiver's antonyms to the given
+		# +synsets+.
+		def_pointer_methods :similarTo,		:similarTo
+
+		# :def: antonyms() - Returns synsets for the receiver's antonyms.
+		# :def: antonyms=( *synsets ) - Set the receiver's antonyms to the given
+		# +synsets+.
+		def_pointer_methods :participles,	:participle
+
+		# :def: antonyms() - Returns synsets for the receiver's antonyms.
+		# :def: antonyms=( *synsets ) - Set the receiver's antonyms to the given
+		# +synsets+.
+		def_pointer_methods :pertainyms,	:pertainym
+
+		# :def: antonyms() - Returns synsets for the receiver's antonyms.
+		# :def: antonyms=( *synsets ) - Set the receiver's antonyms to the given
+		# +synsets+.
+		def_pointer_methods :attributes,	:attribute
+
+		# :def: antonyms() - Returns synsets for the receiver's antonyms.
+		# :def: antonyms=( *synsets ) - Set the receiver's antonyms to the given
+		# +synsets+.
+		def_pointer_methods :derivedFrom,	:derivedFrom
+
+		# :def: antonyms() - Returns synsets for the receiver's antonyms.
+		# :def: antonyms=( *synsets ) - Set the receiver's antonyms to the given
+		# +synsets+.
+		def_pointer_methods :seeAlso,		:seeAlso
+
+		# :def: antonyms() - Returns synsets for the receiver's antonyms.
+		# :def: antonyms=( *synsets ) - Set the receiver's antonyms to the given
+		# +synsets+.
+		def_pointer_methods :functions,		:function
+
+		# Auto-generate types with subtypes
+
+
+		# :def: meronyms() - Returns synsets for the receiver's meronyms.
+		# :def: memberMeronyms() - Returns synsets for the receiver's "member"
+		# meronyms (HAS MEMBER relation).
+		# :def: memberMeronyms=( *synsets ) - Set the receiver's member meronyms
+		# to the given +synsets+.
+		# :def: stuffMeronyms() - Returns synsets for the receiver's "stuff"
+		# meronyms (IS MADE OUT OF relation).
+		# :def: stuffMeronyms=( *synsets ) - Set the receiver's stuff meronyms
+		# to the given +synsets+.
+		# :def: portionMeronyms() - Returns synsets for the receiver's "portion"
+		# meronyms (HAS PORTION relation).
+		# :def: portionMeronyms=( *synsets ) - Set the receiver's portion meronyms
+		# to the given +synsets+.
+		# :def: componentMeronyms() - Returns synsets for the receiver's "component"
+		# meronyms (HAS COMPONENT relation).
+		# :def: componentMeronyms=( *synsets ) - Set the receiver's component meronyms
+		# to the given +synsets+.
+		# :def: featureMeronyms() - Returns synsets for the receiver's "feature"
+		# meronyms (HAS FEATURE relation).
+		# :def: featureMeronyms=( *synsets ) - Set the receiver's feature meronyms
+		# to the given +synsets+.
+		# :def: phaseMeronyms() - Returns synsets for the receiver's "phase"
+		# meronyms (HAS PHASE relation).
+		# :def: phaseMeronyms=( *synsets ) - Set the receiver's phase meronyms
+		# to the given +synsets+.
+		# :def: placeMeronyms() - Returns synsets for the receiver's "place"
+		# meronyms (HAS PLACE relation).
+		# :def: placeMeronyms=( *synsets ) - Set the receiver's place meronyms
+		# to the given +synsets+.
+		def_pointer_methods :meronyms,		:meronym
+
+		# :def: holonyms() - Returns synsets for the receiver's holonyms.
+		# :def: memberHolonyms() - Returns synsets for the receiver's "member"
+		# holonyms (IS A MEMBER OF relation).
+		# :def: memberHolonyms=( *synsets ) - Set the receiver's member holonyms
+		# to the given +synsets+.
+		# :def: stuffHolonyms() - Returns synsets for the receiver's "stuff"
+		# holonyms (IS MATERIAL OF relation).
+		# :def: stuffHolonyms=( *synsets ) - Set the receiver's stuff holonyms
+		# to the given +synsets+.
+		# :def: portionHolonyms() - Returns synsets for the receiver's "portion"
+		# holonyms (IS A PORTION OF relation).
+		# :def: portionHolonyms=( *synsets ) - Set the receiver's portion holonyms
+		# to the given +synsets+.
+		# :def: componentHolonyms() - Returns synsets for the receiver's "component"
+		# holonyms (IS A COMPONENT OF relation).
+		# :def: componentHolonyms=( *synsets ) - Set the receiver's component holonyms
+		# to the given +synsets+.
+		# :def: featureHolonyms() - Returns synsets for the receiver's "feature"
+		# holonyms (IS A FEATURE OF relation).
+		# :def: featureHolonyms=( *synsets ) - Set the receiver's feature holonyms
+		# to the given +synsets+.
+		# :def: phaseHolonyms() - Returns synsets for the receiver's "phase"
+		# holonyms (IS A PHASE OF relation).
+		# :def: phaseHolonyms=( *synsets ) - Set the receiver's phase holonyms
+		# to the given +synsets+.
+		# :def: placeHolonyms() - Returns synsets for the receiver's "place"
+		# holonyms (IS A PLACE IN relation).
+		# :def: placeHolonyms=( *synsets ) - Set the receiver's place holonyms
+		# to the given +synsets+.
+		def_pointer_methods :holonyms,		:holonym
+
+		# :def: members() - Returns synsets for the receiver's topical domain
+		# members.
+		# :def: categoryMembers() - Returns synsets for the receiver's
+		# "category" topical domain members.
+		# :def: categoryMembers=( *synsets ) - Set the receiver's category
+		# domain members to the given +synsets+.
+		# :def: regionMembers() - Returns synsets for the receiver's "region"
+		# topical domain members.
+		# :def: regionMembers=( *synsets ) - Set the receiver's region domain
+		# members to the given +synsets+.
+		# :def: usageMembers() - Returns synsets for the receiver's "usage"
+		# topical domain members.
+		# :def: usageMembers=( *synsets ) - Set the receiver's usage domain
+		# members to the given +synsets+.
+		def_pointer_methods :members,		:member
+
+		# :def: domains() - Returns synsets for the receiver's topical domains.
+		# :def: categoryDomains() - Returns synsets for the receiver's "category"
+		# topical domains.
+		# :def: categoryDomains=( *synsets ) - Set the receiver's category domains
+		# to the given +synsets+.
+		# :def: regionDomains() - Returns synsets for the receiver's "region"
+		# topical domains.
+		# :def: regionDomains=( *synsets ) - Set the receiver's region domains
+		# to the given +synsets+.
+		# :def: usageDomains() - Returns synsets for the receiver's "usage"
+		# topical domains.
+		# :def: usageDomains=( *synsets ) - Set the receiver's usage domains
+		# to the given +synsets+.
+		def_pointer_methods :domains,		:domain
 
 
 		### Returns an Array of the coordinate sisters of the receiver.
 		def coordinates
-			self.hypernyms[0].hyponyms
+			self.hypernyms.collect {|syn|
+				syn.hyponyms
+			}.flatten
 		end
 
 
@@ -261,7 +631,7 @@ module WordNet
 		### synset.
 		def lexInfo
 			@mutex.synchronize( Sync::SH ) {
-				return Lexfiles[ self.filenum ]
+				return Lexfiles[ self.filenum.to_i ]
 			}
 		end
 
@@ -300,7 +670,7 @@ module WordNet
 
 
 		### Traversal iterator: Iterates depth-first over a particular
-		### +pointerType+ of the receiver, and all of the pointed-to synset's
+		### +type+ of the receiver, and all of the pointed-to synset's
 		### pointers. If called with a block, the block is called once for each
 		### synset with the +foundSyn+ and its +depth+ in relation to the
 		### originating synset as arguments. The first call will be the
@@ -310,12 +680,12 @@ module WordNet
 		### the synsets which were traversed if no block is given, or a flag
 		### which indicates whether or not the traversal was interrupted if a
 		### block is given.
-		def traverse( pointerType, includeOrigin=true )
+		def traverse( type, includeOrigin=true )
 			raise ArgumentError, "Illegal parameter 1: Must be either a String or a Symbol" unless
-				pointerType.kind_of?( String ) || pointerType.kind_of?( Symbol )
+				type.kind_of?( String ) || type.kind_of?( Symbol )
 
-			raise ArgumentError, "Synset doesn't support the #{pointerType.to_s} pointer type." unless
-				self.respond_to?( pointerType )
+			raise ArgumentError, "Synset doesn't support the #{type.to_s} pointer type." unless
+				self.respond_to?( type )
 
 			foundSyns = []
 			depth = 0
@@ -336,14 +706,15 @@ module WordNet
 				end
 
 				# Make an array for holding sub-synsets we see
-				subSyns = [ syn ]
+				subSyns = []
+				subSyns.push( syn ) unless newDepth == 0 && !includeOrigin
 
 				# Iterate over each synset returned by calling the pointer on the
 				# current syn. For each one, we call ourselves recursively, and
 				# break out of the iterator with a false value if the block has
 				# indicated we should abort by returning a false value.
 				unless haltFlag
-					syn.send( pointerType ).each {|subSyn|
+					syn.send( type ).each {|subSyn|
 						subSubSyns, haltFlag = traversalFunc.call( subSyn, newDepth + 1 )
 						subSyns.push( *subSubSyns ) unless subSubSyns.empty?
 						break if haltFlag
@@ -369,10 +740,10 @@ module WordNet
 
 
 		### Returns the distance in pointers between the receiver and +otherSynset+
-		### using +pointerType+ as the search path.
-		def distance( pointerType, otherSynset )
+		### using +type+ as the search path.
+		def distance( type, otherSynset )
 			dist = nil
-			self.traverse( pointerType ) {|syn,depth|
+			self.traverse( type ) {|syn,depth|
 				if syn == otherSynset
 					dist = depth
 					true
@@ -384,9 +755,9 @@ module WordNet
 
 
 		### Recursively searches all of the receiver's pointers of the specified
-		### +pointerType+ for +otherSynset+, returning +true+ if it is found.
-		def search( pointerType, otherSynset )
-			self.traverse( pointerType ) {|syn,depth|
+		### +type+ for +otherSynset+, returning +true+ if it is found.
+		def search( type, otherSynset )
+			self.traverse( type ) {|syn,depth|
 				syn == otherSynset
 			}
 		end
@@ -404,7 +775,7 @@ module WordNet
 			# Now traverse the other synset's hypernyms looking for one of our
 			# own hypernyms.
 			otherSyn.traverse( :hypernyms ) {|syn,depth|
-				if hyperSyns.find {|s| s == syn}
+				if hyperSyns.include?( syn )
 					commonSyn = syn
 					true
 				end
@@ -414,14 +785,15 @@ module WordNet
 		end
 
 
-		#########
-		protected
-		#########
-
 		### Returns the pointers in this synset's pointerlist as an +Array+
 		def pointers
 			@mutex.synchronize( Sync::SH ) {
-				@pointerlist.split( WordNet::SubDelimRe )
+				@mutex.synchronize( Sync::EX ) {
+					@pointers = @pointerlist.split(SubDelimRe).collect {|pstr|
+						Pointer::parse( pstr )
+					}
+				} if @pointers.empty?
+				@pointers
 			}
 		end
 
@@ -429,99 +801,58 @@ module WordNet
 		### Set the pointers in this synset's pointerlist to +newPointers+
 		def pointers=( *newPointers )
 			@mutex.synchronize( Sync::EX ) {
-				@pointerlist = newPointers.join( WordNet::SubDelim )
+				@pointerlist = newPointers.collect {|ptr| ptr.to_s}.join( SubDelim )
+				@pointers = newPointers
 			}
 		end
 
 
-		### Add the specified +newPointers+ to this synset's pointerlist.
-		def addPointers( *newPointers )
-			@mutex.synchronize( Sync::EX ) {
-				self.pointers |= newPointers
-			}
+		### Returns the synset's pointers in a Hash keyed by their type.
+		def pointerMap
+			return self.pointers.inject( {} ) do |hsh,ptr|
+				hsh[ ptr.type ] ||= []
+				hsh[ ptr.type ] << ptr
+				hsh
+			end
 		end
-		alias_method :add_pointers, :addPointers
 
 
-		### Delete the specified +oldPointers+ from this synset's pointerlist.
-		def deletePointers( *oldPointers )
-			@mutex.synchronize( Sync::EX ) {
-				self.pointers -= oldPointers
-			}
-		end
-		alias_method :delete_pointers, :deletePointers
 
+		#########
+		protected
+		#########
 
 		### Returns an Array of synset objects for the receiver's pointers of the
-		### specified +pointerType+.
-		def fetchSynsetPointers( pointerType )
-			synsets = []
-			ppat = Regexp::quote( pointerType )
+		### specified +type+.
+		def fetchSynsetPointers( type, subtype=nil )
+			synsets = nil
 
 			# Iterate over this synset's pointers, looking for ones that match
 			# the type we're after. When we find one, we extract its offset and
 			# use that to look it up.
-			@mutex.synchronize( Sync::SH ) {
-				self.pointers.each {|ptr|
-					if ptr =~ /^#{ppat}\w*\s(\d+)\%(\w)\s(\d{4})/
-						synsets << @lexicon.lookupSynsetsByOffset( "#{$1}%#{$2}" )
-					end
-				}
-			}
+			@mutex.synchronize( Sync::SH ) do
+				synsets = self.pointers.
+					find_all {|ptr|
+						ptr.type == type and
+							subtype.nil? || ptr.subtype == subtype
+					}.
+					collect {|ptr| ptr.synset }.
+					collect {|key| @lexicon.lookupSynsetsByKey( key )}
+			end
 
-			return synsets
+			return synsets.flatten
 		end
 
 
-		### Sets the receiver's synset pointers for the specified +pointerType+ to
-		### the specified +synsets+. (*Not yet implemented*)
-		### --
-		### :TODO: Implementation
-		def setSynsetPointers( pointerType, *synsets )
-			raise :UnimplementedError, "This method is not yet implemented."
+		### Sets the receiver's synset pointers for the specified +type+ to
+		### the specified +synsets+.
+		def setSynsetPointers( type, synsets, subtype=nil )
+			synsets = [ synsets ] unless synsets.is_a?( Array )
+			pmap = self.pointerMap
+			pmap[ type ] = synsets
+			self.pointers = pmap.values
 		end
 
-
-		### Add the specified +synsets+ (WordNet::Synset objects) to the receiver
-		### as +pointerType+ pointers.
-		def addSynsetPointers( pointerType, *synsets )
-			raise ArgumentError, "No synsets to delete" if synsets.empty?
-
-			@mutex.synchronize( Sync::EX ) {
-				newPointers = synsets.collect {|syn| "#{pointerType} #{syn.offset} 0000" }
-				self.pointers |= newPointers
-			}
-		end
-
-
-		### Remove the specified +synsets+ (WordNet::Synset objects) from the
-		### receiver's pointers. If no +synsets+ are specified, removes all
-		### pointers of the specified +pointerType+. If no +pointerType+ is
-		### specified, removes all pointers.
-		def deleteSynsetPointers( pointerType=nil, *synsets )
-			oldPointers = []
-
-			@mutex.synchronize( Sync::EX ) {
-				if pointerType
-					if synsets.empty?
-						oldPointers |= self.pointers.find_all {|ptr|
-							ptr =~ /^#{pointerType}\s/
-						}
-					else
-						synsets.each {|syn|
-							oldPointers |= self.pointers.find_all {|ptr|
-								ptr =~ /#{pointerType}\s#{syn.offset}\s\d{4}/
-							}
-						}
-					end
-
-				else
-					oldPointers = self.pointers
-				end
-
-				self.pointers -= oldPointers
-			}
-		end
 
 	end # class Synset
 end # module WordNet
