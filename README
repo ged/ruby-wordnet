@@ -2,7 +2,7 @@
 
                                   Ruby-WordNet
                                   ------------
-              $Id: README,v 1.2 2002/01/05 12:32:33 deveiant Exp $
+              $Id: README,v 1.3 2002/01/07 06:03:06 deveiant Exp $
 
 Authors
 -------
@@ -21,13 +21,13 @@ concept. Different relations link the synonym sets.
 
 You can find out more about WordNet® at <http://www.cogsci.princeton.edu/~wn/>.
 
-This code was based on the Lingua::Wordnet Perl module by Dan Brian, and
+This code was loosely based on the Lingua::Wordnet Perl module by Dan Brian, and
 requires the databases that module builds. I hope to soon have a pure-Ruby port
 of the conversion script that comes with that module that will be able to
 generate the databases without requiring you to install Lingua::Wordnet. This
-module is intended to offer the same functionality as Lingua::Wordnet, and you
+module is intended to offer basically the same functionality as Lingua::Wordnet, and you
 should be able to use either (or both) to access and modify the lexical database
-interchangeably. This module also attempts to remain fairly close in API to
+interchangeably. This module attempts to remain fairly close in API to
 Lingua::Wordnet, so if you're familiar with it already, you should be able to
 port things from one to the other with relatively little trouble.
 
