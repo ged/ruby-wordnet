@@ -4,9 +4,8 @@
 #	them heirarchically
 #
 
-$: << "lib"
-require "WordNet"
-require "pp"
+$LOAD_PATH.unshift "lib"
+require 'wordnet'
 
 raise RuntimeError, "No word specified." if ARGV.empty?
 
@@ -14,7 +13,7 @@ raise RuntimeError, "No word specified." if ARGV.empty?
 lex = WordNet::Lexicon.new
 
 # Look up the synsets for the specified word
-origins = lex.lookupSynsets( ARGV[0], WordNet::NOUN )
+origins = lex.lookupSynsets( ARGV[0], WordNet::Noun )
 
 # Use the analyzer to traverse meronyms of the synset, adding a string for each
 # one with indentation for the level

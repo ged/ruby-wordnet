@@ -4,18 +4,18 @@
 #	Lingua::Wordnet::Analysis)
 #
 
-$: << "lib"
-require "WordNet"
+$LOAD_PATH.unshift "lib"
+require "wordnet"
 
 # Create the lexicon
 lex = WordNet::Lexicon.new
 
 # Look up the clothes synset as the origin
-clothes = lex.lookupSynsets( "clothes", WordNet::NOUN, 1 )
+clothes = lex.lookupSynsets( "clothes", WordNet::Noun, 1 )
 puts clothes
 
 # Now look up the second sense of tongue (not the anatomical part)
-tongue = lex.lookupSynsets( "tongue", WordNet::NOUN, 7 )
+tongue = lex.lookupSynsets( "tongue", WordNet::Noun, 7 )
 puts tongue
 
 # Now traverse all hyponyms of the clothes synset, and check for "tongue" among
@@ -23,8 +23,6 @@ puts tongue
 clothes.traverse( :hyponyms ) {|syn,depth|
 	if syn.search( :allMeronyms, tongue )
 		puts "Has a tongue: #{syn}"
-	else
-		puts "Doesn't have a tongue: #{syn}"
 	end
 }
 
