@@ -1,7 +1,7 @@
 #!/usr/bin/ruby
 #
 #	RDoc Documentation Generation Script
-#	$Id: makedocs.rb,v 1.1 2003/08/06 08:02:13 deveiant Exp $
+#	$Id: makedocs.rb,v 1.2 2003/09/03 05:33:22 deveiant Exp $
 #
 #	Copyright (c) 2001-2003 The FaerieMUD Consortium.
 #
@@ -47,6 +47,8 @@ def makeDocs( docsdir, template='css2', diagrams=false, upload=nil, ridocs=false
 		'--op', docsdir,
 		'--title', title,
 		'--tab-width', 4,
+		'--promiscuous',
+		'--show-hash',
 	]
 
 	flags += [ '--quiet' ] unless $VERBOSE
