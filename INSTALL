@@ -1,6 +1,6 @@
 
                      Ruby-WordNet Installation Instructions
-             $Id: INSTALL,v 1.4 2002/01/14 13:21:49 deveiant Exp $
+             $Id: INSTALL,v 1.5 2003/08/06 07:57:55 deveiant Exp $
 
 These instructions are decidedly Unix-biased. I apologize to those of you trying
 to run this on some other platform. Suggestions or patches for other-platform
@@ -13,20 +13,12 @@ Prerequisites
 Versions listed are the ones I've tested with. Earlier versions may work, but
 your mileage may vary.
 
-* Ruby (>= 1.6.5)
+* Ruby (>= 1.8.0)
   Home page: http://www.ruby-lang.org/
-  Download: ftp://ftp.ruby-lang.org/pub/ruby/ruby-1.6.5.tar.gz
+  Download: ftp://ftp.ruby-lang.org/pub/ruby/ruby-1.8.0.tar.gz
 
-* WordNet (>= 1.7)
+* WordNet (>= 1.7.1)
   Home page: http://www.cogsci.princeton.edu/~wn/
-  Download: http://www.cogsci.princeton.edu/~wn/obtain/
-
-* Lingua::Wordnet (for now)
-  CPAN: http://search.cpan.org/search?dist=Lingua-Wordnet
-
-  You don't actually need to install the Perl module -- you just have to run the
-  'converdb.pl' program in the distribution's 'scripts' directory to build the
-  necessary databases.
 
 * bdb (>=0.2.5)
   RAA: http://www.ruby-lang.org/en/raa-list.rhtml?name=bdb
@@ -40,7 +32,15 @@ These instructions assume that you've already installed the prerequisite
 packages, unpacked the distribution somewhere, and have changed your working
 directory to the resultant subdirectory.
 
-To run unit tests (requires RubyUnit >= 0.5):
+You must first convert the WordNet lexicon into the database format used by
+Ruby-WordNet:
+
+  $ ruby convertdb.rb
+
+This can take some time, and will consume about ~40 Mb of disk space when the
+process is finished. While it is building, it can consume a bit more.
+
+To run unit tests:
 
   $ ruby test.rb
 
@@ -55,7 +55,7 @@ Documentation
 If you have Rdoc (http://rdoc.sourceforge.net/) installed, you can create HTML
 documentation thusly:
 
- $ rdoc lib
+ $ ruby docs/makedocs.rb
 
-This will leave HTML documentation in 'doc'.
+This will leave HTML documentation (by default) in 'docs/html'.
 
