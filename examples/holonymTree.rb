@@ -18,7 +18,7 @@ origins = lex.lookupSynsets( ARGV[0], WordNet::Noun )
 # one with indentation for the level
 origins.each_index {|i|
 	treeComponents = []
-	origins[i].traverse( :allHolonyms ) {|syn,depth|
+	origins[i].traverse( :holonyms ) {|syn,depth|
 		treeComponents << "  #{'  ' * depth}#{syn.words[0]} -- #{syn.gloss.split(/;/)[0]}"
 	}
 

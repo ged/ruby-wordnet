@@ -19,7 +19,7 @@ origins = lex.lookupSynsets( ARGV[0], WordNet::Noun )
 # one with indentation for the level
 origins.each_index {|i|
 	treeComponents = []
-	origins[i].traverse( :allMeronyms ) {|syn,depth|
+	origins[i].traverse( :meronyms ) {|syn,depth|
 		treeComponents << "  #{'  ' * depth}#{syn.words[0]} -- #{syn.gloss.split(/;/)[0]}"
 	}
 
