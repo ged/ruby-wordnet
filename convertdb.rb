@@ -24,7 +24,7 @@
 # 
 # == Version
 #
-#  $Id: convertdb.rb,v 1.1 2003/06/17 15:01:06 deveiant Exp $
+#  $Id: convertdb.rb,v 1.2 2003/06/17 18:11:21 deveiant Exp $
 # 
 
 $LOAD_PATH.unshift ".", "lib"
@@ -37,9 +37,11 @@ require 'fileutils'
 
 include UtilityFunctions
 
+# Globals: Index of words => senses, StringScanner for parsing.
 $senseIndex = {}
 $scanner = StringScanner::new( "" )
 
+# Source WordNet files
 IndexFiles = %w[ index.noun index.verb index.adj index.adv ]
 MorphFiles = {
 	'adj.exc'		=> WordNet::Adjective,
@@ -55,8 +57,17 @@ DataFiles =  {
 	'data.verb'		=> WordNet::Verb,
 }
 
+# Struct which represents a list of files, a database, and a processor function
+# for moving records from each of the files into the database.
 Fileset = Struct::new( "WordNetFileset", :files, :name, :db, :processor )
 
+# How many records to insert between commits
+CommitThreshold = 2000
+
+
+#####################################################################
+###	M A I N   P R O G R A M
+#####################################################################
 def main
 	$stderr.sync = $stdout.sync = true
 	header "WordNet Lexicon Converter"
@@ -141,6 +152,7 @@ def main
 				next
 			end
 
+			txn, dbh = lexicon.env.txn_begin( 0, set.db )
 			entries = lineNumber = errors = 0
 			File::readlines( filepath ).each {|line|
 				lineNumber += 1
@@ -154,18 +166,28 @@ def main
 					end
 				end
 
-				set.db[ key ] = value
+				dbh[ key ] = value
 				entries += 1
 				print "%d%s" % [ entries, "\x08" * entries.to_s.length ]
+
+				# Commit and start a new transaction every 1000 records
+				if (entries % CommitThreshold).nonzero?
+					txn.commit( BDB::TXN_NOSYNC )
+					txn, dbh = lexicon.env.txn_begin( 0, set.db )
+				end
 			}
+			message "committing..."
+			txn.commit( BDB::TXN_SYNC )
 			message "done (%d entries, %d errors).\n" %
 				[ entries, errors ]
 		}
-		puts
+
+		message "Checkpointing DB and cleaning logs..."
+		lexicon.checkpoint
+		lexicon.cleanLogs
+		puts "done."
 	}
 
-	#message "Done with conversion. Checkpointing DB..."
-	#lexicon.env.checkpoint( 0 )
 	message "done.\n\n"
 end
 
