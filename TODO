@@ -2,5 +2,10 @@
 ** Lingua::Wordnet::Analysis
 ** WordNet::Similarity
 
+* Move lexicographer file-parsing routines from convertdb.rb into the WordNet
+  classes.
+
+* Finish pointer-mutator routines
+
 
 
