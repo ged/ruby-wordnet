@@ -6,6 +6,9 @@
 $: << "lib"
 require "WordNet"
 
+$stderr.puts "This doesn't work yet."
+exit
+
 lex = WordNet::Lexicon.new
 
 boot = lex.lookupSynset( "boot", "n", 1 )
