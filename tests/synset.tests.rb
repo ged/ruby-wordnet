@@ -7,11 +7,13 @@
 $: << "../lib" if File.directory?( "../lib" )
 $: << "lib" if File.directory?( "lib" )
 
-require "walkit/cli_script"
+require "runit/cui/testrunner"
+require "runit/testcase"
+
 require "WordNet"
 require "bdb"
 
-class SynsetTests < Walkit::Testclass
+class SynsetTests < RUNIT::TestCase
 
 	indexDb	= BDB::Btree.open( "#{WordNet::DICTDIR}/lingua_wordnet.index", nil, BDB::CREATE, 0666 )
 	dataDb	= BDB::Btree.open( "#{WordNet::DICTDIR}/lingua_wordnet.data", nil, BDB::CREATE, 0666 )
@@ -74,11 +76,8 @@ class SynsetTests < Walkit::Testclass
 	def test_00_factory
 		synset = nil
 
-		vet {
-			assert_no_exception { synset = @lexicon.createSynset("Ruby", WordNet::NOUN) }
-			assert_instance_of WordNet::Synset, synset
-		}
-
+		assert_no_exception { synset = @lexicon.createSynset("Ruby", WordNet::NOUN) }
+		assert_instance_of WordNet::Synset, synset
 	end
 
 	# Test various static attribute accessors, and by extension the data-parsing
@@ -87,24 +86,20 @@ class SynsetTests < Walkit::Testclass
 		synsets = nil
 
 		TestWords.each_pair {|word,hash|
-			vet {
-				assert_no_exception		{synsets = @lexicon.lookupSynsets( word, hash['pos'] )}
-				assert_instance_of		Array, synsets
-				assert_equal			hash['data'].length, synsets.length
-			}
+			assert_no_exception		{synsets = @lexicon.lookupSynsets( word, hash['pos'] )}
+			assert_instance_of		Array, synsets
+			assert_equal			hash['data'].length, synsets.length
 
 			synsets.each {|syn|
-				vet {
-					assert_matches		syn.offset, /\d+%\w/
+				assert_matches		syn.offset, /\d+%\w/
 
-					data = hash['data'][syn.offset]
+				data = hash['data'][syn.offset]
 
-					assert_equal		data['fileno'], syn.filenum
-					assert_equal		data['words'], syn.wordlist
-					assert_equal		data['ptrs'], syn.pointerlist
-					assert_equal		data['frames'], syn.frameslist
-					assert_equal		data['gloss'], syn.gloss
-				}
+				assert_equal		data['fileno'], syn.filenum
+				assert_equal		data['words'], syn.wordlist
+				assert_equal		data['ptrs'], syn.pointerlist
+				assert_equal		data['frames'], syn.frameslist
+				assert_equal		data['gloss'], syn.gloss
 			}
 		}
 	end
@@ -116,14 +111,12 @@ class SynsetTests < Walkit::Testclass
 		synset = @lexicon.lookupSynsetByOffset( TestSyns['words']['offset'] ) or raise RuntimeError
 		words = []
 
-		vet {
-			assert_equals TestSyns['words']['data'], synset.wordlist
+		assert_equals TestSyns['words']['data'], synset.wordlist
 
-			assert_no_exception { words = synset.words }
-			dataWords = TestSyns['words']['data'].split(/\|/)
+		assert_no_exception { words = synset.words }
+		dataWords = TestSyns['words']['data'].split(/\|/)
 			
-			assert_equal dataWords, words
-		}
+		assert_equal dataWords, words
 	end
 
 	# :TODO: Write tests for pointers (perhaps automate by scanning dataDb for
@@ -132,6 +125,6 @@ class SynsetTests < Walkit::Testclass
 end
 
 if $0 == __FILE__
-    Walkit::Cli_script.new.select([SynsetTests], $*.shift)
+    RUNIT::CUI::TestRunner.run(SynsetTests.suite)
 end
 
