@@ -13,7 +13,7 @@ class LexiconTests < WordNet::TestCase
 		synset2 = nil
 
 		assert_nothing_raised {
-			synset = $lexicon.lookupSynsetsByOffset( BaseballOffset )
+			synset = $lexicon.lookupSynsetsByKey( BaseballOffset )
 		}
 		assert_instance_of WordNet::Synset, synset
 
@@ -29,8 +29,8 @@ class LexiconTests < WordNet::TestCase
 		synset2.words.each {|word| words += "#{word}, "}
 		assert_match( /journey/, words )
 
-		assert_equal $lexicon.familiarity( "boy", WordNet::Noun ), 4
-		assert_equal $lexicon.morph( "bluest", WordNet::Adjective ), "blue"
+		assert_equal 4, $lexicon.familiarity( "boy", WordNet::Noun )
+		assert_equal "blue", $lexicon.morph( "bluest", WordNet::Adjective ) 
 		assert_match( /baseball/, "#{synset}" )
 	end
 end
