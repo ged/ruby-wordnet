@@ -1,0 +1,9 @@
+#
+# Title:  Ruby-WordNet
+# Main:   README
+# Upload: ssh://oberon/www/devEiate.org/public/code/Ruby-WordNet/
+# Webcvs: http://www.deveiate.org/cgi/viewcvs.cgi/Ruby-WordNet/
+#
+lib/**/*.rb
+README
+TODO
