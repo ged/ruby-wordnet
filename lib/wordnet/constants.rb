@@ -37,7 +37,7 @@
 # 
 # == Version
 #
-#  $Id: constants.rb,v 1.1 2003/08/06 08:05:18 deveiant Exp $
+#  $Id: constants.rb,v 1.2 2003/09/03 06:29:17 deveiant Exp $
 # 
 
 
@@ -46,57 +46,143 @@ module WordNet
 	### Constant-container module
 	module Constants
 
-		### Record-part delimiter
+		# Synset syntactic-category names -> indicators
+		SyntacticCategories = {
+			:noun		=> "n",
+			:verb		=> "v",
+			:adjective	=> "a",
+			:adverb		=> "r",
+			:other		=> "s",
+		}
+		# Syntactic-category indicators -> names
+		SyntacticSymbols = SyntacticCategories.invert
+
+		# Map the categories into their own constants (eg., Noun)
+		SyntacticCategories.each {|sym,val|
+			cname = sym.to_s.capitalize
+			const_set( cname, val )
+		}
+
+		# Synset pointer typenames -> indicators
+		PointerTypes = {
+			:antonym		=> '!',
+			:hypernym		=> '@',
+			:entailment		=> '*',
+			:hyponym		=> '~',
+			:meronym		=> '%',
+			:holonym		=> '#',
+			:cause			=> '>',
+			:verbGroup		=> %{$},
+			:similarTo		=> '&',
+			:participle		=> '<',
+			:pertainym		=> '\\',
+			:attribute		=> '=',
+			:derivedFrom	=> '\\',
+			:seeAlso		=> '^',
+			:derivation		=> '+',
+			:domain			=> ';',
+			:member			=> '-',
+		}
+
+		# Synset pointer indicator -> typename
+		PointerSymbols = PointerTypes.invert
+
+		# Map the pointer types into their own symbols (eg., VerbGroup)
+		PointerTypes.each {|sym,val|
+			cname = sym.to_s[0,1].upcase + sym.to_s[1..-1]
+			const_set( cname, val )
+		}
+
+		# Meronym synset pointer types
+		MeronymTypes = {
+			:member			=> '%m',
+			:stuff			=> '%s',
+			:portion		=> '%o',
+			:component		=> '%p',
+			:feature		=> '%f',
+			:phase			=> '%a',
+			:place			=> '%l',
+		}
+
+		# Meronym indicator -> type map
+		MeronymSymbols = MeronymTypes.invert
+
+		# Map the meronym types into their own constants (eg., MemberMeronym)
+		MeronymTypes.each {|sym,val|
+			cname = sym.to_s.capitalize + "Meronym"
+			const_set( cname, val )
+		}
+
+		# Holonym synset pointer types
+		HolonymTypes = {
+			:member			=> '#m',
+			:stuff			=> '#s',
+			:portion		=> '#o',
+			:component		=> '#p',
+			:feature		=> '#f',
+			:phase			=> '#a',
+			:place			=> '#l',
+		}
+
+		# Holonym indicator -> type map
+		HolonymSymbols = HolonymTypes.invert
+
+		# Map the holonym types into their own constants (eg., MemberHolonym)
+		HolonymTypes.each {|sym,val|
+			cname = sym.to_s.capitalize + "Holonym"
+			const_set( cname, val )
+		}
+
+		# Domain synset pointer types
+		DomainTypes = {
+			:category		=> ';c',
+			:region			=> ';r',
+			:usage			=> ';u',
+		}
+
+		# Domain indicator -> type map
+		DomainSymbols = DomainTypes.invert
+
+		# Map the domain types into their own constants (eg., CategoryDomain)
+		DomainTypes.each {|sym,val|
+			cname = sym.to_s.capitalize + "Domain"
+			const_set( cname, val )
+		}
+
+		# Member synset pointer types
+		MemberTypes = {
+			:category		=> '-c',
+			:region			=> '-r',
+			:usage			=> '-u',
+		}
+
+		# Member indicator -> type map
+		MemberSymbols = MemberTypes.invert
+
+		# Map the member types into their own constants (eg., CategoryMember)
+		MemberTypes.each {|sym,val|
+			cname = sym.to_s.capitalize + "Member"
+			const_set( cname, val )
+		}
+
+		# Map of primary types to maps of their subtypes 
+		PointerSubTypes = {
+			:meronym	=> MeronymTypes,
+			:holonym	=> HolonymTypes,
+			:member		=> MemberTypes,
+			:domain		=> DomainTypes,
+		}
+
+
+		# Record-part delimiter
 		Delim = '||'
 		DelimRe = Regexp::new( Regexp::quote(Delim) )
 
-		### Record-subpart delimiter
+		# Record-subpart delimiter
 		SubDelim = '|'
 		SubDelimRe = Regexp::new( Regexp::quote(SubDelim) )
 
-		### Synset syntactic-category types
-		Noun		= "n"
-		Verb		= "v"
-		Adjective	= "a"
-		Adverb		= "r"
-		Other		= "s"
-
-		### Synset pointer types
-		Antonym		= '!'
-		Hypernym	= '@'
-		Entailment	= '*'
-		Hyponym		= '~'
-		Meronym		= '%'
-		Holonym		= '#'
-		Cause		= '>'
-		VerbGroup	= %{$}
-		SimilarTo	= '&'
-		Participle	= '<'
-		Pertainym	= '\\'
-		Attribute	= '='
-		DerivedFrom	= '\\' # Is this really supposed to be the same as PERTAINYM?
-		SeeAlso		= '^'
-		Function	= '+'
-
-		### Meronym synset pointer types
-		MemberMeronym		= '%m'
-		StuffMeronym		= '%s'
-		PortionMeronym		= '%o'
-		ComponentMeronym	= '%p'
-		FeatureMeronym		= '%f'
-		PhaseMeronym		= '%a'
-		PlaceMeronym		= '%l'
-
-		### Holonym synset pointer types
-		MemberHolonym		= '#m'
-		StuffHolonym		= '#s'
-		PortionHolonym		= '#o'
-		ComponentHolonym	= '#p'
-		FeatureHolonym		= '#f'
-		PhaseHolonym		= '#a'
-		PlaceHolonym		= '#l'
-
-		### Lexicographer file index
+		# Lexicographer file index
 		Lexfiles = [
 			"adj.all",
 			"adj.pert",         
@@ -145,7 +231,7 @@ module WordNet
 			"adj.ppl"
 		]
 
-		### Verb sentences (?) -- used in building verb frames.
+		# Verb sentences (?) -- used in building verb frames.
 		VerbSents = [
 			"",
 			"Something ----s",
