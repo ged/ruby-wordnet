@@ -3,9 +3,8 @@
 #	Find least general hypernymial synsets between all noun senses of two words.
 #
 
-$: << "lib"
-require "WordNet"
-require "pp"
+$LOAD_PATH.unshift "lib"
+require "wordnet"
 
 raise RuntimeError, "You must specify two words." if ARGV.length != 2
 
@@ -13,8 +12,8 @@ raise RuntimeError, "You must specify two words." if ARGV.length != 2
 lex = WordNet::Lexicon.new
 
 # Look up the synsets for the specified word
-word1Syns = lex.lookupSynsets( ARGV[0], WordNet::NOUN )
-word2Syns = lex.lookupSynsets( ARGV[1], WordNet::NOUN )
+word1Syns = lex.lookupSynsets( ARGV[0], WordNet::Noun )
+word2Syns = lex.lookupSynsets( ARGV[1], WordNet::Noun )
 
 def debugMsg( message )
 	return unless $DEBUG
@@ -29,21 +28,23 @@ word1Syns.each {|syn|
 	word2Syns.each {|secondSyn|
 		debugMsg( "  Comparing #{secondSyn.wordlist} to the origin." )
 
+		# The intersection of the two syns is the most-specific hypernym they
+		# share in common.
 		commonSyn = (syn | secondSyn)
 
 		if commonSyn
-puts <<-EOF
-----
-  #{syn.words.join(', ')}
-  #{syn.gloss}
-and
-  #{secondSyn.words.join(', ')}
-  #{secondSyn.gloss}
-are both instances of
-  #{commonSyn.words.join(', ')}
-  #{commonSyn.gloss}.
-----
-EOF
+			puts <<-"EOF".gsub( /^\t{3}/, '' )
+			----
+			  #{syn.words.join(', ')}
+			  #{syn.gloss}
+			and
+			  #{secondSyn.words.join(', ')}
+			  #{secondSyn.gloss}
+			are both instances of
+			  #{commonSyn.words.join(', ')}
+			  #{commonSyn.gloss}.
+			----
+			EOF
 		else
 			debugMsg( "    No synsets in common." )
 		end
