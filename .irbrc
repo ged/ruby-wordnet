@@ -23,7 +23,7 @@ IRB.conf[:PROMPT][:MUES] = { # name of prompt mode
 }
 IRB.conf[:PROMPT_MODE] = :MUES
 
-# Try to require the 'mues' library
+# Try to require the 'wordnet' library
 begin
 	puts "Requiring 'wordnet'..."
 	require 'wordnet'
