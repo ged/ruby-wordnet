@@ -1,6 +1,6 @@
 
                      Ruby-WordNet Installation Instructions
-             $Id: INSTALL,v 1.5 2003/08/06 07:57:55 deveiant Exp $
+             $Id: INSTALL,v 1.6 2003/09/03 06:47:19 deveiant Exp $
 
 These instructions are decidedly Unix-biased. I apologize to those of you trying
 to run this on some other platform. Suggestions or patches for other-platform
@@ -17,7 +17,7 @@ your mileage may vary.
   Home page: http://www.ruby-lang.org/
   Download: ftp://ftp.ruby-lang.org/pub/ruby/ruby-1.8.0.tar.gz
 
-* WordNet (>= 1.7.1)
+* WordNet (>= 2.0)
   Home page: http://www.cogsci.princeton.edu/~wn/
 
 * bdb (>=0.2.5)
@@ -33,9 +33,10 @@ packages, unpacked the distribution somewhere, and have changed your working
 directory to the resultant subdirectory.
 
 You must first convert the WordNet lexicon into the database format used by
-Ruby-WordNet:
+Ruby-WordNet. The <datadir> argument is the full path to the 'dict' directory
+under the WordNet installation:
 
-  $ ruby convertdb.rb
+  $ ruby convertdb.rb <datadir>
 
 This can take some time, and will consume about ~40 Mb of disk space when the
 process is finished. While it is building, it can consume a bit more.
