@@ -24,7 +24,7 @@
 # 
 # == Version
 #
-#  $Id: convertdb.rb,v 1.3 2003/06/18 04:51:47 deveiant Exp $
+#  $Id: convertdb.rb,v 1.4 2003/08/06 07:59:44 deveiant Exp $
 # 
 
 $LOAD_PATH.unshift ".", "lib"
@@ -122,7 +122,7 @@ def main
 
 	# Query for the source data files
 	message "Where can I find the WordNet data files?\n"
-	datadir = promptWithDefault( "Data directory", "/usr/local/WordNet-1.7.1/dict" )
+	datadir = promptWithDefault( "Data directory", "/usr/local/WordNet-2.0/dict" )
 	abort( "Directory '#{datadir}' does not exist" ) unless File::exists?( datadir )
 	abort( "'#{datadir}' is not a directory" ) unless File::directory?( datadir )
 	testfile = File::join(datadir, "data.noun")
