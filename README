@@ -1,17 +1,5 @@
-
-
-                                  Ruby-WordNet
-                                  ------------
-              $Id: README,v 1.4 2002/01/14 13:22:34 deveiant Exp $
-
-Authors
--------
-
- Michael Granger <ged@FaerieMUD.org>
-
-
-General Information
--------------------
+= Ruby-WordNet
+== General Information
 
 This library is a Ruby interface to WordNet®. WordNet® is an online lexical
 reference system whose design is inspired by current psycholinguistic theories
@@ -22,49 +10,46 @@ concept. Different relations link the synonym sets.
 You can find out more about WordNet® at <http://www.cogsci.princeton.edu/~wn/>.
 
 This code was loosely based on the Lingua::Wordnet Perl module by Dan Brian, and
-requires the databases that module builds. I hope to soon have a pure-Ruby port
-of the conversion script that comes with that module that will be able to
-generate the databases without requiring you to install Lingua::Wordnet. This
-module is intended to offer basically the same functionality as Lingua::Wordnet, and you
-should be able to use either (or both) to access and modify the lexical database
-interchangeably. This module attempts to remain fairly close in API to
-Lingua::Wordnet, so if you're familiar with it already, you should be able to
-port things from one to the other with relatively little trouble.
+uses a similar strategy of converting the WordNet data files into a BerkeleyDB
+database. The 'convertdb.rb' script in this directory can be used to build these
+databases from the WordNet dictionaries.
+
+This module is intended to offer basically the same functionality as
+Lingua::Wordnet, and you should be able to use either (or both) to access and
+modify the lexical database interchangeably. This module attempts to remain
+fairly close in API to Lingua::Wordnet, so if you're familiar with it already,
+you should be able to port things from one to the other with relatively little
+trouble. This module, however, uses BerkeleyDB's transaction subsystem to allow
+safe concurrent access to the databases.
 
 Many thanks to Dan Brian, who did most of the hard work. His efforts made my job
 mostly a matter of playing around.
 
 
-Caveats
--------
+== Caveats
 
-IMPORTANT: This is an *alpha* release. It might blow up, compromise your
-security, write random data to sensitive portions of your hard drive, or
-otherwise fail to work as advertised. It is intended to be used by developers
-who are interested in helping out or curious onlookers who don't mind getting
-a bit wet.
+IMPORTANT: This is a *beta* release. It might blow up, compromise your security,
+write random data to sensitive portions of your hard drive, or otherwise fail to
+work as advertised. It is intended to be used by developers who are interested
+in helping out or curious onlookers who don't mind getting a bit wet.
 
 The database-writing portions of this code have not been extensively tested, and
 there are almost certainly bugs which will cause data to be lost or
-miswritten. You should keep the Lexicon locked unless you don't mind your
-databases becoming corrupted. I'm in the process of writing the unit tests for
-the writing functionality, and I should have it working by the next release.
+miswritten. You should make backups of changes you make periodically.
 
-That said, I would greatly appreciate feedback on any aspect of this
-software. Suggestions, feature requests, questions, design critiques, and bug
-reports are most welcome. Relevant patches are particularly helpful. I may be
-reached at <ged@FaerieMUD.org>.
+I would greatly appreciate feedback on any aspect of this software. Suggestions,
+feature requests, questions, design critiques, and bug reports are most
+welcome. Relevant patches are particularly helpful. I may be reached at
+<ged@FaerieMUD.org>.
 
 
-Installation
-------------
+== Installation
 
 For installation instructions (such as they are at this point), see the INSTALL
 file.
 
 
-More Information
-----------------
+== More Information
 
 There is a project page for Ruby-WordNet which can be found at:
 <http://www.deveiate.org/code/Ruby-WordNet.shtml>.
@@ -76,13 +61,17 @@ at <http://docs.FaerieMUD.org/>.
 
 You may also access a web interface to the FaerieMUD CVS repository at:
 <http://cvs.FaerieMUD.org/>, which includes instructions on checking out the CVS
-version of the MUES.
+version of this module.
 
 
-Legal
------
+== Authors
 
-Ruby-WordNet is Open Source Software which is Copyright © 2001,2002 by The
+* Michael Granger <ged@FaerieMUD.org>
+
+
+== Legal
+
+Ruby-WordNet is Open Source Software which is Copyright © 2001-2003 by The
 FaerieMUD Consortium.
 
 You may use, modify, and/or redistribute this software under the terms of the
@@ -109,4 +98,8 @@ Lingua::Wordnet is code licensed under the following terms:
   This program is free software; you can redistribute it and/or modify
   it under the same terms as Perl itself.
 
+
+=== Version
+
+$Id: README,v 1.5 2003/08/06 07:59:01 deveiant Exp $
 
