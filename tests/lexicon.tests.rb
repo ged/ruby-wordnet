@@ -1,154 +1,167 @@
 #!/usr/bin/ruby
 
-#
-# This is a walkit test suite for the WordNet::Lexicon class.
-#
-
-$: << "../lib" if File.directory?( "../lib" )
-$: << "lib" if File.directory?( "lib" )
-
-require "runit/cui/testrunner"
-require "runit/testcase"
-
-require "WordNet"
+require "wntestcase"
 require "bdb"
 
-class LexiconTests < RUNIT::TestCase
-
-	indexDb	= BDB::Btree.open( "#{WordNet::DICTDIR}/lingua_wordnet.index", nil, BDB::CREATE, 0666 )
-	dataDb	= BDB::Btree.open( "#{WordNet::DICTDIR}/lingua_wordnet.data", nil, BDB::CREATE, 0666 )
-	morphDb	= BDB::Btree.open( "#{WordNet::DICTDIR}/lingua_wordnet.morph", nil, BDB::CREATE, 0666 )
+class LexiconTests < WordNet::TestCase
 
 	TestWords = {
-		'activity'	=> { 'pos' => WordNet::NOUN	},
-		'sword'		=> { 'pos' => WordNet::NOUN },
-		'density'	=> { 'pos' => WordNet::NOUN },
-		'burly'		=> { 'pos' => WordNet::ADJECTIVE },
-		'wispy'		=> { 'pos' => WordNet::ADJECTIVE },
-		'traditional' => { 'pos' => WordNet::ADJECTIVE },
-		'sit'		=> { 'pos' => WordNet::VERB },
-		'take'		=> { 'pos' => WordNet::VERB },
-		'joust'		=> { 'pos' => WordNet::VERB }
+		'activity'		=> WordNet::Noun,
+		'sword'			=> WordNet::Noun,
+		'density'		=> WordNet::Noun,
+		'burly'			=> WordNet::Adjective,
+		'wispy'			=> WordNet::Adjective,
+		'traditional'	=> WordNet::Adjective,
+		'sit'			=> WordNet::Verb,
+		'take'			=> WordNet::Verb,
+		'joust'			=> WordNet::Verb,
 	}
 
-	# Now fetch information about each word from the db
-	TestWords.each_pair {|word,val|
-		# familiarities
-		poly, offsets = indexDb[ "#{word}%#{val['pos']}" ].split(/\|\|/)
-		val['fam'] = poly.to_i
-		val['data'] = {}
-		offsets.split(/\|/).collect {|off| "#{off}%#{val['pos']}" }.each {|offset|
-			fileno, words, ptrs, frames, gloss = dataDb[offset].split(/\|\|/)
-			val['data'][offset] = {
-				'fileno'	=> fileno,
-				'words'		=> words,
-				'ptrs'		=> ptrs,
-				'frames'	=> frames,
-				'gloss'		=> gloss
-			}
-		}
-	}
 
-	#require "pp"
-	#pp TestWords
+	#################################################################
+	###	T E S T S
+	#################################################################
 
-	def setup
-		@lexicon = WordNet::Lexicon.new( "/usr/local/wordnet1.7/lingua-wordnet" )
-	end
-
-	def teardown
-		@lexicon = nil
-	end
-
-	# Make sure the constructor worked
+	### Class + constructor
 	def test_00_constructor
-		assert_instance_of WordNet::Lexicon, @lexicon
+		printTestHeader "Lexicon: Constructor"
+		rval = nil
+
+		assert_instance_of Module, WordNet
+		assert_instance_of Class, WordNet::Lexicon
+		assert_instance_of Class, WordNet::Synset
+
+		assert_nothing_raised {
+			# This can't be a per-test instance var because bdb segfaults for
+			# some reason if you destroy and re-create it for each test...
+			$lexicon ||= WordNet::Lexicon::new
+		}
+
+		assert_instance_of WordNet::Lexicon, $lexicon
 	end
 
-	# Test to be sure closing the lexicon works, and that it makes it inactive
-	def test_01_close
-		assert @lexicon.active?
-		assert_no_exception { @lexicon.close }
-		assert ! @lexicon.active?
-		assert_exception(WordNet::LexiconError) { @lexicon.familiarity("activity", WordNet::NOUN) }
-	end
+	### Database methods
+	def test_10_DbMethods
+		printTestHeader "Lexicon: Database methods"
+		rval = nil
 
-	# Test locking
-	def test_02_lock
-		assert @lexicon.locked?
-		assert_no_exception {@lexicon.unlock}
-		assert ! @lexicon.locked?
-		assert_no_exception {@lexicon.lock}
-		assert @lexicon.locked?
-	end
+		# DB handles
+		assert_nothing_raised { rval = $lexicon.env }
+		assert_instance_of BDB::Env, rval
 
-	# Test familiarity
-	def test_03_familiarity
-		result = nil
+		[ :indexDb, :morphDb, :dataDb ].each {|db|
+			assert_nothing_raised {
+				rval = $lexicon.send( db )
+			}
+			assert_instance_of BDB::Btree, rval
+		}
 
-		TestWords.each_pair {|word,attr|
-			fam = nil
-			assert_no_exception { fam = @lexicon.familiarity( word, attr['pos'] ) }
-			assert_equals attr['fam'], fam
+		# Checkpoint the DB
+		assert_nothing_raised {
+			$lexicon.checkpoint
+		}
+
+		# Fetch the list of archival logs
+		assert_nothing_raised {
+			rval = $lexicon.archlogs
+		}
+		assert_instance_of Array, rval
+
+		# Delete old logs
+		assert_nothing_raised {
+			$lexicon.cleanLogs
 		}
 	end
 
-	# Test morph
-	def test_04_morph
+
+	### Test familiarity
+	def test_20_Familiarity
+		printTestHeader "Lexicon: Familiarity"
 		res = nil
 
-		assert_no_exception { res = @lexicon.morph("angriest", WordNet::ADJECTIVE) }
+		TestWords.each {|word, pos|
+			assert_nothing_raised( "Familiarity for #{word}(#{pos})" ) {
+				res = $lexicon.familiarity( word, pos )
+			}
+			assert_instance_of Fixnum, res
+		}
+	end
+
+
+	### Test morphology
+	def test_25_Morph
+		printTestHeader "Lexicon: Morphology"
+		res = nil
+
+		assert_nothing_raised {
+			res = $lexicon.morph("angriest", WordNet::Adjective)
+		}
 		assert_equal "angry", res
 
-		assert_no_exception { res = @lexicon.morph("Passomoquoddy", WordNet::NOUN ) }
+		assert_nothing_raised {
+			res = $lexicon.morph("Passomoquoddy", WordNet::Noun )
+		}
 		assert_nil res
 	end
 
-	# Test reverse morph
-	def test_05_morph
+
+	### Test reverse morph
+	def test_30_ReverseMorph
+		printTestHeader "Lexicon: Reverse morphology"
 		res = nil
 
-		assert_no_exception { res = @lexicon.reverseMorph("angry") }
-		assert_matches res, /^angr/
+		assert_nothing_raised {
+			res = $lexicon.reverseMorph("angry")
+		}
+		assert_match( /^angr/, res )
 	end
 
-	# Test grep
-	def test_06_grep
+
+	### Test grep
+	def test_35_Grep
+		printTestHeader "Lexicon: Grep"
 		words = []
 
-		assert_no_exception { words = @lexicon.grep( "thing" ) }
+		assert_nothing_raised {
+			words = $lexicon.grep( "thing" )
+		}
 		words.each {|word|
-			assert_matches word, /^thing/
+			assert_match( /^thing/, word )
 		}
 	end
 
-	# Test synset lookup (which also tests synset-by-offset lookup)
-	def test_07_lookupSynsets
-		synsets = []
 
-		TestWords.each_pair {|word,attr|
-			assert_no_exception { synsets |= @lexicon.lookupSynsets(word, attr['pos']) }
+	### Test synset lookup (which also tests synset-by-offset lookup)
+	def test_40_LookupSynsets
+		printTestHeader "Lexicon: Lookup synsets"
+		rval = nil
 
-			attr['data'].each_pair {|offset,data|
-				assert_not_nil synsets.detect {|syn| syn.offset == offset}
+		TestWords.each {|word,pos|
+			assert_nothing_raised {
+				rval, rest = $lexicon.lookupSynsets( word, pos )
 			}
+
+			assert_instance_of WordNet::Synset, rval
+
+			# :TODO: Should test synsets for content, but I've yet to condense a
+			# test dataset for it from the WordNet sources.
 		}
 	end
 
-	# Test synset creation via factory method
-	def test_08_createSynset
+
+	### Test synset creation via factory method
+	def test_45_CreateSynset
+		printTestHeader "Lexicon: Create Synset via Factory Method"
 		synset = nil
 
-		assert_no_exception { synset = @lexicon.createSynset("Ruby", WordNet::NOUN) }
+		assert_nothing_raised {
+			synset = $lexicon.createSynset( "Ruby", WordNet::Noun )
+		}
 		assert_instance_of WordNet::Synset, synset
 	end
 
 
 	# :TODO: Test storeSynset()?
 
-end
-
-if $0 == __FILE__
-    RUNIT::CUI::TestRunner.run(LexiconTest.suite)
 end
 
