@@ -1,18 +1,21 @@
 # install.rb
 #
-# $Date: 2002/01/14 13:33:24 $
-# Copyright (c) 2000 Masatoshi SEKI
+# $Date: 2003/08/06 08:00:52 $
+# Copyright (c) 2000, 2003 Masatoshi SEKI
 #
 # install.rb is copyrighted free software by Masatoshi SEKI.
 # You can redistribute it and/or modify it under the same term as Ruby.
 
+$LOAD_PATH.unshift "."
+
 require 'rbconfig'
 require 'find'
 require 'ftools'
+require 'utils'
 
-include Config
+include Config, UtilityFunctions
 
-CheckDb = 'lingua_wordnet.data'
+CheckDb = 'lib/wordnet/lexicon'
 
 class Installer
 	protected
@@ -80,49 +83,6 @@ class Installer
 	end
 end
 
-def promptWithDefault( prompt, default )
-	print "#{prompt}: [#{default}] "
-	answer = ( $stdin.gets || '' ).chomp
-	answer = default if answer.empty?
-	return answer
-end
-
-def rewriteWordnetPath
-	path = promptWithDefault( "Path to your installation of Lingua::Wordnet databases",
-							  '/usr/local/wordnet1.7/lingua-wordnet' )
-	if ! File.exists?( path )
-		$stderr.puts "Hrmmm... '#{path}' doesn't seem to exist, \n" +
-			"but I'll assume you know what you're doing."
-	elsif ! File.directory?( path )
-		$stderr.puts "Hrmmm... '#{path}' doesn't seem to be a directory, \n" +
-			"but I'll assume you know what you're doing."
-	elsif ! File.exists?( "#{path}/#{CheckDb}" )
-		$stderr.puts "Hrmmm... I couldn't find the #{CheckDb} database under '#{path}', \n" +
-			"but I'll assume you know what you're doing."
-	else
-		puts "Lingua::Wordnet databases found. Everything looks good."
-	end
-
-	print "Rewriting lib/Wordnet.rb..."
-	newFile = "lib/WordNet.rb.#{Process.pid}"
-	File.open( "lib/WordNet.rb", File::RDONLY ) {|inputf|
-		File.open( newFile, File::WRONLY|File::TRUNC|File::CREAT ) {|outputf|
-			inputf.each {|line|
-				if /DICTDIR =/ =~ line
-					line.gsub!(/'[^']+'/, %{'#{path}'})
-				end
-				outputf.print line
-			}
-		}
-	}
-	File.delete( "lib/WordNet.rb" )
-	File.rename( newFile, "lib/WordNet.rb" )
-	puts "done."
-end
-
-if __FILE__ == $0
-	rewriteWordnetPath()
-	inst = Installer.new(ARGV.shift == '-n')
-	inst.install_rb
-end
+inst = Installer.new( ARGV.shift == '-n' )
+inst.install_rb
 
