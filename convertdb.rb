@@ -24,10 +24,14 @@
 # 
 # == Version
 #
-#  $Id: convertdb.rb,v 1.4 2003/08/06 07:59:44 deveiant Exp $
+#  $Id: convertdb.rb,v 1.5 2003/09/03 05:32:08 deveiant Exp $
 # 
 
-$LOAD_PATH.unshift ".", "lib"
+begin
+	base = File::dirname( File::expand_path(__FILE__) )
+	$LOAD_PATH.unshift "#{base}/lib" unless $LOAD_PATH.include?( "#{base}/lib" )
+	$LOAD_PATH.unshift base
+end
 
 require 'strscan'
 require 'utils'
@@ -120,9 +124,14 @@ def main
 		FileUtils::rm_rf( WordNet::Lexicon::DbFile )
 	end
 
-	# Query for the source data files
-	message "Where can I find the WordNet data files?\n"
-	datadir = promptWithDefault( "Data directory", "/usr/local/WordNet-2.0/dict" )
+	# Find the source data files
+	if ARGV.empty?
+		message "Where can I find the WordNet data files?\n"
+		datadir = promptWithDefault( "Data directory", "/usr/local/WordNet-2.0/dict" )
+	else
+		datadir = ARGV.shift
+	end
+
 	abort( "Directory '#{datadir}' does not exist" ) unless File::exists?( datadir )
 	abort( "'#{datadir}' is not a directory" ) unless File::directory?( datadir )
 	testfile = File::join(datadir, "data.noun")
@@ -229,10 +238,7 @@ def parseIndexLine( string, lineNumber, pos=nil )
 
 	# Make the index entry and return it
 	key = lemma + "%" + pos
-	data = [
-		polycnt,
-		synsets.join(WordNet::SubDelim),
-	].join( WordNet::Delim )
+	data = synsets.join(WordNet::SubDelim)
 
 	return key, data
 rescue => err
