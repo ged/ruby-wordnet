@@ -1,6 +1,6 @@
 
                      Ruby-WordNet Installation Instructions
-             $Id: INSTALL,v 1.3 2002/01/05 13:34:21 deveiant Exp $
+             $Id: INSTALL,v 1.4 2002/01/14 13:21:49 deveiant Exp $
 
 These instructions are decidedly Unix-biased. I apologize to those of you trying
 to run this on some other platform. Suggestions or patches for other-platform
@@ -24,6 +24,10 @@ your mileage may vary.
 * Lingua::Wordnet (for now)
   CPAN: http://search.cpan.org/search?dist=Lingua-Wordnet
 
+  You don't actually need to install the Perl module -- you just have to run the
+  'converdb.pl' program in the distribution's 'scripts' directory to build the
+  necessary databases.
+
 * bdb (>=0.2.5)
   RAA: http://www.ruby-lang.org/en/raa-list.rhtml?name=bdb
   Download: ftp://moulon.inra.fr/pub/ruby/
@@ -36,7 +40,7 @@ These instructions assume that you've already installed the prerequisite
 packages, unpacked the distribution somewhere, and have changed your working
 directory to the resultant subdirectory.
 
-To run unit tests (requires RUnit and walkit):
+To run unit tests (requires RubyUnit >= 0.5):
 
   $ ruby test.rb
 
@@ -48,11 +52,10 @@ To install:
 Documentation
 -------------
 
-If you have Rdoc installed, you can create HTML documentation thusly:
+If you have Rdoc (http://rdoc.sourceforge.net/) installed, you can create HTML
+documentation thusly:
 
  $ rdoc lib
 
 This will leave HTML documentation in 'doc'.
-
-
 
