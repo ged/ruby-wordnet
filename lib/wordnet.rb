@@ -1,7 +1,5 @@
-#!/usr/bin/ruby
-# = Name
 #
-# WordNet - A Ruby interface to the WordNet lexicon
+# WordNet - A Ruby interface to the WordNet lexical database
 #
 # = Synopsis
 # 
@@ -36,8 +34,9 @@
 # 
 # = Description
 #
-# This is a Ruby interface to the WordNet lexicon. It's mostly a port of Dan
-# Brian's Lingua::Wordnet Perl module, modified a bit to be more Ruby-ish.
+# This is a Ruby interface to the WordNet lexical database. It's mostly a port
+# of Dan Brian's Lingua::Wordnet Perl module, modified a bit to be more
+# Ruby-ish.
 #
 # = Author
 #
@@ -49,7 +48,7 @@
 #   This program is free software; you can redistribute it and/or modify
 #   it under the same terms as Perl itself.
 #
-# Port and miscellaneous mistakes by Michael Granger <ged@FaerieMUD.org>
+# Written by Michael Granger <ged@FaerieMUD.org>
 #
 # Copyright (c) 2002 The FaerieMUD Consortium. All rights reserved.
 #
@@ -59,7 +58,7 @@
 #
 # = Version
 #
-#  $Id: wordnet.rb,v 1.1 2002/01/04 21:52:22 deveiant Exp $
+#  $Id: wordnet.rb,v 1.2 2002/01/14 13:36:31 deveiant Exp $
 #
 
 ##
@@ -67,8 +66,8 @@
 module WordNet
 
 	### Globals
-	Version = /([\d\.]+)/.match( %q$Revision: 1.1 $ )[1]
-	Rcsid = %q$Id: wordnet.rb,v 1.1 2002/01/04 21:52:22 deveiant Exp $
+	Version = /([\d\.]+)/.match( %q$Revision: 1.2 $ )[1]
+	Rcsid = %q$Id: wordnet.rb,v 1.2 2002/01/14 13:36:31 deveiant Exp $
 
 	### Constants
 
@@ -107,7 +106,7 @@ module WordNet
 	PARTICIPLE	= '<'
 	PERTAINYM	= '\\'
 	ATTRIBUTE	= '='
-	DERIVEDFROM	= '\\' # Is this really supposed to be the same as with PERTAINYM?
+	DERIVEDFROM	= '\\' # Is this really supposed to be the same as PERTAINYM?
 	SEEALSO		= '^'
 	FUNCTION	= '+'
 
@@ -173,7 +172,7 @@ module WordNet
 		"verb.creation",        
 		"verb.emotion",     
 		"verb.motion",      
-		"verb.perception",      
+		"verb.perception",
 		"verb.possession",      
 		"verb.social",      
 		"verb.stative",     
@@ -225,4 +224,5 @@ end # module WordNet
 
 require "wn/Lexicon"
 require "wn/Synset"
-#require "wn/Analysis"
+
+
