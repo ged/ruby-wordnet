@@ -7,11 +7,13 @@
 $: << "../lib" if File.directory?( "../lib" )
 $: << "lib" if File.directory?( "lib" )
 
-require "walkit/cli_script"
+require "runit/cui/testrunner"
+require "runit/testcase"
+
 require "WordNet"
 require "bdb"
 
-class LexiconTests < Walkit::Testclass
+class LexiconTests < RUNIT::TestCase
 
 	indexDb	= BDB::Btree.open( "#{WordNet::DICTDIR}/lingua_wordnet.index", nil, BDB::CREATE, 0666 )
 	dataDb	= BDB::Btree.open( "#{WordNet::DICTDIR}/lingua_wordnet.data", nil, BDB::CREATE, 0666 )
@@ -60,24 +62,24 @@ class LexiconTests < Walkit::Testclass
 
 	# Make sure the constructor worked
 	def test_00_constructor
-		vet { assert_instance_of WordNet::Lexicon, @lexicon }
+		assert_instance_of WordNet::Lexicon, @lexicon
 	end
 
 	# Test to be sure closing the lexicon works, and that it makes it inactive
 	def test_01_close
-		vet { assert @lexicon.active? }
-		vet { assert_no_exception { @lexicon.close } }
-		vet { assert ! @lexicon.active? }
-		vet { assert_exception(WordNet::LexiconError) { @lexicon.familiarity("activity", WordNet::NOUN) } }
+		assert @lexicon.active?
+		assert_no_exception { @lexicon.close }
+		assert ! @lexicon.active?
+		assert_exception(WordNet::LexiconError) { @lexicon.familiarity("activity", WordNet::NOUN) }
 	end
 
 	# Test locking
 	def test_02_lock
-		vet { assert @lexicon.locked? }
-		vet { assert_no_exception {@lexicon.unlock} }
-		vet { assert ! @lexicon.locked? }
-		vet { assert_no_exception {@lexicon.lock} }
-		vet { assert @lexicon.locked? }
+		assert @lexicon.locked?
+		assert_no_exception {@lexicon.unlock}
+		assert ! @lexicon.locked?
+		assert_no_exception {@lexicon.lock}
+		assert @lexicon.locked?
 	end
 
 	# Test familiarity
@@ -85,11 +87,9 @@ class LexiconTests < Walkit::Testclass
 		result = nil
 
 		TestWords.each_pair {|word,attr|
-			vet {
-				fam = nil
-				assert_no_exception { fam = @lexicon.familiarity( word, attr['pos'] ) }
-				assert_equals attr['fam'], fam
-			}
+			fam = nil
+			assert_no_exception { fam = @lexicon.familiarity( word, attr['pos'] ) }
+			assert_equals attr['fam'], fam
 		}
 	end
 
@@ -97,36 +97,28 @@ class LexiconTests < Walkit::Testclass
 	def test_04_morph
 		res = nil
 
-		vet {
-			assert_no_exception { res = @lexicon.morph("angriest", WordNet::ADJECTIVE) }
-			assert_equal "angry", res
-		}
+		assert_no_exception { res = @lexicon.morph("angriest", WordNet::ADJECTIVE) }
+		assert_equal "angry", res
 
-		vet {
-			assert_no_exception { res = @lexicon.morph("Passomoquoddy", WordNet::NOUN ) }
-			assert_nil res
-		}
+		assert_no_exception { res = @lexicon.morph("Passomoquoddy", WordNet::NOUN ) }
+		assert_nil res
 	end
 
 	# Test reverse morph
 	def test_05_morph
 		res = nil
 
-		vet {
-			assert_no_exception { res = @lexicon.reverseMorph("angry") }
-			assert_matches res, /^angr/
-		}
+		assert_no_exception { res = @lexicon.reverseMorph("angry") }
+		assert_matches res, /^angr/
 	end
 
 	# Test grep
 	def test_06_grep
 		words = []
 
-		vet {
-			assert_no_exception { words = @lexicon.grep( "thing" ) }
-			words.each {|word|
-				assert_matches word, /^thing/
-			}
+		assert_no_exception { words = @lexicon.grep( "thing" ) }
+		words.each {|word|
+			assert_matches word, /^thing/
 		}
 	end
 
@@ -135,12 +127,10 @@ class LexiconTests < Walkit::Testclass
 		synsets = []
 
 		TestWords.each_pair {|word,attr|
-			vet {
-				assert_no_exception { synsets |= @lexicon.lookupSynsets(word, attr['pos']) }
+			assert_no_exception { synsets |= @lexicon.lookupSynsets(word, attr['pos']) }
 
-				attr['data'].each_pair {|offset,data|
-					assert_not_nil synsets.detect {|syn| syn.offset == offset}
-				}
+			attr['data'].each_pair {|offset,data|
+				assert_not_nil synsets.detect {|syn| syn.offset == offset}
 			}
 		}
 	end
@@ -149,10 +139,8 @@ class LexiconTests < Walkit::Testclass
 	def test_08_createSynset
 		synset = nil
 
-		vet {
-			assert_no_exception { synset = @lexicon.createSynset("Ruby", WordNet::NOUN) }
-			assert_instance_of WordNet::Synset, synset
-		}
+		assert_no_exception { synset = @lexicon.createSynset("Ruby", WordNet::NOUN) }
+		assert_instance_of WordNet::Synset, synset
 	end
 
 
@@ -161,6 +149,6 @@ class LexiconTests < Walkit::Testclass
 end
 
 if $0 == __FILE__
-    Walkit::Cli_script.new.select([LexiconTests], $*.shift)
+    RUNIT::CUI::TestRunner.run(LexiconTest.suite)
 end
 

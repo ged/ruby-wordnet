@@ -6,10 +6,12 @@
 $: << "../lib" if File.directory?( "../lib" )
 $: << "lib" if File.directory?( "lib" )
 
-require "walkit/cli_script"
+require "runit/cui/testrunner"
+require "runit/testcase"
+
 require "WordNet"
 
-class LinguaWordnetTests < Walkit::Testclass
+class LinguaWordnetTests < RUNIT::TestCase
 
 	def setup
 		@lexicon = WordNet::Lexicon.new
@@ -23,45 +25,30 @@ class LinguaWordnetTests < Walkit::Testclass
 		synset = nil
 		synset2 = nil
 
-		vet {
-			assert_no_exception { synset = @lexicon.lookupSynsetByOffset( "00333350%n" ) }
-			assert_instance_of WordNet::Synset, synset
+		assert_no_exception { synset = @lexicon.lookupSynsetByOffset( "00333350%n" ) }
+		assert_instance_of WordNet::Synset, synset
+
+		words = ''
+
+		synset.hyponyms.each {|bb_synset|
+			bb_synset.words += ["ballser"]
+			bb_synset.words.each {|word| words += "#{word}, "}
 		}
 
-		vet {
-			words = ''
+		assert_match words, /hardball/
 
-			synset.hyponyms.each {|bb_synset|
-				bb_synset.words += ["ballser"]
-				bb_synset.words.each {|word| words += "#{word}, "}
-			}
-
-			assert_match words, /hardball/
-		}
-
-		vet {
-			words = ''
-			synset2 = @lexicon.lookupSynsets( "travel", WordNet::VERB, 2 )[0]
-			synset2.words.each {|word| words += "#{word}, "}
+		words = ''
+		synset2 = @lexicon.lookupSynsets( "travel", WordNet::VERB, 2 )
+		synset2.words.each {|word| words += "#{word}, "}
 		
-			assert_match words, /journey/
-		}
-
-		vet {
-			assert_equal @lexicon.familiarity("boy", WordNet::NOUN), 4
-		}
-
-		vet {
-			assert_equal @lexicon.morph("bluest", WordNet::ADJECTIVE), "blue"
-		}
-
-		vet {
-			assert_match "#{synset}", /baseball/
-		}
+		assert_match words, /journey/
+		assert_equal @lexicon.familiarity("boy", WordNet::NOUN), 4
+		assert_equal @lexicon.morph("bluest", WordNet::ADJECTIVE), "blue"
+		assert_match "#{synset}", /baseball/
 	end
 end
 
 if $0 == __FILE__
-    Walkit::Cli_script.new.select([LinguaWordnetTests], $*.shift)
+    RUNIT::CUI::TestRunner.run(LinguaWordnetTests.suite)
 end
 
