@@ -1,0 +1,349 @@
+2003-09-03 14:24  Michael Granger <ged@FaerieMUD.org>
+
+	* TODO (1.3, RELEASE_0_02):
+
+	- Fixed list for RDoc.
+	
+2003-09-03 08:15  Michael Granger <ged@FaerieMUD.org>
+
+	* tests/synset.tests.rb (1.5, RELEASE_0_02):
+
+	- Fixed tests for relation pointer methods: verbgroups => verbGroups and delete
+	  'functions'.
+	
+2003-09-03 01:47  Michael Granger <ged@FaerieMUD.org>
+
+	* lib/wordnet/synset.rb (1.5, RELEASE_0_02):
+
+	- Corrected pointer-method docs.
+	
+2003-09-03 00:47  Michael Granger <ged@FaerieMUD.org>
+
+	* INSTALL (1.6, RELEASE_0_02):
+
+	- Updated requirements list.
+	
+2003-09-03 00:42  Michael Granger <ged@FaerieMUD.org>
+
+	* tests/: linguawordnet.tests.rb (1.4, RELEASE_0_02),
+	synset.tests.rb (1.4):
+
+	- Modified to reflect WordNet-2.0 changes and API changes.
+	
+	- Added some more tests.
+	
+2003-09-03 00:41  Michael Granger <ged@FaerieMUD.org>
+
+	* lib/wordnet/synset.rb (1.4):
+
+	- Added new class: WordNet::Synset::Pointer which is the generic type which
+	  contains a reference from one synset to another.
+	
+	- Refactored all pointer-specific code into Pointer.
+	
+	- Refactored some of the more complex methods into several submethods.
+	
+	- Removed all addFoo()/deleteFoo() methods to fit a more Ruby-ish '+=' and '-='
+	  idiom.
+	
+	- Documentation additions/fixes.
+	
+2003-09-03 00:37  Michael Granger <ged@FaerieMUD.org>
+
+	* lib/wordnet/lexicon.rb (1.4, RELEASE_0_02):
+
+	- [COMPAT] Simplified index entry-parsing by removing redundant count.
+	
+	-  New method: removeSynset() -- still experimental.
+	
+	- Changed internal terminology to more closely match WordNet's terms to reduce
+	  future maintainer confusion.
+	
+2003-09-03 00:29  Michael Granger <ged@FaerieMUD.org>
+
+	* lib/wordnet/constants.rb (1.2, RELEASE_0_02):
+
+	- Rewritten to group constants into Hashes by function, with maps into real
+	  constants for convenience.
+	
+2003-09-03 00:28  Michael Granger <ged@FaerieMUD.org>
+
+	* lib/wordnet/.cvsignore (1.1, RELEASE_0_02):
+
+	Initial checkin.
+	
+2003-09-03 00:27  Michael Granger <ged@FaerieMUD.org>
+
+	* lib/wordnet.rb (1.4, RELEASE_0_02):
+
+	- Updated synopsis to reflect changes to the API.
+	
+	- Added optional require of CrossCase module.
+	
+2003-09-02 23:34  Michael Granger <ged@FaerieMUD.org>
+
+	* examples/: holonymTree.rb (1.3), meronymTree.rb (1.3) (utags:
+	RELEASE_0_02):
+
+	- Modified to reflect changes in method names.
+	
+2003-09-02 23:33  Michael Granger <ged@FaerieMUD.org>
+
+	* examples/domainTree.rb (1.1), examples/memberTree.rb (1.1),
+	docs/.cvsignore (1.1) (utags: RELEASE_0_02):
+
+	Initial checkin.
+	
+2003-09-02 23:33  Michael Granger <ged@FaerieMUD.org>
+
+	* docs/makedocs.rb (1.2, RELEASE_0_02):
+
+	- Added --promiscuous and --show-hash options to RDoc invocation.
+	
+2003-09-02 23:32  Michael Granger <ged@FaerieMUD.org>
+
+	* install.rb (1.4, RELEASE_0_02):
+
+	- Fixed 1.8 String =~ String warning.
+	
+	- Added filter to installation file list.
+	
+2003-09-02 23:32  Michael Granger <ged@FaerieMUD.org>
+
+	* convertdb.rb (1.5, RELEASE_0_02):
+
+	- Fixed to work with a dictdir argument.
+	
+	- COMPAT: Modified to no longer store the redundant pointer count in the index.
+	
+2003-09-02 23:30  Michael Granger <ged@FaerieMUD.org>
+
+	* TODO (1.2):
+
+	- Updated for new release.
+	
+2003-08-06 02:08  Michael Granger <ged@FaerieMUD.org>
+
+	* lib/wordnet/synset.rb (1.3):
+
+	- Changed to reflect changes in the API.
+	
+2003-08-06 02:07  Michael Granger <ged@FaerieMUD.org>
+
+	* lib/wordnet/lexicon.rb (1.3):
+
+	- Modified to use BDB transactions.
+	
+	- Made changes to reflect change in constant names.
+	
+2003-08-06 02:04  Michael Granger <ged@FaerieMUD.org>
+
+	* lib/wordnet.rb (1.3):
+
+	- Moved constants into a separate module.
+	
+2003-08-06 02:03  Michael Granger <ged@FaerieMUD.org>
+
+	* examples/: clothesWithTongues.rb (1.2, RELEASE_0_02), distance.rb
+	(1.2, RELEASE_0_02), gcs.rb (1.2, RELEASE_0_02), holonymTree.rb
+	(1.2), hypernymTree.rb (1.2, RELEASE_0_02), hyponymTree.rb (1.2,
+	RELEASE_0_02), meronymTree.rb (1.2):
+
+	- Updated to use new API.
+	
+2003-08-06 02:01  Michael Granger <ged@FaerieMUD.org>
+
+	* test.rb (1.3, RELEASE_0_02), tests/lexicon.tests.rb (1.3,
+	RELEASE_0_02), tests/linguawordnet.tests.rb (1.3),
+	tests/synset.tests.rb (1.3):
+
+	- Converted to use Test::Unit.
+	
+2003-08-06 02:00  Michael Granger <ged@FaerieMUD.org>
+
+	* install.rb (1.3):
+
+	- Modified to reflect self-build of wordnet DBs.
+	
+2003-08-06 01:59  Michael Granger <ged@FaerieMUD.org>
+
+	* convertdb.rb (1.4):
+
+	- Changed to look for WordNet-2.0 dicts by default.
+	
+2003-08-06 01:59  Michael Granger <ged@FaerieMUD.org>
+
+	* TODO (1.1), makedist.rb (1.1, RELEASE_0_02), utils.rb (1.1,
+	RELEASE_0_02), docs/makedocs.rb (1.1),
+	examples/clothesWithCollars.rb (1.1, RELEASE_0_02),
+	lib/wordnet/constants.rb (1.1), tests/wntestcase.rb (1.1,
+	RELEASE_0_02):
+
+	Initial checkin.
+	
+2003-08-06 01:57  Michael Granger <ged@FaerieMUD.org>
+
+	* INSTALL (1.5), README (1.5, RELEASE_0_02):
+
+	- Updated for pending release.
+	
+2003-08-06 01:46  Michael Granger <ged@FaerieMUD.org>
+
+	* lib/WordNet.rb (1.3):
+
+	- Renamed to 'wordnet.rb' to follow Ruby module-naming convention.
+	
+2003-08-06 01:42  Michael Granger <ged@FaerieMUD.org>
+
+	* docs/CATALOG (1.1, RELEASE_0_02):
+
+	Initial checkin.
+	
+2003-06-17 22:51  Michael Granger <ged@FaerieMUD.org>
+
+	* convertdb.rb (1.3):
+
+	- Fixed stupid bug caused by using the append operator (<<) instead of
+	  catenation (+) to build the keys and values of the parsing methods.
+	
+	- Fixed several bugs of verying degrees of stupidity in the gloss-parsing code.
+	
+2003-06-17 12:11  Michael Granger <ged@FaerieMUD.org>
+
+	* convertdb.rb (1.2):
+
+	- Added async transactions to speed database functions.
+	
+2003-06-17 09:01  Michael Granger <ged@FaerieMUD.org>
+
+	* convertdb.rb (1.1):
+
+	Initial checkin.
+	
+2002-01-14 06:44  Michael Granger <ged@FaerieMUD.org>
+
+	* tests/: lexicon.tests.rb (1.2), linguawordnet.tests.rb (1.2),
+	synset.tests.rb (1.2) (utags: RELEASE_0_01):
+
+	- Converted to RubyUnit
+	
+2002-01-14 06:44  Michael Granger <ged@FaerieMUD.org>
+
+	* lib/wordnet/synset.rb (1.2, RELEASE_0_01):
+
+	- Small header/comment corrections
+	
+	- Made raw pointer methods 'protected' instead of 'public'
+	
+	- Added underbar-style method name aliases
+	
+	- Added traversal iterator and a bunch of derived analysis methods.
+	
+2002-01-14 06:41  Michael Granger <ged@FaerieMUD.org>
+
+	* lib/wordnet/lexicon.rb (1.2, RELEASE_0_01):
+
+	- Small header/comment corrections
+	
+	- Added optional block form to #unlock
+	
+	- Changed all instances of 'pos' to 'partOfSpeech' for clarity
+	
+	- Fixed misnamed-database bug in #write
+	
+2002-01-14 06:36  Michael Granger <ged@FaerieMUD.org>
+
+	* lib/: WordNet.rb (1.2), wordnet.rb (1.2) (utags: RELEASE_0_01):
+
+	- Small header/comment corrections
+	
+2002-01-14 06:34  Michael Granger <ged@FaerieMUD.org>
+
+	* test.rb (1.2, RELEASE_0_01):
+
+	- Converted to a RubyUnit test, and walkit is no longer maintained or available.
+	
+2002-01-14 06:33  Michael Granger <ged@FaerieMUD.org>
+
+	* install.rb (1.2, RELEASE_0_01):
+
+	- Added code to rewrite the DICTDIR in lib/WordNet.rb
+	
+2002-01-14 06:31  Michael Granger <ged@FaerieMUD.org>
+
+	* examples/addLacedBoots.rb (1.2, RELEASE_0_02, RELEASE_0_01):
+
+	- Added abort code until writing is tested.
+	
+2002-01-14 06:30  Michael Granger <ged@FaerieMUD.org>
+
+	* examples/: addLacedBoots.rb (1.1), clothesWithTongues.rb (1.1,
+	RELEASE_0_01), distance.rb (1.1, RELEASE_0_01), gcs.rb (1.1,
+	RELEASE_0_01), holonymTree.rb (1.1, RELEASE_0_01), hypernymTree.rb
+	(1.1, RELEASE_0_01), hyponymTree.rb (1.1, RELEASE_0_01),
+	meronymTree.rb (1.1, RELEASE_0_01):
+
+	Initial import
+	
+2002-01-14 06:22  Michael Granger <ged@FaerieMUD.org>
+
+	* README (1.4, RELEASE_0_01):
+
+	- Added write-access methods warning.
+	
+2002-01-14 06:21  Michael Granger <ged@FaerieMUD.org>
+
+	* INSTALL (1.4, RELEASE_0_01):
+
+	- Fixed up instructions.
+	
+2002-01-06 23:03  Michael Granger <ged@FaerieMUD.org>
+
+	* README (1.3):
+
+	- Modified the statement about Lingua::Wordnet to make it clear that it does
+	  deviate from the module a bit more than a straight port.
+	
+2002-01-05 06:34  Michael Granger <ged@FaerieMUD.org>
+
+	* INSTALL (1.3):
+
+	- Fixed confusing first sentence.
+	
+2002-01-05 06:33  Michael Granger <ged@FaerieMUD.org>
+
+	* INSTALL (1.2):
+
+	- Cleaned up, untabified.
+	
+2002-01-05 06:29  Michael Granger <ged@FaerieMUD.org>
+
+	* INSTALL (1.1):
+
+	Initial release.
+	
+2002-01-05 05:32  Michael Granger <ged@FaerieMUD.org>
+
+	* README (1.2):
+
+	- Cleaned up and finished. Untabified.
+	
+2002-01-04 14:52  Michael Granger <ged@FaerieMUD.org>
+
+	* README (1.1), install.rb (1.1), test.rb (1.1), lib/WordNet.rb
+	(1.1), lib/wordnet.rb (1.1), lib/wordnet/lexicon.rb (1.1),
+	lib/wordnet/synset.rb (1.1), tests/lexicon.tests.rb (1.1),
+	tests/linguawordnet.tests.rb (1.1), tests/synset.tests.rb (1.1):
+
+	Initial revision
+	
+2002-01-04 14:52  Michael Granger <ged@FaerieMUD.org>
+
+	* README (1.1.1.1), install.rb (1.1.1.1), test.rb (1.1.1.1),
+	lib/WordNet.rb (1.1.1.1), lib/wordnet.rb (1.1.1.1),
+	lib/wordnet/lexicon.rb (1.1.1.1), lib/wordnet/synset.rb (1.1.1.1),
+	tests/lexicon.tests.rb (1.1.1.1), tests/linguawordnet.tests.rb
+	(1.1.1.1), tests/synset.tests.rb (1.1.1.1) (utags: ALPHA_1_1):
+
+	Initial import
+	
