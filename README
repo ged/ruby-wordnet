@@ -2,7 +2,7 @@
 
                                   Ruby-WordNet
                                   ------------
-              $Id: README,v 1.3 2002/01/07 06:03:06 deveiant Exp $
+              $Id: README,v 1.4 2002/01/14 13:22:34 deveiant Exp $
 
 Authors
 -------
@@ -43,6 +43,12 @@ security, write random data to sensitive portions of your hard drive, or
 otherwise fail to work as advertised. It is intended to be used by developers
 who are interested in helping out or curious onlookers who don't mind getting
 a bit wet.
+
+The database-writing portions of this code have not been extensively tested, and
+there are almost certainly bugs which will cause data to be lost or
+miswritten. You should keep the Lexicon locked unless you don't mind your
+databases becoming corrupted. I'm in the process of writing the unit tests for
+the writing functionality, and I should have it working by the next release.
 
 That said, I would greatly appreciate feedback on any aspect of this
 software. Suggestions, feature requests, questions, design critiques, and bug
