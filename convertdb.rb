@@ -24,7 +24,7 @@
 # 
 # == Version
 #
-#  $Id: convertdb.rb,v 1.2 2003/06/17 18:11:21 deveiant Exp $
+#  $Id: convertdb.rb,v 1.3 2003/06/18 04:51:47 deveiant Exp $
 # 
 
 $LOAD_PATH.unshift ".", "lib"
@@ -224,11 +224,11 @@ def parseIndexLine( string, lineNumber, pos=nil )
 		$scanner.scan( SynsetId ) or raise "couldn't parse synset #{i}"
 		synset = $scanner[1]
 		synsets.push( synset )
-		$senseIndex[ synset << "%" << pos << "%" << lemma ] = i.to_s
+		$senseIndex[ synset + "%" + pos + "%" + lemma ] = i.to_s
 	end
 
 	# Make the index entry and return it
-	key = lemma << "%" << pos
+	key = lemma + "%" + pos
 	data = [
 		polycnt,
 		synsets.join(WordNet::SubDelim),
@@ -269,7 +269,7 @@ SynPtrCnt	= /(\d{3})\s/
 SynPtr		= /(\S{1,2})\s(\d+)\s(\w)\s(\w{4})\s/
 SynFrameCnt	= /\s*(\d{2})\s/
 SynFrame	= /\+\s(\d{2})\s(\w{2})\s/
-SynGloss	= /\s*(.+)?/
+SynGloss	= /\s*\|\s*(.+)?/
 
 ### Parse an entry from a data file and return the key and data. Returns +nil+
 ### if any part of the entry isn't able to be parsed.
@@ -331,10 +331,13 @@ def parseSynsetLine( string, lineNumber, pos )
 	end
 
 	# Find the gloss
-	gloss = $scanner.scan( SynGloss )
+	if $scanner.scan( SynGloss )
+		gloss = $scanner[1].strip
+	end
+
+	# This should never happen, as the gloss matches pretty much anything to
+	# the end of line.
 	if !$scanner.empty?
-		# This should never happen, as the gloss matches pretty much
-		# anything to EOL.
 		raise "Trailing miscellaneous found at end of entry"
 	end
 
