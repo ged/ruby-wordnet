@@ -1,6 +1,6 @@
-# install.rb
+#!/usr/bin/ruby
 #
-# $Date: 2003/08/06 08:00:52 $
+# $Date: 2003/09/03 05:32:47 $
 # Copyright (c) 2000, 2003 Masatoshi SEKI
 #
 # install.rb is copyrighted free software by Masatoshi SEKI.
@@ -46,7 +46,7 @@ class Installer
 		site_libdir = $:.find {|x| x =~ /site_ruby$/}
 		if !site_libdir
 			site_libdir = File.join(@libdir, "site_ruby")
-		elsif site_libdir !~ Regexp.quote(@version)
+		elsif site_libdir !~ Regexp::new( Regexp.quote(@version) )
 			site_libdir = File.join(site_libdir, @version)
 		end
 		site_libdir
@@ -79,7 +79,12 @@ class Installer
 
 	public
 	def install_rb
-		install_files('lib', files_in_dir('lib'))
+		flist = files_in_dir('lib').reject {|fname|
+			/CVS/ =~ fname or
+			/~$/ =~ fname or
+			/^#/ =~ fname
+		}
+		install_files('lib', flist)
 	end
 end
 
