@@ -29,7 +29,7 @@
 # 
 # == Version
 #
-#  $Id: synset.rb,v 1.4 2003/09/03 06:41:39 deveiant Exp $
+#  $Id: synset.rb,v 1.5 2003/09/03 07:47:29 deveiant Exp $
 # 
 
 require 'sync'
@@ -48,10 +48,10 @@ module WordNet
 		include CrossCase if defined?( CrossCase )
 
 		# CVS version tag
-		Version = /([\d\.]+)/.match( %q{$Revision: 1.4 $} )[1]
+		Version = /([\d\.]+)/.match( %q{$Revision: 1.5 $} )[1]
 
 		# CVS id tag
-		Rcsid = %q$Id: synset.rb,v 1.4 2003/09/03 06:41:39 deveiant Exp $
+		Rcsid = %q$Id: synset.rb,v 1.5 2003/09/03 07:47:29 deveiant Exp $
 
 		# The "pointer" type that encapsulates relationships between one synset
 		# and another.
@@ -457,68 +457,70 @@ module WordNet
 
 		### Auto-generate synset pointer methods for the various types
 
-		# :def: antonyms() - Returns synsets for the receiver's antonyms.
+		# :def: antonyms() - Returns synsets for the receiver's antonyms (opposites).
 		# :def: antonyms=( *synsets ) - Set the receiver's antonyms to the given
 		# +synsets+.
 		def_pointer_methods :antonyms,		:antonym
 
-		# :def: antonyms() - Returns synsets for the receiver's antonyms.
-		# :def: antonyms=( *synsets ) - Set the receiver's antonyms to the given
+		# :def: hypernyms() - Returns synsets for the receiver's hypernyms
+		# (more-general term).
+		# :def: hypernyms=( *synsets ) - Set the receiver's hypernyms to the given
 		# +synsets+.
 		def_pointer_methods :hypernyms,		:hypernym
 
-		# :def: antonyms() - Returns synsets for the receiver's antonyms.
-		# :def: antonyms=( *synsets ) - Set the receiver's antonyms to the given
+		# :def: entailment() - Returns synsets for the receiver's entailments.
+		# :def: entailment=( *synsets ) - Set the receiver's entailment to the given
 		# +synsets+.
 		def_pointer_methods :entailment,	:entailment
 
-		# :def: antonyms() - Returns synsets for the receiver's antonyms.
-		# :def: antonyms=( *synsets ) - Set the receiver's antonyms to the given
+		# :def: hyponyms() - Returns synsets for the receiver's hyponyms
+		# (more-specific terms).
+		# :def: hyponyms=( *synsets ) - Set the receiver's hyponyms to the given
 		# +synsets+.
 		def_pointer_methods :hyponyms,		:hyponym
 
-		# :def: antonyms() - Returns synsets for the receiver's antonyms.
-		# :def: antonyms=( *synsets ) - Set the receiver's antonyms to the given
+		# :def: causes() - Returns synsets for the receiver's causes.
+		# :def: causes=( *synsets ) - Set the receiver's causes to the given
 		# +synsets+.
 		def_pointer_methods :causes,		:cause
 
-		# :def: antonyms() - Returns synsets for the receiver's antonyms.
-		# :def: antonyms=( *synsets ) - Set the receiver's antonyms to the given
+		# :def: verbgroups() - Returns synsets for the receiver's verbgroups.
+		# :def: verbgroups=( *synsets ) - Set the receiver's verbgroups to the given
 		# +synsets+.
 		def_pointer_methods :verbgroups,	:verbGroup
 
-		# :def: antonyms() - Returns synsets for the receiver's antonyms.
-		# :def: antonyms=( *synsets ) - Set the receiver's antonyms to the given
-		# +synsets+.
+		# :def: similarTo() - Returns list of synsets similar to the the receiver.
+		# :def: similarTo=( *synsets ) - Set the synsets similarTo to the
+		# receiver to the given +synsets+.
 		def_pointer_methods :similarTo,		:similarTo
 
-		# :def: antonyms() - Returns synsets for the receiver's antonyms.
-		# :def: antonyms=( *synsets ) - Set the receiver's antonyms to the given
-		# +synsets+.
+		# :def: participles() - Returns synsets for the receiver's participles.
+		# :def: participles=( *synsets ) - Set the receiver's participles to the
+		# given +synsets+.
 		def_pointer_methods :participles,	:participle
 
-		# :def: antonyms() - Returns synsets for the receiver's antonyms.
-		# :def: antonyms=( *synsets ) - Set the receiver's antonyms to the given
+		# :def: pertainyms() - Returns synsets for the receiver's pertainyms.
+		# :def: pertainyms=( *synsets ) - Set the receiver's pertainyms to the given
 		# +synsets+.
 		def_pointer_methods :pertainyms,	:pertainym
 
-		# :def: antonyms() - Returns synsets for the receiver's antonyms.
-		# :def: antonyms=( *synsets ) - Set the receiver's antonyms to the given
+		# :def: attributes() - Returns synsets for the receiver's attributes.
+		# :def: attributes=( *synsets ) - Set the receiver's attributes to the given
 		# +synsets+.
 		def_pointer_methods :attributes,	:attribute
 
-		# :def: antonyms() - Returns synsets for the receiver's antonyms.
-		# :def: antonyms=( *synsets ) - Set the receiver's antonyms to the given
+		# :def: derivedFrom() - Returns synsets for the receiver's derivedFrom.
+		# :def: derivedFrom=( *synsets ) - Set the receiver's derivedFrom to the given
 		# +synsets+.
 		def_pointer_methods :derivedFrom,	:derivedFrom
 
-		# :def: antonyms() - Returns synsets for the receiver's antonyms.
-		# :def: antonyms=( *synsets ) - Set the receiver's antonyms to the given
+		# :def: seeAlso() - Returns synsets for the receiver's seeAlso.
+		# :def: seeAlso=( *synsets ) - Set the receiver's seeAlso to the given
 		# +synsets+.
 		def_pointer_methods :seeAlso,		:seeAlso
 
-		# :def: antonyms() - Returns synsets for the receiver's antonyms.
-		# :def: antonyms=( *synsets ) - Set the receiver's antonyms to the given
+		# :def: functions() - Returns synsets for the receiver's functions.
+		# :def: functions=( *synsets ) - Set the receiver's functions to the given
 		# +synsets+.
 		def_pointer_methods :functions,		:function
 
