@@ -26,7 +26,7 @@
 # 
 # == Version
 #
-# $Id: lexicon.rb,v 1.4 2003/09/03 06:37:29 deveiant Exp $
+# $Id$
 # 
 
 require 'bdb'
@@ -54,7 +54,7 @@ module WordNet
 
 		# Class constants
 		Version = /([\d\.]+)/.match( %q{$Revision: 1.4 $} )[1]
-		Rcsid = %q$Id: lexicon.rb,v 1.4 2003/09/03 06:37:29 deveiant Exp $
+		Rcsid = %q$Id$
 
 		#############################################################
 		###	B E R K E L E Y D B   C O N F I G U R A T I O N

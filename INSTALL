@@ -1,6 +1,6 @@
 
                      Ruby-WordNet Installation Instructions
-             $Id: INSTALL,v 1.6 2003/09/03 06:47:19 deveiant Exp $
+             $Id$
 
 These instructions are decidedly Unix-biased. I apologize to those of you trying
 to run this on some other platform. Suggestions or patches for other-platform

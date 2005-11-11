@@ -33,7 +33,7 @@
 # 
 # == Rcsid
 # 
-# $Id: wntestcase.rb,v 1.1 2003/08/06 08:05:39 deveiant Exp $
+# $Id$
 # 
 # == Authors
 # 
