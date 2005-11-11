@@ -16,7 +16,7 @@
 # 
 # == Copyright
 #
-# Copyright (c) 2003 The FaerieMUD Consortium. All rights reserved.
+# Copyright (c) 2003, 2005 The FaerieMUD Consortium. All rights reserved.
 # 
 # This module is free software. You may use, modify, and/or redistribute this
 # software under the terms of the Perl Artistic License. (See
@@ -24,7 +24,7 @@
 # 
 # == Version
 #
-#  $Id: convertdb.rb,v 1.5 2003/09/03 05:32:08 deveiant Exp $
+#  $Id$
 # 
 
 begin
@@ -180,7 +180,8 @@ def main
 				print "%d%s" % [ entries, "\x08" * entries.to_s.length ]
 
 				# Commit and start a new transaction every 1000 records
-				if (entries % CommitThreshold).nonzero?
+				if (entries % CommitThreshold).zero?
+					print "."
 					txn.commit( BDB::TXN_NOSYNC )
 					txn, dbh = lexicon.env.txn_begin( 0, set.db )
 				end
