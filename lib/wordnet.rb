@@ -49,7 +49,7 @@
 #
 # Written by Michael Granger <ged@FaerieMUD.org>
 #
-# Copyright (c) 2002,2003 The FaerieMUD Consortium. All rights reserved.
+# Copyright (c) 2002,2003,2005 The FaerieMUD Consortium. All rights reserved.
 #
 # This module is free software. You may use, modify, and/or redistribute this
 # software under the terms of the Perl Artistic License. (See
@@ -57,7 +57,7 @@
 #
 # == Version
 #
-#  $Id: wordnet.rb,v 1.4 2003/09/03 06:27:51 deveiant Exp $
+#  $Id$
 #
 
 # Try to provide underbarred alternatives for camelCased methods. Requires the
@@ -70,11 +70,11 @@ end
 ### The main namespace for WordNet classes
 module WordNet
 
-	# CVS version tag
-	Version = /([\d\.]+)/.match( %q{$Revision: 1.4 $} )[1]
+	# Revision tag
+	SvnRev = %q$Rev$
 
-	# CVS id tag
-	Rcsid = %q$Id: wordnet.rb,v 1.4 2003/09/03 06:27:51 deveiant Exp $
+	# Id tag
+	SvnId = %q$Id$
 
 end # module WordNet
 

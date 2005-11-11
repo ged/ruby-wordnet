@@ -37,7 +37,7 @@
 # 
 # == Version
 #
-#  $Id: constants.rb,v 1.2 2003/09/03 06:29:17 deveiant Exp $
+#  $Id$
 # 
 
 
