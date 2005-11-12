@@ -1,9 +1,15 @@
 #
-# Title:  Ruby-WordNet
+# Title:  Ruby-WordNet API
 # Main:   README
-# Upload: ssh://oberon/www/devEiate.org/public/code/Ruby-WordNet/
-# Webcvs: http://www.deveiate.org/cgi/viewcvs.cgi/Ruby-WordNet/
+# Upload: ssh://yhaliwell/usr/local/www/servers/devEiate.org/public/code/Ruby-WordNet/
+# Webcvs: http://devEiate.org/projects/Ruby-WordNet/browse/trunk/
 #
-lib/**/*.rb
+# Accessors:
+#		  def_pointer_methods=pointer
+#
+lib/wordnet.rb
+lib/wordnet/synset.rb
+lib/wordnet/lexicon.rb
+lib/wordnet/constants.rb
 README
 TODO
