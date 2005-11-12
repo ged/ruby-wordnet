@@ -18,7 +18,7 @@
 #
 # Michael Granger <ged@FaerieMUD.org>
 # 
-# Copyright (c) 2002, 2003 The FaerieMUD Consortium. All rights reserved.
+# Copyright (c) 2002, 2003, 2005 The FaerieMUD Consortium. All rights reserved.
 # 
 # This module is free software. You may use, modify, and/or redistribute this
 # software under the terms of the Perl Artistic License. (See
@@ -29,7 +29,7 @@
 # 
 # == Version
 #
-#  $Id: synset.rb,v 1.5 2003/09/03 07:47:29 deveiant Exp $
+#  $Id$
 # 
 
 require 'sync'
@@ -51,7 +51,7 @@ module WordNet
 		Version = /([\d\.]+)/.match( %q{$Revision: 1.5 $} )[1]
 
 		# CVS id tag
-		Rcsid = %q$Id: synset.rb,v 1.5 2003/09/03 07:47:29 deveiant Exp $
+		Rcsid = %q$Id$
 
 		# The "pointer" type that encapsulates relationships between one synset
 		# and another.
@@ -221,19 +221,27 @@ module WordNet
 		#############################################################
 
 		### Define a group of pointer methods based on +symbol+ that will fetch,
-		### add, and delete pointer synsets of the type indicated by +type+. If
-		### the given +type+ has subtypes (according to
-		### WordNet::PointerSubTypes), accessors/mutators for the subtypes will
-		### be generated as well.
-		def self::def_pointer_methods( symbol, type ) # :nodoc:
+		### add, and delete pointer synsets of the type indicated. If no pointer
+		### type corresponding to the given +symbol+ is found, a variant without
+		### a trailing 's' is tried (e.g., 'def_pointer_methods :antonyms' will
+		### create methods called #antonyms and #antonyms=, but will fetch
+		### pointers of type :antonym). If the pointer type has subtypes
+		### (according to WordNet::PointerSubTypes), accessors/mutators for the
+		### subtypes will be generated as well.
+		def self::def_pointer_methods( symbol ) # :nodoc:
 			name = symbol.id2name
 			casename = name.dup
 			casename[ 0,1 ] = casename[ 0,1 ].upcase
+			type = if PointerTypes.key?( symbol )
+					   symbol
+				   elsif PointerTypes.key?( symbol.to_s.sub(/s$/, '').intern )
+					   type = symbol.to_s.sub(/s$/, '').intern
+				   else
+					   raise ArgumentError, "Unknown pointer type %p" % symbol
+				   end
 
 			# Define the accessor
-			define_method( name.intern ) {
-				self.fetchSynsetPointers( type )
-			}
+			define_method( name.intern ) { self.fetchSynsetPointers(type) }
 
 			# If the pointer is one that has subtypes, make the variants list
 			# out of the subtypes. If it doesn't have subtypes, make the only
@@ -247,15 +255,15 @@ module WordNet
 
 			# Define a set of methods for each variant, or for the main method
 			# if the variant is nil.
-			variants.each {|var|
-				varname = var ? var.to_s + casename : name
-				varcname = var ? var.to_s.capitalize + casename : casename
+			variants.each {|subtype|
+				varname = subtype ? subtype.to_s + casename : name
+				varcname = subtype ? subtype.to_s.capitalize + casename : casename
 
 				define_method( varname ) {
-					self.fetchSynsetPointers( type, var )
-				} unless var.nil?
+					self.fetchSynsetPointers( type, subtype )
+				} unless subtype.nil?
 				define_method( "#{varname}=" ) {|*synsets|
-					self.setSynsetPointers( type, synsets, var )
+					self.setSynsetPointers( type, synsets, subtype )
 				}
 			}
 		end
@@ -298,8 +306,8 @@ module WordNet
 		# The WordNet::Lexicon that was used to look up this synset
 		attr_reader :lexicon
 
-		# The syntactic category of this Synset. Will be one of the keys of
-		# WordNet::SyntacticCategories.
+		# The syntactic category of this Synset. Will be one of "n" (noun), "v"
+		# (verb), "a" (adjective), "r" (adverb), or "s" (other).
 		attr_accessor :partOfSpeech
 
 		# The original byte offset of the synset in the data file; acts as the
@@ -308,13 +316,19 @@ module WordNet
 		attr_accessor :offset
 
 		# The number corresponding to the lexicographer file name containing the
-		# synset. Calling #lexInfo will return the actual filename.
+		# synset. Calling #lexInfo will return the actual filename. See the
+		# "System Description" of wngloss(7WN) for more info about this.
 		attr_accessor :filenum
 
-		# The raw list of word/lex_id pairs associated with this synset
+		# The raw list of word/lex_id pairs associated with this synset. Each
+		# word and lex_id is separated by a '%' character, and each pair is
+		# delimited with a '|'. E.g., the wordlist for "animal" is:
+		#   "animal%0|animate_being%0|beast%0|brute%1|creature%0|fauna%1"
 		attr_accessor :wordlist
 
-		# The list of raw pointers to related synsets
+		# The list of raw pointers to related synsets. E.g., the pointerlist for
+		# "mourning dove" is:
+		#   "@ 01731700%n 0000|#m 01733452%n 0000"
 		attr_accessor :pointerlist
 
 		# The list of raw verb sentence frames for this synset.
@@ -349,14 +363,16 @@ module WordNet
 		end
 
 
-		### The symbol which represents this synset's syntactic category
+		### The symbol which represents this synset's syntactic category. Will
+		### be one of :noun, :verb, :adjective, :adverb, or :other.
 		def pos
 			return SyntacticCategories[ @partOfSpeech ]
 		end
 
 
 		### Return each of the sentences of the gloss for this synset as an
-		### array.
+		### array. The gloss is a definition of the synset, and optionally one
+		### or more example sentences.
 		def glosses
 			return self.gloss.split( /\s*;\s*/ )
 		end
@@ -457,168 +473,134 @@ module WordNet
 
 		### Auto-generate synset pointer methods for the various types
 
-		# :def: antonyms() - Returns synsets for the receiver's antonyms (opposites).
-		# :def: antonyms=( *synsets ) - Set the receiver's antonyms to the given
-		# +synsets+.
-		def_pointer_methods :antonyms,		:antonym
+		# Get/set the synsets for the receiver's antonyms (opposites).
+		def_pointer_methods :antonyms
 
-		# :def: hypernyms() - Returns synsets for the receiver's hypernyms
-		# (more-general term).
-		# :def: hypernyms=( *synsets ) - Set the receiver's hypernyms to the given
-		# +synsets+.
-		def_pointer_methods :hypernyms,		:hypernym
+		# Returns synsets for the receiver's hypernyms
+		# (more-general terms).
+		def_pointer_methods :hypernyms
 
-		# :def: entailment() - Returns synsets for the receiver's entailments.
-		# :def: entailment=( *synsets ) - Set the receiver's entailment to the given
-		# +synsets+.
-		def_pointer_methods :entailment,	:entailment
+		# Get/set synsets for the receiver's entailments (a verb X entails Y if
+		# X cannot be done unless Y is, or has been, done).
+		def_pointer_methods :entailment
 
-		# :def: hyponyms() - Returns synsets for the receiver's hyponyms
-		# (more-specific terms).
-		# :def: hyponyms=( *synsets ) - Set the receiver's hyponyms to the given
-		# +synsets+.
-		def_pointer_methods :hyponyms,		:hyponym
+		# Get/set synsets for the receiver's hyponyms (more-specific terms).
+		def_pointer_methods :hyponyms
 
-		# :def: causes() - Returns synsets for the receiver's causes.
-		# :def: causes=( *synsets ) - Set the receiver's causes to the given
-		# +synsets+.
-		def_pointer_methods :causes,		:cause
+		# Get/set synsets for the receiver's cause pointers (a verb X causes Y
+		# to happen).
+		def_pointer_methods :causes
 
-		# :def: verbgroups() - Returns synsets for the receiver's verbgroups.
-		# :def: verbgroups=( *synsets ) - Set the receiver's verbgroups to the given
-		# +synsets+.
-		def_pointer_methods :verbgroups,	:verbGroup
+		# Get/set synsets for the receiver's verb groups. Verb groups link verbs
+		# with similar senses together.
+		def_pointer_methods :verbGroups
 
-		# :def: similarTo() - Returns list of synsets similar to the the receiver.
-		# :def: similarTo=( *synsets ) - Set the synsets similarTo to the
-		# receiver to the given +synsets+.
-		def_pointer_methods :similarTo,		:similarTo
+		# Get/set list of synsets for the receiver's "similar to" pointers. This
+		# type of pointer links together head adjective synsets with its
+		# satellite adjective synsets.
+		def_pointer_methods :similarTo
 
-		# :def: participles() - Returns synsets for the receiver's participles.
-		# :def: participles=( *synsets ) - Set the receiver's participles to the
-		# given +synsets+.
-		def_pointer_methods :participles,	:participle
+		# Get/set synsets for the receiver's participles.
+		def_pointer_methods :participles
 
-		# :def: pertainyms() - Returns synsets for the receiver's pertainyms.
-		# :def: pertainyms=( *synsets ) - Set the receiver's pertainyms to the given
-		# +synsets+.
-		def_pointer_methods :pertainyms,	:pertainym
+		# Get/set synsets for the receiver's pertainyms.
+		def_pointer_methods :pertainyms
 
-		# :def: attributes() - Returns synsets for the receiver's attributes.
-		# :def: attributes=( *synsets ) - Set the receiver's attributes to the given
-		# +synsets+.
-		def_pointer_methods :attributes,	:attribute
+		# Get/set synsets for the receiver's attributes.
+		def_pointer_methods :attributes
 
-		# :def: derivedFrom() - Returns synsets for the receiver's derivedFrom.
-		# :def: derivedFrom=( *synsets ) - Set the receiver's derivedFrom to the given
-		# +synsets+.
-		def_pointer_methods :derivedFrom,	:derivedFrom
+		# Get/set synsets for the receiver's derivedFrom.
+		def_pointer_methods :derivedFrom
 
-		# :def: seeAlso() - Returns synsets for the receiver's seeAlso.
-		# :def: seeAlso=( *synsets ) - Set the receiver's seeAlso to the given
-		# +synsets+.
-		def_pointer_methods :seeAlso,		:seeAlso
+		# Get/set synsets for the receiver's seeAlso.
+		def_pointer_methods :seeAlso
 
-		# :def: functions() - Returns synsets for the receiver's functions.
-		# :def: functions=( *synsets ) - Set the receiver's functions to the given
-		# +synsets+.
-		def_pointer_methods :functions,		:function
 
 		# Auto-generate types with subtypes
 
+		# Get/set synsets for the receiver's meronyms. In addition to the
+		# general accessors for all meronyms, there are also accessors for
+		# subtypes as well:
+		#
+		# [memberMeronyms]
+		#   Get/set synsets for the receiver's "member" meronyms (HAS MEMBER
+		#   relation).
+		# [stuffMeronyms]
+		#   Get/set synsets for the receiver's "stuff" meronyms (IS MADE OUT OF
+		#   relation).
+		# [portionMeronyms]
+		#   Get/set synsets for the receiver's "portion" meronyms (HAS PORTION
+		#   relation).
+		# [componentMeronyms]
+		#   Get/set synsets for the receiver's "component" meronyms (HAS
+		#   COMPONENT relation).
+		# [featureMeronyms]
+		#   Get/set synsets for the receiver's "feature" meronyms (HAS FEATURE
+		#   relation).
+		# [phaseMeronyms]
+		#   Get/set synsets for the receiver's "phase" meronyms (HAS PHASE
+		#   relation).
+		# [placeMeronyms]
+		#   Get/set synsets for the receiver's "place" meronyms (HAS PLACE
+		#   relation).
+		def_pointer_methods :meronyms
 
-		# :def: meronyms() - Returns synsets for the receiver's meronyms.
-		# :def: memberMeronyms() - Returns synsets for the receiver's "member"
-		# meronyms (HAS MEMBER relation).
-		# :def: memberMeronyms=( *synsets ) - Set the receiver's member meronyms
-		# to the given +synsets+.
-		# :def: stuffMeronyms() - Returns synsets for the receiver's "stuff"
-		# meronyms (IS MADE OUT OF relation).
-		# :def: stuffMeronyms=( *synsets ) - Set the receiver's stuff meronyms
-		# to the given +synsets+.
-		# :def: portionMeronyms() - Returns synsets for the receiver's "portion"
-		# meronyms (HAS PORTION relation).
-		# :def: portionMeronyms=( *synsets ) - Set the receiver's portion meronyms
-		# to the given +synsets+.
-		# :def: componentMeronyms() - Returns synsets for the receiver's "component"
-		# meronyms (HAS COMPONENT relation).
-		# :def: componentMeronyms=( *synsets ) - Set the receiver's component meronyms
-		# to the given +synsets+.
-		# :def: featureMeronyms() - Returns synsets for the receiver's "feature"
-		# meronyms (HAS FEATURE relation).
-		# :def: featureMeronyms=( *synsets ) - Set the receiver's feature meronyms
-		# to the given +synsets+.
-		# :def: phaseMeronyms() - Returns synsets for the receiver's "phase"
-		# meronyms (HAS PHASE relation).
-		# :def: phaseMeronyms=( *synsets ) - Set the receiver's phase meronyms
-		# to the given +synsets+.
-		# :def: placeMeronyms() - Returns synsets for the receiver's "place"
-		# meronyms (HAS PLACE relation).
-		# :def: placeMeronyms=( *synsets ) - Set the receiver's place meronyms
-		# to the given +synsets+.
-		def_pointer_methods :meronyms,		:meronym
+		# Get/set synsets for the receiver's holonyms. In addition to the
+		# general accessors for all holonyms, there are also accessors for
+		# subtypes as well:
+		#
+		# [memberHolonyms]
+		#   Get/set synsets for the receiver's "member" holonyms (IS A MEMBER OF
+		#   relation).
+		# [stuffHolonyms]
+		#   Get/set synsets for the receiver's "stuff" holonyms (IS MATERIAL OF
+		#   relation).
+		# [portionHolonyms]
+		#   Get/set synsets for the receiver's "portion" holonyms (IS A PORTION
+		#   OF relation).
+		# [componentHolonyms]
+		#   Get/set synsets for the receiver's "component" holonyms (IS A
+		#   COMPONENT OF relation).
+		# [featureHolonyms]
+		#   Get/set synsets for the receiver's "feature" holonyms (IS A FEATURE
+		#   OF relation).
+		# [phaseHolonyms]
+		#   Get/set synsets for the receiver's "phase" holonyms (IS A PHASE OF
+		#   relation).
+		# [placeHolonyms]
+		#   Get/set synsets for the receiver's "place" holonyms (IS A PLACE IN
+		#   relation).
+		def_pointer_methods :holonyms
 
-		# :def: holonyms() - Returns synsets for the receiver's holonyms.
-		# :def: memberHolonyms() - Returns synsets for the receiver's "member"
-		# holonyms (IS A MEMBER OF relation).
-		# :def: memberHolonyms=( *synsets ) - Set the receiver's member holonyms
-		# to the given +synsets+.
-		# :def: stuffHolonyms() - Returns synsets for the receiver's "stuff"
-		# holonyms (IS MATERIAL OF relation).
-		# :def: stuffHolonyms=( *synsets ) - Set the receiver's stuff holonyms
-		# to the given +synsets+.
-		# :def: portionHolonyms() - Returns synsets for the receiver's "portion"
-		# holonyms (IS A PORTION OF relation).
-		# :def: portionHolonyms=( *synsets ) - Set the receiver's portion holonyms
-		# to the given +synsets+.
-		# :def: componentHolonyms() - Returns synsets for the receiver's "component"
-		# holonyms (IS A COMPONENT OF relation).
-		# :def: componentHolonyms=( *synsets ) - Set the receiver's component holonyms
-		# to the given +synsets+.
-		# :def: featureHolonyms() - Returns synsets for the receiver's "feature"
-		# holonyms (IS A FEATURE OF relation).
-		# :def: featureHolonyms=( *synsets ) - Set the receiver's feature holonyms
-		# to the given +synsets+.
-		# :def: phaseHolonyms() - Returns synsets for the receiver's "phase"
-		# holonyms (IS A PHASE OF relation).
-		# :def: phaseHolonyms=( *synsets ) - Set the receiver's phase holonyms
-		# to the given +synsets+.
-		# :def: placeHolonyms() - Returns synsets for the receiver's "place"
-		# holonyms (IS A PLACE IN relation).
-		# :def: placeHolonyms=( *synsets ) - Set the receiver's place holonyms
-		# to the given +synsets+.
-		def_pointer_methods :holonyms,		:holonym
-
-		# :def: members() - Returns synsets for the receiver's topical domain
-		# members.
-		# :def: categoryMembers() - Returns synsets for the receiver's
+		# Get/set synsets for the receiver's topical domain members. In addition
+		# to the general members accessor, there are also accessors for
+		# membership subtypes:
+		#
+		# [categoryMembers]
+		#   Get/set synsets for the receiver's
 		# "category" topical domain members.
-		# :def: categoryMembers=( *synsets ) - Set the receiver's category
-		# domain members to the given +synsets+.
-		# :def: regionMembers() - Returns synsets for the receiver's "region"
+		# [regionMembers]
+		#   Get/set synsets for the receiver's "region"
 		# topical domain members.
-		# :def: regionMembers=( *synsets ) - Set the receiver's region domain
-		# members to the given +synsets+.
-		# :def: usageMembers() - Returns synsets for the receiver's "usage"
+		# [usageMembers]
+		#   Get/set synsets for the receiver's "usage"
 		# topical domain members.
-		# :def: usageMembers=( *synsets ) - Set the receiver's usage domain
-		# members to the given +synsets+.
-		def_pointer_methods :members,		:member
+		def_pointer_methods :members
 
-		# :def: domains() - Returns synsets for the receiver's topical domains.
-		# :def: categoryDomains() - Returns synsets for the receiver's "category"
-		# topical domains.
-		# :def: categoryDomains=( *synsets ) - Set the receiver's category domains
-		# to the given +synsets+.
-		# :def: regionDomains() - Returns synsets for the receiver's "region"
-		# topical domains.
-		# :def: regionDomains=( *synsets ) - Set the receiver's region domains
-		# to the given +synsets+.
-		# :def: usageDomains() - Returns synsets for the receiver's "usage"
-		# topical domains.
-		# :def: usageDomains=( *synsets ) - Set the receiver's usage domains
-		# to the given +synsets+.
-		def_pointer_methods :domains,		:domain
+		# Get/set synsets for the receiver's topical domain domains. In addition
+		# to the general domains accessor, there are also accessors for
+		# domainship subtypes:
+		#
+		# [categoryDomains]
+		#   Get/set synsets for the receiver's
+		#   "category" topical domain domains.
+		# [regionDomains]
+		#   Get/set synsets for the receiver's "region"
+		#   topical domain domains.
+		# [usageDomains]
+		#   Get/set synsets for the receiver's "usage"
+		#   topical domain domains.
+		def_pointer_methods :domains
 
 
 		### Returns an Array of the coordinate sisters of the receiver.
