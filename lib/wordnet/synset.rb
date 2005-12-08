@@ -47,11 +47,11 @@ module WordNet
 		include WordNet::Constants
 		include CrossCase if defined?( CrossCase )
 
-		# CVS version tag
-		Version = /([\d\.]+)/.match( %q{$Revision: 1.5 $} )[1]
+		# Subversion ID
+		SVNId = %q$Id$
 
-		# CVS id tag
-		Rcsid = %q$Id$
+		# Subversion Rev
+		SVNRev = %q$Rev$
 
 		# The "pointer" type that encapsulates relationships between one synset
 		# and another.
@@ -94,24 +94,31 @@ module WordNet
 			def initialize( type, offset, pos=Noun, sourceWn=0, targetWn=0 )
 
 				# Allow type = '!', 'antonym', or :antonym. Also handle
-				# splitting of :memberMeronym and '%m' into their correct
-				# type/subtype parts.
+				# splitting of compound pointers (e.g., :memberMeronym / '%m')
+				# into their correct type/subtype parts.
 				@type = @subtype = nil
 				if type.to_s.length == 1
 					@type = PointerSymbols[ type[0,1] ]
+					
 				elsif type.to_s.length == 2
 					@type = PointerSymbols[ type[0,1] ]
-					@subtype = PointerSubTypes[ @type ].index( type )
+					raise "No known subtypes for '%s'" % [@type] unless
+						PointerSubTypes.key?( @type )
+					@subtype = PointerSubTypes[ @type ].index( type ) or
+						raise "Unknown subtype '%s' for '%s'" %
+						[ type, @type ]
+						
 				else
-					if PointerTypes.key?( type.to_s.intern )
-						@type = type.to_s.intern
+					if PointerTypes.key?( type.to_sym )
+						@type = type.to_sym
 					elsif /([a-z]+)([A-Z][a-z]+)/ =~ type.to_s
 						subtype, maintype = $1, $2.downcase
-						@type = maintype.intern if
-							PointerTypes.key?( maintype.intern )
-						@subtype = subtype.intern
+						@type = maintype.to_sym if
+							PointerTypes.key?( maintype.to_sym )
+						@subtype = subtype.to_sym
 					end
 				end
+
 				raise ArgumentError, "No such pointer type %p" % type if
 					@type.nil?
 
@@ -120,8 +127,8 @@ module WordNet
 				if pos.to_s.length == 1
 					@partOfSpeech = SyntacticSymbols[ pos ]
 				else
-					@partOfSpeech = pos.to_s.intern if
-						SyntacticCategories.key?( pos.to_s.intern )
+					@partOfSpeech = pos.to_sym if
+						SyntacticCategories.key?( pos.to_sym )
 				end
 				raise ArgumentError, "No such part of speech %p" % pos if
 					@partOfSpeech.nil?
@@ -232,16 +239,19 @@ module WordNet
 			name = symbol.id2name
 			casename = name.dup
 			casename[ 0,1 ] = casename[ 0,1 ].upcase
-			type = if PointerTypes.key?( symbol )
-					   symbol
-				   elsif PointerTypes.key?( symbol.to_s.sub(/s$/, '').intern )
-					   type = symbol.to_s.sub(/s$/, '').intern
-				   else
-					   raise ArgumentError, "Unknown pointer type %p" % symbol
-				   end
+			type = nil
+			
+			if PointerTypes.key?( symbol )
+                symbol
+            elsif PointerTypes.key?( symbol.to_s.sub(/s$/, '').to_sym )
+                type = symbol.to_s.sub(/s$/, '').to_sym
+            else
+                raise ArgumentError, "Unknown pointer type %p" % symbol
+            end
 
 			# Define the accessor
-			define_method( name.intern ) { self.fetchSynsetPointers(type) }
+			$deferr.puts "Defining reader for #{name}" if $DEBUG
+			define_method( name.to_sym ) { self.fetchSynsetPointers(type) }
 
 			# If the pointer is one that has subtypes, make the variants list
 			# out of the subtypes. If it doesn't have subtypes, make the only
@@ -255,17 +265,26 @@ module WordNet
 
 			# Define a set of methods for each variant, or for the main method
 			# if the variant is nil.
-			variants.each {|subtype|
+			variants.each do |subtype|
+                
 				varname = subtype ? subtype.to_s + casename : name
 				varcname = subtype ? subtype.to_s.capitalize + casename : casename
 
-				define_method( varname ) {
-					self.fetchSynsetPointers( type, subtype )
-				} unless subtype.nil?
+                unless subtype.nil?
+                    $deferr.puts "Defining reader for #{varname}" if $DEBUG
+                    define_method( varname ) {
+                        self.fetchSynsetPointers( type, subtype )
+                    }
+                else
+                    $deferr.puts "No subtype for %s (subtype = %p)" %
+                        [ varname, subtype ] if $DEBUG
+                end
+                
+                $deferr.puts "Defining mutator for #{varname}" if $DEBUG
 				define_method( "#{varname}=" ) {|*synsets|
 					self.setSynsetPointers( type, synsets, subtype )
 				}
-			}
+			end
 		end
 
 
@@ -345,9 +364,10 @@ module WordNet
 				"#{type}s: #{ptrs.length}"
 			}.join( ", " )
 
-			%q{#<%s:0x%08x %s (%s): "%s" (%s)>} % [
+			%q{#<%s:0x%08x/%s %s (%s): "%s" (%s)>} % [
 				self.class.name,
 				self.object_id * 2,
+				self.offset,
 				self.words.join(", "),
 				self.partOfSpeech,
 				self.gloss,
@@ -473,19 +493,23 @@ module WordNet
 
 		### Auto-generate synset pointer methods for the various types
 
-		# Get/set the synsets for the receiver's antonyms (opposites).
+		# The synsets for the receiver's antonyms (opposites). E.g., 
+		#   $lexicon.lookup_synsets( "opaque", :adjective, 1 ).antonyms
+		#   ==> [#<WordNet::Synset:0x010a9acc/454927 clear (adjective): "free
+		#        from cloudiness; allowing light to pass through; "clear water";
+		#        "clear plastic bags"; "clear glass"; "the air is clear and
+		#        clean"" (similarTos: 6, attributes: 1, derivations: 2,
+		#        antonyms: 1, seeAlsos: 1)>]
 		def_pointer_methods :antonyms
 
-		# Returns synsets for the receiver's hypernyms
-		# (more-general terms).
-		def_pointer_methods :hypernyms
-
-		# Get/set synsets for the receiver's entailments (a verb X entails Y if
-		# X cannot be done unless Y is, or has been, done).
+		# Synsets for the receiver's entailments (a verb X entails Y if X cannot
+		# be done unless Y is, or has been, done). E.g.,
+		#   $lexicon.lookup_synsets( 'rasp', :verb, 1 ).entailment
+		#   ==> [#<WordNet::Synset:0x010dc24c rub (verb): "move over something
+		#        with pressure; "rub my hands"; "rub oil into her skin""
+		#        (derivations: 2, entailments: 1, hypernyms: 1, hyponyms: 13,
+		#        seeAlsos: 4)>]
 		def_pointer_methods :entailment
-
-		# Get/set synsets for the receiver's hyponyms (more-specific terms).
-		def_pointer_methods :hyponyms
 
 		# Get/set synsets for the receiver's cause pointers (a verb X causes Y
 		# to happen).
@@ -500,23 +524,51 @@ module WordNet
 		# satellite adjective synsets.
 		def_pointer_methods :similarTo
 
-		# Get/set synsets for the receiver's participles.
+		# Get/set synsets for the receiver's participles. Participles are
+		# non-finite forms of a verb; used adjectivally and to form compound
+		# tenses. For example, the first participle for "working" is:
+		#   "function, work, operate, go, run (verb)"
 		def_pointer_methods :participles
 
-		# Get/set synsets for the receiver's pertainyms.
+		# Get/set synsets for the receiver's pertainyms. Pertainyms are
+		# relational adjectives. Adjectives that are pertainyms are usually
+		# defined by such phrases as "of or pertaining to" and do not have
+		# antonyms. A pertainym can point to a noun or another pertainym.
 		def_pointer_methods :pertainyms
 
-		# Get/set synsets for the receiver's attributes.
+		# Get/set synsets for the receiver's attributes. 
 		def_pointer_methods :attributes
 
 		# Get/set synsets for the receiver's derivedFrom.
 		def_pointer_methods :derivedFrom
+
+		# Get/set synsets for the receiver's derivations.
+		def_pointer_methods :derivations
 
 		# Get/set synsets for the receiver's seeAlso.
 		def_pointer_methods :seeAlso
 
 
 		# Auto-generate types with subtypes
+
+		# Synsets for the receiver's hypernyms (more-general terms). E.g.,
+		#   $lexicon.lookup_synsets( "cudgel", :noun, 1 ).hypernyms
+		#     ==> [#<WordNet::Synset:0x0109a644/3023321 club (noun): "stout
+		#          stick that is larger at one end; "he carried a club in self
+		#          defense"; "he felt as if he had been hit with a club""
+		#          (derivations: 1, hypernyms: 1, hyponyms: 7)>]
+		# Also generates accessors for subtypes:
+		# 
+		# [instanceHypernyms]
+		#   A proper noun that refers to a particular, unique referent (as
+        #   distinguished from nouns that refer to classes).
+ 		def_pointer_methods :hypernyms
+
+		# Get/set synsets for the receiver's hyponyms (more-specific terms). E.g., 
+
+		# 
+		def_pointer_methods :hyponyms
+
 
 		# Get/set synsets for the receiver's meronyms. In addition to the
 		# general accessors for all meronyms, there are also accessors for

@@ -2,6 +2,9 @@
 
 require "wntestcase"
 require "bdb"
+require 'tmpdir'
+require 'fileutils'
+
 
 class LexiconTests < WordNet::TestCase
 
@@ -18,128 +21,127 @@ class LexiconTests < WordNet::TestCase
 	}
 
 
+
 	#################################################################
 	###	T E S T S
 	#################################################################
 
-	### Class + constructor
-	def test_00_constructor
-		printTestHeader "Lexicon: Constructor"
-		rval = nil
 
-		assert_instance_of Module, WordNet
-		assert_instance_of Class, WordNet::Lexicon
-		assert_instance_of Class, WordNet::Synset
-
-		assert_nothing_raised {
-			# This can't be a per-test instance var because bdb segfaults for
-			# some reason if you destroy and re-create it for each test...
-			$lexicon ||= WordNet::Lexicon::new
-		}
-
-		assert_instance_of WordNet::Lexicon, $lexicon
-	end
-
-	### Database methods
-	def test_10_DbMethods
-		printTestHeader "Lexicon: Database methods"
-		rval = nil
-
-		# DB handles
-		assert_nothing_raised { rval = $lexicon.env }
-		assert_instance_of BDB::Env, rval
-
-		[ :indexDb, :morphDb, :dataDb ].each {|db|
-			assert_nothing_raised {
-				rval = $lexicon.send( db )
-			}
-			assert_instance_of BDB::Btree, rval
-		}
-
-		# Checkpoint the DB
-		assert_nothing_raised {
-			$lexicon.checkpoint
-		}
-
-		# Fetch the list of archival logs
-		assert_nothing_raised {
-			rval = $lexicon.archlogs
-		}
-		assert_instance_of Array, rval
-
-		# Delete old logs
-		assert_nothing_raised {
-			$lexicon.cleanLogs
-		}
+	def test_default_open_with_new_dir_should_fail
+		printTestHeader "Lexicon: ':readonly' creation with new dir"
+		
+		make_testing_directory do |path|
+			assert_raises( BDB::Fatal ) do
+				WordNet::Lexicon::new( path )
+			end
+		end
 	end
 
 
-	### Test familiarity
-	def test_20_Familiarity
-		printTestHeader "Lexicon: Familiarity"
+	def test_writable_open_with_new_dir_should_succeed
+		printTestHeader "Lexicon: ':writable' creation with new dir"
+
+		make_testing_directory do |path|
+			assert_nothing_raised do
+				WordNet::Lexicon::new( path, :writable )
+			end
+		end
+	end
+
+
+	def test_readwrite_open_with_new_dir_should_succeed
+		printTestHeader "Lexicon: ':readwrite' creation with new dir"
+
+		make_testing_directory do |path|
+			assert_nothing_raised do
+				WordNet::Lexicon::new( path, :readwrite )
+			end
+		end
+	end
+
+
+	def test_default_open_with_existing_dir_should_succeed
+		make_testing_directory do |path|
+			WordNet::Lexicon::new( path, :readwrite ).checkpoint
+
+			assert_nothing_raised do
+				WordNet::Lexicon::new( path )
+			end
+		end
+	end
+
+
+	def test_familiarity_for_testwords_should_all_return_a_fixnum
+		printTestHeader "Lexicon: Familiarity for testwords should all return a Fixnum"
 		res = nil
 
-		TestWords.each {|word, pos|
-			assert_nothing_raised( "Familiarity for #{word}(#{pos})" ) {
-				res = $lexicon.familiarity( word, pos )
-			}
+		TestWords.each do |word, pos|
+			assert_nothing_raised( "Familiarity for #{word}(#{pos})" ) do
+				res = @lexicon.familiarity( word, pos )
+			end
 			assert_instance_of Fixnum, res
-		}
+		end
 	end
 
 
-	### Test morphology
-	def test_25_Morph
-		printTestHeader "Lexicon: Morphology"
+	def test_morphology_of_dictionary_word_should_return_root_word
+		printTestHeader "Lexicon: Morphology should "
 		res = nil
 
-		assert_nothing_raised {
-			res = $lexicon.morph("angriest", WordNet::Adjective)
-		}
+		assert_nothing_raised do
+			res = @lexicon.morph( "angriest", WordNet::Adjective )
+		end
 		assert_equal "angry", res
-
-		assert_nothing_raised {
-			res = $lexicon.morph("Passomoquoddy", WordNet::Noun )
-		}
-		assert_nil res
 	end
 
 
-	### Test reverse morph
-	def test_30_ReverseMorph
+	def test_morphology_of_nondictionary_word_should_return_nil
+		printTestHeader "Lexicon: Morphology should "
+		res = nil
+
+		assert_nothing_raised do
+			res = @lexicon.morph( "Passomoquoddy", WordNet::Noun )
+		end
+		assert_equal nil, res
+	end
+
+
+	def test_reverse_morphology_should_return_inverse
 		printTestHeader "Lexicon: Reverse morphology"
 		res = nil
 
-		assert_nothing_raised {
-			res = $lexicon.reverseMorph("angry")
-		}
+		assert_nothing_raised do
+			res = @lexicon.reverseMorph( "angry" )
+		end
+
+		# Don't want this to fail if WordNet data changes, so just match the
+		# beginning
 		assert_match( /^angr/, res )
 	end
 
 
-	### Test grep
-	def test_35_Grep
+	def test_grep_finds_compound_words
 		printTestHeader "Lexicon: Grep"
 		words = []
 
-		assert_nothing_raised {
-			words = $lexicon.grep( "thing" )
-		}
-		words.each {|word|
+		assert_nothing_raised do
+			words = @lexicon.grep( "thing" )
+		end
+		words.each do |word|
 			assert_match( /^thing/, word )
-		}
+		end
 	end
 
 
 	### Test synset lookup (which also tests synset-by-offset lookup)
-	def test_40_LookupSynsets
+	def test_lookup_synsets
 		printTestHeader "Lexicon: Lookup synsets"
 		rval = nil
 
 		TestWords.each {|word,pos|
-			assert_nothing_raised {
-				rval, rest = $lexicon.lookupSynsets( word, pos )
-			}
+			assert_nothing_raised do
+				rval, rest = @lexicon.lookupSynsets( word, pos )
+			end
 
 			assert_instance_of WordNet::Synset, rval
 
@@ -154,14 +156,32 @@ class LexiconTests < WordNet::TestCase
 		printTestHeader "Lexicon: Create Synset via Factory Method"
 		synset = nil
 
-		assert_nothing_raised {
-			synset = $lexicon.createSynset( "Ruby", WordNet::Noun )
-		}
+		assert_nothing_raised do
+			synset = @lexicon.createSynset( "Ruby", WordNet::Noun )
+		end
 		assert_instance_of WordNet::Synset, synset
 	end
 
 
 	# :TODO: Test storeSynset()?
+
+
+	#######
+	private
+	#######
+
+	### Create a temporary directory for testing, call the supplied +block+ with
+	### the name of the new directory, then remove it.
+	def make_testing_directory
+		rndstuff = Process::pid
+		path = File::join( Dir::tmpdir, "test.#{rndstuff}" )
+		Dir::mkdir( path )
+
+		yield( path )
+	ensure
+		FileUtils::rm_rf( path ) if defined?( path )
+	end
+
 
 end
 

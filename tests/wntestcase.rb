@@ -57,175 +57,131 @@ require "test/unit"
 require "test/unit/mock"
 require "wordnet"
 
-module WordNet
+### The abstract base class for WordNet test cases.
+class WordNet::TestCase < Test::Unit::TestCase
 
-	### The abstract base class for WordNet test cases.
-	class TestCase < Test::Unit::TestCase
+	### Output the specified <tt>msgs</tt> joined together to
+	### <tt>STDERR</tt> if <tt>$DEBUG</tt> is set.
+	def self::debugMsg( *msgs )
+		return unless $DEBUG
+		self.message "DEBUG>>> %s" % msgs.join('')
+	end
 
-		class << self
-			@methodCounter = 0
-			attr_accessor :methodCounter
-		end
-
-
-		### Inheritance callback -- adds @setupBlocks and @teardownBlocks ivars
-		### and accessors to the inheriting class.
-		def self::inherited( klass )
-			klass.module_eval {
-				@setupBlocks = []
-				@teardownBlocks = []
-
-				class << self
-					attr_accessor :setupBlocks
-					attr_accessor :teardownBlocks
-				end
-			}
-			klass.methodCounter = 0
-		end
-		
+	### Output the specified <tt>msgs</tt> joined together to
+	### <tt>STDOUT</tt>.
+	def self::message( *msgs )
+		$stderr.puts msgs.join('')
+		$stderr.flush
+	end
 
 
-		### Output the specified <tt>msgs</tt> joined together to
-		### <tt>STDERR</tt> if <tt>$DEBUG</tt> is set.
-		def self::debugMsg( *msgs )
-			return unless $DEBUG
-			self.message "DEBUG>>> %s" % msgs.join('')
-		end
 
-		### Output the specified <tt>msgs</tt> joined together to
-		### <tt>STDOUT</tt>.
-		def self::message( *msgs )
-			$stderr.puts msgs.join('')
-			$stderr.flush
-		end
+	#############################################################
+	###	I N S T A N C E   M E T H O D S
+	#############################################################
+
+    ### Create a new WordNet::TestCase
+    def initialize( *args )
+        @basedir = File::dirname( File::dirname(__FILE__) )
+        @builddir = File::join( @basedir, File::basename(WordNet::Lexicon::DefaultDbEnv) )
+        super
+    end
 
 
-		### Add a setup block for the current testcase
-		def self::addSetupBlock( &block )
-			self.methodCounter += 1
-			newMethodName = "setup_#{self.methodCounter}".intern
-			define_method( newMethodName, &block )
-			self.setupBlocks.push newMethodName
-		end
-			
-		### Add a teardown block for the current testcase
-		def self::addTeardownBlock( &block )
-			self.methodCounter += 1
-			newMethodName = "teardown_#{self.methodCounter}".intern
-			define_method( newMethodName, &block )
-			self.teardownBlocks.unshift newMethodName
-		end
-			
-
-		#############################################################
-		###	I N S T A N C E   M E T H O D S
-		#############################################################
-
-		### Forward-compatibility method for namechange in Test::Unit
-		def setup( *args )
-			self.class.setupBlocks.each {|sblock|
-				debugMsg "Calling setup block method #{sblock}"
-				self.send( sblock )
-			}
-			super( *args )
-		end
-		alias_method :set_up, :setup
+    ### Set up the lexicon
+    def setup
+        @lexicon = WordNet::Lexicon::new( @builddir, :readonly )
+    end
 
 
-		### Forward-compatibility method for namechange in Test::Unit
-		def teardown( *args )
-			super( *args )
-			self.class.teardownBlocks.each {|tblock|
-				debugMsg "Calling teardown block method #{tblock}"
-				self.send( tblock )
-			}
-		end
-		alias_method :tear_down, :teardown
+    ### Cleanly close the lexicon
+    def teardown
+        @lexicon.cleanLogs
+        @lexicon.close
+    end
 
 
-		### Instance alias for the like-named class method.
-		def message( *msgs )
-			self.class.message( *msgs )
-		end
+	### Instance alias for the like-named class method.
+	def message( *msgs )
+		self.class.message( *msgs )
+	end
 
 
-		### Instance alias for the like-named class method
-		def debugMsg( *msgs )
-			self.class.debugMsg( *msgs )
-		end
+	### Instance alias for the like-named class method
+	def debugMsg( *msgs )
+		self.class.debugMsg( *msgs )
+	end
 
 
-		### Output a separator line made up of <tt>length</tt> of the specified
-		### <tt>char</tt>.
-		def writeLine( length=75, char="-" )
-			$stderr.puts "\r" + (char * length )
-		end
+	### Output a separator line made up of <tt>length</tt> of the specified
+	### <tt>char</tt>.
+	def writeLine( length=75, char="-" )
+		$stderr.puts "\r" + (char * length )
+	end
 
 
-		### Output a header for delimiting tests
-		def printTestHeader( desc )
-			return unless $VERBOSE || $DEBUG
-			message ">>> %s <<<" % desc
-		end
+	### Output a header for delimiting tests
+	def printTestHeader( desc )
+		return unless $VERBOSE || $DEBUG
+		message ">>> %s <<<" % desc
+	end
 
 
-		### Try to force garbage collection to start.
-		def collectGarbage
-			a = []
-			1000.times { a << {} }
-			a = nil
-			GC.start
-		end
+	### Try to force garbage collection to start.
+	def collectGarbage
+		a = []
+		1000.times { a << {} }
+		a = nil
+		GC.start
+	end
 
 
-		### Output the name of the test as it's running if in verbose mode.
-		def run( result )
-			$stderr.puts self.name if $VERBOSE || $DEBUG
-			super
-		end
+	### Output the name of the test as it's running if in verbose mode.
+	def run( result )
+		$stderr.puts self.name if $VERBOSE || $DEBUG
+		super
+	end
 
 
-		#############################################################
-		###	E X T R A   A S S E R T I O N S
-		#############################################################
+	#############################################################
+	###	E X T R A   A S S E R T I O N S
+	#############################################################
 
-		### Negative of assert_respond_to
-		def assert_not_respond_to( obj, meth )
-			msg = "%s expected NOT to respond to '%s'" %
-				[ obj.inspect, meth ]
-			assert_block( msg ) {
-				!obj.respond_to?( meth )
-			}
-		end
-
-
-		### Assert that the instance variable specified by +sym+ of an +object+
-		### is equal to the specified +value+. The '@' at the beginning of the
-		### +sym+ will be prepended if not present.
-		def assert_ivar_equal( value, object, sym )
-			sym = "@#{sym}".intern unless /^@/ =~ sym.to_s
-			msg = "Instance variable '%s'\n\tof <%s>\n\texpected to be <%s>\n" %
-				[ sym, object.inspect, value.inspect ]
-			msg += "\tbut was: <%s>" % object.instance_variable_get(sym)
-			assert_block( msg ) {
-				value == object.instance_variable_get(sym)
-			}
-		end
+	### Negative of assert_respond_to
+	def assert_not_respond_to( obj, meth )
+		msg = "%s expected NOT to respond to '%s'" %
+			[ obj.inspect, meth ]
+		assert_block( msg ) {
+			!obj.respond_to?( meth )
+		}
+	end
 
 
-		### Assert that the specified +object+ has an instance variable which
-		### matches the specified +sym+. The '@' at the beginning of the +sym+
-		### will be prepended if not present.
-		def assert_has_ivar( sym, object )
-			sym = "@#{sym}" unless /^@/ =~ sym.to_s
-			msg = "Object <%s> expected to have an instance variable <%s>" %
-				[ object.inspect, sym ]
-			assert_block( msg ) {
-				object.instance_variables.include?( sym.to_s )
-			}
-		end
+	### Assert that the instance variable specified by +sym+ of an +object+
+	### is equal to the specified +value+. The '@' at the beginning of the
+	### +sym+ will be prepended if not present.
+	def assert_ivar_equal( value, object, sym )
+		sym = "@#{sym}".intern unless /^@/ =~ sym.to_s
+		msg = "Instance variable '%s'\n\tof <%s>\n\texpected to be <%s>\n" %
+			[ sym, object.inspect, value.inspect ]
+		msg += "\tbut was: <%s>" % object.instance_variable_get(sym)
+		assert_block( msg ) {
+			value == object.instance_variable_get(sym)
+		}
+	end
 
-	end # class TestCase
 
-end # module WordNet
+	### Assert that the specified +object+ has an instance variable which
+	### matches the specified +sym+. The '@' at the beginning of the +sym+
+	### will be prepended if not present.
+	def assert_has_ivar( sym, object )
+		sym = "@#{sym}" unless /^@/ =~ sym.to_s
+		msg = "Object <%s> expected to have an instance variable <%s>" %
+			[ object.inspect, sym ]
+		assert_block( msg ) {
+			object.instance_variables.include?( sym.to_s )
+		}
+	end
+
+end # class WordNet::TestCase
 
