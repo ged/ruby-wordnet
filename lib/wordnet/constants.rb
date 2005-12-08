@@ -29,7 +29,7 @@
 # 
 # == Copyright
 #
-# Copyright (c) 2003 The FaerieMUD Consortium. All rights reserved.
+# Copyright (c) 2003, 2005 The FaerieMUD Consortium. All rights reserved.
 # 
 # This module is free software. You may use, modify, and/or redistribute this
 # software under the terms of the Perl Artistic License. (See
@@ -63,6 +63,9 @@ module WordNet
 			const_set( cname, val )
 		}
 
+        # Information about pointer types is contained in the wninput(5WN)
+        # manpage.
+
 		# Synset pointer typenames -> indicators
 		PointerTypes = {
 			:antonym		=> '!',
@@ -92,6 +95,24 @@ module WordNet
 			cname = sym.to_s[0,1].upcase + sym.to_s[1..-1]
 			const_set( cname, val )
 		}
+
+        # Hypernym synset pointer types
+        HypernymTypes = {
+            nil             => '@', # Install non-subtype methods, too
+            :instance       => '@i',
+        }
+        
+        # Hypernym indicator -> type map
+        HypernymSymbols = HypernymTypes.invert
+
+        # Hyponym synset pointer types
+        HyponymTypes = {
+            nil             => '~', # Install non-subtype methods, too
+            :instance       => '~i',
+        }
+        
+        # Hyponym indicator -> type map
+        HyponymSymbols = HyponymTypes.invert
 
 		# Meronym synset pointer types
 		MeronymTypes = {
@@ -167,6 +188,8 @@ module WordNet
 
 		# Map of primary types to maps of their subtypes 
 		PointerSubTypes = {
+            :hyponym    => HyponymTypes,
+            :hypernym   => HypernymTypes,
 			:meronym	=> MeronymTypes,
 			:holonym	=> HolonymTypes,
 			:member		=> MemberTypes,

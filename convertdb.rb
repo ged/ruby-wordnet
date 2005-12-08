@@ -31,15 +31,18 @@ begin
 	base = File::dirname( File::expand_path(__FILE__) )
 	$LOAD_PATH.unshift "#{base}/lib" unless $LOAD_PATH.include?( "#{base}/lib" )
 	$LOAD_PATH.unshift base
+
+    unless defined?( UtilityFunctions )
+        require "#{base}/utils.rb"
+        include UtilityFunctions
+    end
 end
 
 require 'strscan'
-require 'utils'
 require 'wordnet'
 require 'optparse'
 require 'fileutils'
 
-include UtilityFunctions
 
 # Globals: Index of words => senses, StringScanner for parsing.
 $senseIndex = {}
@@ -68,45 +71,17 @@ Fileset = Struct::new( "WordNetFileset", :files, :name, :db, :processor )
 # How many records to insert between commits
 CommitThreshold = 2000
 
+# Temporary location for the lexicon data files
+BuildDir = File::join( File::dirname(__FILE__), File::basename(WordNet::Lexicon::DefaultDbEnv) )
+
+
 
 #####################################################################
 ###	M A I N   P R O G R A M
 #####################################################################
-def main
+def convertdb( errorLimit=0 )
 	$stderr.sync = $stdout.sync = true
 	header "WordNet Lexicon Converter"
-	errorLimit = 0
-
-	ARGV.options {|oparser|
-		oparser.banner = "Usage: #{File::basename($0)} -dv\n"
-
-		# Debugging on/off
-		oparser.on( "--debug", "-d", TrueClass, "Turn debugging on" ) {
-			$DEBUG = true
-			debugMsg "Turned debugging on."
-		}
-
-		# Verbose
-		oparser.on( "--verbose", "-v", TrueClass, "Verbose progress messages" ) {
-			$VERBOSE = true
-			debugMsg "Turned verbose on."
-		}
-
-		# Error-limit
-		oparser.on( "--error-limit=COUNT", "-eCOUNT", Integer,
-			"Error limit -- quit after COUNT errors" ) {|arg|
-			errorLimit = arg.to_i
-			debugMsg "Set error limit to #{errorLimit}"
-		}
-
-		# Handle the 'help' option
-		oparser.on( "--help", "-h", "Display this text." ) {
-			$stderr.puts oparser
-			exit!(0)
-		}
-
-		oparser.parse!
-	}
 
 	# Make sure the user knows what they're in for
 	message "This program will convert WordNet data files into databases\n"\
@@ -116,18 +91,20 @@ def main
 
 	# Open the database and check to be sure it's empty. Confirm overwrite if
 	# not. Checkpoint and set up logging proc if debugging.
-	if File::exists?( WordNet::Lexicon::DbFile )
+	if File::exists?( BuildDir )
 		message ">>> Warning: Existing data in the Ruby-WordNet databases\n"\
 			"will be overwritten.\n"
 		abort( "user cancelled." ) unless 
 			/^y/i =~ promptWithDefault( "Continue?", "n" )
-		FileUtils::rm_rf( WordNet::Lexicon::DbFile )
+		FileUtils::rm_rf( BuildDir )
 	end
 
 	# Find the source data files
 	if ARGV.empty?
+
+        # :TODO: Do some more intelligent searching here
 		message "Where can I find the WordNet data files?\n"
-		datadir = promptWithDefault( "Data directory", "/usr/local/WordNet-2.0/dict" )
+		datadir = promptWithDefault( "Data directory", "/usr/local/WordNet-2.1/dict" )
 	else
 		datadir = ARGV.shift
 	end
@@ -138,8 +115,9 @@ def main
 	abort( "'#{datadir}' doesn't seem to contain the necessary files.") unless
 		File::exists?( testfile )
 
-	# Open the lexicon, which creates a new database under lib/wordnet/lexicon.
-	lexicon = WordNet::Lexicon::new
+	# Open the lexicon readwrite into the temporary datadir
+	FileUtils::mkdir( BuildDir )
+	lexicon = WordNet::Lexicon::new( BuildDir, 0666 )
 
 	# Process each fileset
 	[	  # Fileset,  name,    database handle, processor
@@ -372,6 +350,41 @@ rescue => err
 end
 
 
-# Start the program
-main
+# Start the program if it's run directly
+if $0 == __FILE__
+    errorLimit = 0
+    
+	ARGV.options {|oparser|
+		oparser.banner = "Usage: #{File::basename($0)} -dv\n"
+
+		# Debugging on/off
+		oparser.on( "--debug", "-d", TrueClass, "Turn debugging on" ) {
+			$DEBUG = true
+			debugMsg "Turned debugging on."
+		}
+
+		# Verbose
+		oparser.on( "--verbose", "-v", TrueClass, "Verbose progress messages" ) {
+			$VERBOSE = true
+			debugMsg "Turned verbose on."
+		}
+
+		# Error-limit
+		oparser.on( "--error-limit=COUNT", "-eCOUNT", Integer,
+			"Error limit -- quit after COUNT errors" ) {|arg|
+			errorLimit = arg.to_i
+			debugMsg "Set error limit to #{errorLimit}"
+		}
+
+		# Handle the 'help' option
+		oparser.on( "--help", "-h", "Display this text." ) {
+			$stderr.puts oparser
+			exit!(0)
+		}
+
+		oparser.parse!
+	}
+
+    convertdb( errorLimit )
+end
 

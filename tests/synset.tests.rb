@@ -27,7 +27,12 @@ class SynsetTests < WordNet::TestCase
 		:pertainyms,
 		:attributes,
 		:derivedFrom,
+		:derivations,
 		:seeAlso,
+
+        :instanceHyponyms,
+
+        :instanceHypernyms,
 
 		:memberMeronyms,
 		:stuffMeronyms,
@@ -64,8 +69,10 @@ class SynsetTests < WordNet::TestCase
 
 	### Make sure the Lexicon's loaded
 	def setup
-		$lexicon ||= WordNet::Lexicon::new
-		super
+        super
+
+		@blankSyn = WordNet::Synset::new( @lexicon, "1%n", WordNet::Noun )
+		@traversalSyn = @lexicon.lookupSynsets( 'linguistics', :noun, 1 )
 	end
 
 
@@ -73,59 +80,29 @@ class SynsetTests < WordNet::TestCase
 	###	T E S T S
 	#################################################################
 
-	### Class + constructor
-	def test_00_constructor
-		printTestHeader "Synset: Constructor"
-		rval = nil
-
-		assert_instance_of Class, WordNet::Synset
-		assert_raises( ArgumentError ) {
-			rval = WordNet::Synset::new
-		}
-		assert_raises( ArgumentError ) {
-			rval = WordNet::Synset::new( $lexicon )
-		}
-		assert_raises( ArgumentError ) {
-			rval = WordNet::Synset::new( $lexicon, "1%n" )
-		}
-
-
-		assert_nothing_raised {
-			rval = WordNet::Synset::new( $lexicon, "1%n", WordNet::Noun )
-		}
-		assert_instance_of WordNet::Synset, rval
-
-		self.class.addSetupBlock {
-			@blankSyn = WordNet::Synset::new( $lexicon, "1%n", WordNet::Noun )
-		}
-		self.class.addTeardownBlock {
-			@blankSyn = nil
-		}
-	end
-
 	### Accessors
-	def test_10_accessors
+	def test_accessors
 		printTestHeader "Synset: Accessors"
 		rval = nil
 
 		assert_respond_to @blankSyn, :lexicon
 		
-		Accessors.each {|meth|
+		Accessors.each do |meth|
 			assert_respond_to @blankSyn, meth
 			assert_respond_to @blankSyn, "#{meth}="
 
-			assert_nothing_raised {
+			assert_nothing_raised do
 				rval = @blankSyn.send( meth )
-			}
-		}
+			end
+		end
 	end
 
 	### Relations
-	def test_20_relations
+	def test_relations
 		printTestHeader "Synset: Relation methods"
 		rval = nil
 		
-		RelationMethods.each {|meth|
+		RelationMethods.each do |meth|
 			casemeth = meth.to_s.sub( /^(\w)/ ) {|char| char.upcase }.intern
 
 			assert_respond_to @blankSyn, meth
@@ -136,11 +113,11 @@ class SynsetTests < WordNet::TestCase
 			}
 
 			assert_instance_of Array, rval
-		}
+		end
 	end
 
 	### Aggregate relation methods
-	def test_30_aggregateRelations
+	def test_aggregateRelations
 		printTestHeader "Synset: Aggregate relations"
 		rval = nil
 		
@@ -156,31 +133,21 @@ class SynsetTests < WordNet::TestCase
 	end
 
 	### Traversal method
-	def test_40_traversal_method
+	def test_synset_should_respond_to_traverse_method
 		printTestHeader "Synset: Traversal method"
-		syn = rval = depth = count = nil
-		sets = []
-
-		syn = $lexicon.lookupSynsets( 'linguistics', :noun, 1 )
-
-		assert_respond_to syn, :traverse
-		self.class.addSetupBlock {
-			@syn = $lexicon.lookupSynsets( 'linguistics', :noun, 1 )
-		}
-		self.class.addTeardownBlock {
-			@syn = nil
-		}
+		assert_respond_to @traversalSyn, :traverse
 	end
 
+    ### :TODO: This should really be split into two tests.
 	### Traversal: include origin, break loop
-	def test_41_traversal_break_includeOrigin
+	def test_traversal_with_true_second_arg_should_include_origin
 		printTestHeader "Synset: Traversal, including origin, break"
 		rval = nil
 		count = depth = 0
 		sets = []
 
 		assert_nothing_raised {
-			rval = @syn.traverse( :hyponyms, true ) {|tsyn,tdepth|
+			rval = @traversalSyn.traverse( :hyponyms, true ) {|tsyn,tdepth|
 				sets << tsyn
 				depth = tdepth
 				count += 1
@@ -189,20 +156,21 @@ class SynsetTests < WordNet::TestCase
 		}
 		assert_equal true, rval
 		assert_equal 1, sets.length
-		assert_equal @syn, sets[0]
+		assert_equal @traversalSyn, sets[0]
 		assert_equal 0, depth
 		assert_equal 1, count
 	end
 
+    ### :TODO: This should really be split into two tests.
 	### Traversal: exclude origin, break loop
-	def test_42_traversal_break_excludeOrigin
+	def test_traversal_with_false_second_arg_should_not_include_origin
 		printTestHeader "Synset: Traversal, excluding origin, break"
 		rval = nil
 		count = depth = 0
 		sets = []
 
 		assert_nothing_raised {
-			rval = @syn.traverse( :hyponyms, false ) {|tsyn,tdepth|
+			rval = @traversalSyn.traverse( :hyponyms, false ) {|tsyn,tdepth|
 				sets << tsyn
 				depth = tdepth
 				count += 1
@@ -211,37 +179,37 @@ class SynsetTests < WordNet::TestCase
 		}
 		assert_equal true, rval
 		assert_equal 1, sets.length
-		assert_not_equal @syn, sets[0]
+		assert_not_equal @traversalSyn, sets[0]
 		assert_equal 1, depth
 		assert_equal 1, count
 	end
 
 	### Traversal: include origin, nobreak, noblock
-	def test_43_traversal_includeOrigin_noblock_nobreak
+	def test_hyponym_traversal_with_no_block_should_return_appropriate_hyponyms
 		printTestHeader "Synset: Traversal, include origin, nobreak, noblock"
 		sets = []
 
 		assert_nothing_raised {
-			sets = @syn.traverse( :hyponyms )
+			sets = @traversalSyn.traverse( :hyponyms )
 		}
 		assert_block { sets.length > 1 }
-		assert_equal @syn, sets[0]
+		assert_equal @traversalSyn, sets[0]
 		assert_block { sets.find {|hsyn| hsyn.words.include?( "grammar" )} }
 		assert_block { sets.find {|hsyn| hsyn.words.include?( "syntax" )} }
 		assert_block { sets.find {|hsyn| hsyn.words.include?( "computational linguistics" )} }
 	end
 	
 
-	### Traversal: include origin, nobreak, noblock
-	def test_44_traversal_excludeOrigin_noblock_nobreak
+	### Traversal: exclude origin, nobreak, noblock
+	def test_hyponym_traversal_with_no_block_and_false_second_arg_should_return_holonyms_but_not_the_origin
 		printTestHeader "Synset: Traversal, exclude origin, nobreak, noblock"
 		sets = []
 
 		assert_nothing_raised {
-			sets = @syn.traverse( :hyponyms, false )
+			sets = @traversalSyn.traverse( :hyponyms, false )
 		}
 		assert_block { sets.length > 1 }
-		assert_not_equal @syn, sets[0]
+		assert_not_equal @traversalSyn, sets[0]
 		assert_block { sets.find {|hsyn| hsyn.words.include?( "grammar" )} }
 		assert_block { sets.find {|hsyn| hsyn.words.include?( "syntax" )} }
 		assert_block { sets.find {|hsyn| hsyn.words.include?( "computational linguistics" )} }
@@ -249,13 +217,13 @@ class SynsetTests < WordNet::TestCase
 	
 
 	### Traversal: include origin, nobreak, noblock
-	def test_45_traversal_break_after_3
+	def test_traversal_break_after_3_should_include_three_sets_plus_origin
 		printTestHeader "Synset: Traversal, break after 3"
 		rval = nil
 		sets = Hash::new {|hsh,key| hsh[key] = []}
 
 		assert_nothing_raised {
-			rval = @syn.traverse( :hyponyms ) {|tsyn,tdepth|
+			rval = @traversalSyn.traverse( :hyponyms ) {|tsyn,tdepth|
 				sets[tdepth] << tsyn
 				tdepth == 3
 			}
@@ -268,21 +236,21 @@ class SynsetTests < WordNet::TestCase
 
 
 	### Part of speech: partOfSpeech
-	def test_50_part_of_speech
+	def test_part_of_speech_should_return_the_symbol_part_of_speech
 		printTestHeader "Synset: partOfSpeech"
 		rval = nil
 
-		assert_nothing_raised { rval = @syn.partOfSpeech }
+		assert_nothing_raised { rval = @traversalSyn.partOfSpeech }
 		assert_equal :noun, rval
 	end
 
 
 	### Part of speech: pos
-	def test_51_pos
+	def test_pos_should_return_the_synsets_singlechar_part_of_speech
 		printTestHeader "Synset: pos"
 		rval = nil
 
-		assert_nothing_raised { rval = @syn.pos }
+		assert_nothing_raised { rval = @traversalSyn.pos }
 		assert_equal "n", rval
 	end
 
