@@ -706,7 +706,7 @@ module UtilityFunctions
 			result = err.message + "\n\t" + nicetrace
 		ensure
 			divider
-			message result + "\n"
+			message result.chomp + "\n"
 			divider
 			$deferr.puts
 		end
