@@ -311,7 +311,7 @@ module UtilityFunctions
 	# Pattern for extracting the name of the project from a Subversion URL
 	SVNUrlPath = %r{
 		.*/						# Skip all but the last bit
-		(\w+)					# $1 = project name
+		([^/]+)					# $1 = project name
 		/						# Followed by / +
 		(?:
 			trunk |				# 'trunk'
