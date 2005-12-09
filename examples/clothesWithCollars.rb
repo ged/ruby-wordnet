@@ -10,19 +10,27 @@ require "wordnet"
 # Create the lexicon
 lex = WordNet::Lexicon.new
 
-# Look up the clothes synset as the origin
-clothes = lex.lookupSynsets( "clothes", WordNet::Noun, 1 )
-puts clothes
+# Look up the clothing synset as the origin
+clothing = lex.lookupSynsets( "clothing", WordNet::Noun, 1 )
 
-# Now look up the second sense of tongue (not the anatomical part)
-collar = lex.lookupSynsets( "collar", WordNet::Noun, 1 )
-puts collar
+part_word = ARGV.shift || "collar"
+part = lex.lookupSynsets( part_word, WordNet::Noun, 1 ) or
+	abort( "Couldn't find synset for #{part_word}" )
 
-# Now traverse all hyponyms of the clothes synset, and check for "tongue" among
-# each one's meronyms. We print any that we find.
-clothes.traverse( :hyponyms ) {|syn,depth|
-	if syn.search( :allMeronyms, collar )
-		puts "Has a collar: #{syn}"
+
+puts "Looking for instances of:",
+	"  #{part}",
+	"in the hyponyms of",
+	"  #{clothing}",
+	""
+
+# Now traverse all hyponyms of the clothing synset, and check for "part" among
+# each one's meronyms, printing any we find
+clothing.traverse( :hyponyms ) {|syn,depth|
+	if syn.search( :meronyms, part )
+		puts "Has a #{part_word}: #{syn}"
+	else
+		puts "Doesn't have a #{part_word}: #{syn}" if $DEBUG
 	end
 }
 
