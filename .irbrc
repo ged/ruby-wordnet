@@ -27,6 +27,9 @@ IRB.conf[:PROMPT_MODE] = :MUES
 begin
 	puts "Requiring 'wordnet'..."
 	require 'wordnet'
+
+    puts "Instantiating the lexicon as $lex"
+    $lex = WordNet::Lexicon.new
 rescue => e
 	$stderr.puts "Ack! WordNet failed to load: #{e.message}\n\t" +
 		e.backtrace.join( "\n\t" )
