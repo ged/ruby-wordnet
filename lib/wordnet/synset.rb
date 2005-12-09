@@ -434,7 +434,7 @@ module WordNet
 				self.words |= newWords
 			}
 		end
-		alias_method :add_words, :addWords
+		alias_method :add_words, :addWords unless method_defined?( :add_words )
 
 
 		### Delete the specified +oldWords+ from this synset's wordlist. Alias:
@@ -444,7 +444,7 @@ module WordNet
 				self.words -= oldWords
 			}
 		end
-		alias_method :delete_words, :deleteWords
+		alias_method :delete_words, :deleteWords unless method_defined?( :delete_words )
 
 
 		### Return the synset as a string. Alias: +overview+.
