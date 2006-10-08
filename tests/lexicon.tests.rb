@@ -21,6 +21,16 @@ class LexiconTests < WordNet::TestCase
 	}
 
 
+	def setup
+		super
+		GC.disable
+	end
+	
+	def teardown
+		GC.enable
+		super
+	end
+
 
 	#################################################################
 	###	T E S T S
@@ -152,8 +162,7 @@ class LexiconTests < WordNet::TestCase
 
 
 	### Test synset creation via factory method
-	def test_45_CreateSynset
-		printTestHeader "Lexicon: Create Synset via Factory Method"
+	def test_lexicon_create_synset_should_create_a_new_synset
 		synset = nil
 
 		assert_nothing_raised do
@@ -175,11 +184,11 @@ class LexiconTests < WordNet::TestCase
 	def make_testing_directory
 		rndstuff = Process::pid
 		path = File::join( Dir::tmpdir, "test.#{rndstuff}" )
-		Dir::mkdir( path )
+		Dir::mkdir( path ) unless File.directory?( path )
 
 		yield( path )
 	ensure
-		FileUtils::rm_rf( path ) if defined?( path )
+		FileUtils::rm_rf( path, :verbose => $VERBOSE ) if defined?( path )
 	end
 
 

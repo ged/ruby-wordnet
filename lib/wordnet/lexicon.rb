@@ -4,7 +4,7 @@
 # 
 # == Synopsis
 # 
-#   lexicon = WordNet::Lexicon.new( dictpath )
+#	lexicon = WordNet::Lexicon.new( dictpath )
 # 
 # == Description
 # 
@@ -54,12 +54,12 @@ class WordNet::Lexicon
 	# Subversion Id
 	SvnId = %q$Id$
 
-    # Subversion revision
+	# Subversion revision
 	SvnRev = %q$Rev$
 
 
 	#############################################################
-	###	B E R K E L E Y D B   C O N F I G U R A T I O N
+	### B E R K E L E Y D B	  C O N F I G U R A T I O N
 	#############################################################
 
 	# The path to the WordNet BerkeleyDB Env. It lives in the directory that
@@ -73,8 +73,9 @@ class WordNet::Lexicon
 		:set_verbose	=> false,
 	}
 
-	# Flags for the creation of the Env object
-	EnvFlags = BDB::CREATE|BDB::INIT_TRANSACTION|BDB::RECOVER
+	# Flags for the creation of the Env object (read-write and read-only)
+	EnvFlagsRW = BDB::CREATE|BDB::INIT_TRANSACTION|BDB::RECOVER|BDB::INIT_MPOOL
+	EnvFlagsRO = BDB::INIT_MPOOL
 
 	# Table names (actually database names in BerkeleyDB)
 	TableNames = {
@@ -86,28 +87,43 @@ class WordNet::Lexicon
 
 
 	#############################################################
-	###	I N S T A N C E   M E T H O D S
+	### I N S T A N C E	  M E T H O D S
 	#############################################################
 
 	### Create a new WordNet::Lexicon object that will read its data from
-    ### the given +dbenv+ (a BerkeleyDB env directory). The database will be
-    ### opened with the specified +mode+, which can either be a numeric 
-    ### octal mode (e.g., 0444) or one of (:readonly, :readwrite).
+	### the given +dbenv+ (a BerkeleyDB env directory). The database will be
+	### opened with the specified +mode+, which can either be a numeric 
+	### octal mode (e.g., 0444) or one of (:readonly, :readwrite).
 	def initialize( dbenv=DefaultDbEnv, mode=:readonly )
-        raise ArgumentError, "Cannot find data directory '#{dbenv}'" unless
-            File::directory?( dbenv )
+		raise ArgumentError, "Cannot find data directory '#{dbenv}'" unless
+			File::directory?( dbenv )
 
-        mode = normalize_mode( mode )
-        
-        begin
-			@env = BDB::Env::new( dbenv, EnvFlags, EnvOptions )
-			@indexDb = @env.open_db( BDB::BTREE, "index", nil, BDB::CREATE, mode )
-			@dataDb = @env.open_db( BDB::BTREE, "data", nil, BDB::CREATE, mode )
-			@morphDb = @env.open_db( BDB::BTREE, "morph", nil, BDB::CREATE, mode )
-        rescue StandardError => err
-            msg = "Error while opening Ruby-WordNet data files: %s" % err.message
-            raise err.exception( msg )
-        end
+		mode = normalize_mode( mode )
+		debug_msg "Mode is: %04o" % [ mode ] if $DEBUG
+
+		if (mode & 0200).nonzero?
+			debug_msg "Using read/write flags"
+			envflags = EnvFlagsRW
+			dbflags = BDB::CREATE
+		else
+			debug_msg "Using readonly flags"
+			envflags = EnvFlagsRO
+			dbflags = 0
+		end
+
+		debug_msg "Env flags are: %0s, dbflags are %0s" %
+			[ envflags.to_s(2), dbflags.to_s(2) ]
+
+		begin
+			@env = BDB::Env::new( dbenv, envflags, EnvOptions )
+			@indexDb = @env.open_db( BDB::BTREE, "index", nil, dbflags, mode )
+			@dataDb = @env.open_db( BDB::BTREE, "data", nil, dbflags, mode )
+			@morphDb = @env.open_db( BDB::BTREE, "morph", nil, dbflags, mode )
+		rescue StandardError => err
+			msg = "Error while opening Ruby-WordNet data files: %s" % 
+				[ err.message ]
+			raise err, msg, err.backtrace
+		end
 	end
 
 
@@ -129,10 +145,10 @@ class WordNet::Lexicon
 	attr_reader :morphDb
 
 
-    ### Close the lexicon's database environment
-    def close
-        @env.close
-    end
+	### Close the lexicon's database environment
+	def close
+		@env.close if @env
+	end
 
 
 	### Checkpoint the database. (BerkeleyDB-specific)
@@ -375,24 +391,31 @@ class WordNet::Lexicon
 	end
 
 
-    #######
-    private
-    #######
-    
-    ### Turn the given +origmode+ into an octal file mode such as that 
-    ### given to File.open.
-    def normalize_mode( origmode )
-        case origmode
-        when :readonly
-            0444 - File.umask
-        when :readwrite, :writable
-            0666 - File.umask
-        when Fixnum
-            origmode
-        else
-            raise ArgumentError, "unrecognized mode %p" % [origmode]
-        end
-    end
+	#######
+	private
+	#######
+	
+	### Turn the given +origmode+ into an octal file mode such as that 
+	### given to File.open.
+	def normalize_mode( origmode )
+		case origmode
+		when :readonly
+			0444 & ~File.umask
+		when :readwrite, :writable
+			0666 & ~File.umask
+		when Fixnum
+			origmode
+		else
+			raise ArgumentError, "unrecognized mode %p" % [origmode]
+		end
+	end
+
+	### Output the given +msg+ to STDERR if $DEBUG is turned on.
+	def debug_msg( *msg )
+		return unless $DEBUG
+		$deferr.puts msg
+	end
+	
 
 end # class WordNet::Lexicon
 
