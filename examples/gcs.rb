@@ -12,8 +12,8 @@ raise RuntimeError, "You must specify two words." if ARGV.length != 2
 lex = WordNet::Lexicon.new
 
 # Look up the synsets for the specified word
-word1Syns = lex.lookupSynsets( ARGV[0], WordNet::Noun )
-word2Syns = lex.lookupSynsets( ARGV[1], WordNet::Noun )
+word1Syns = lex.lookup_synsets( ARGV[0], WordNet::Noun )
+word2Syns = lex.lookup_synsets( ARGV[1], WordNet::Noun )
 
 def debugMsg( message )
 	return unless $DEBUG

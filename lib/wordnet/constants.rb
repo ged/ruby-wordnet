@@ -21,7 +21,7 @@
 #	include WordNet::Constants
 #
 #	lex = WordNet::Lexicon::new
-#	origins = lex.lookupSynsets( "shoe", Noun )
+#	origins = lex.lookup_synsets( "shoe", Noun )
 # 
 # == Authors
 # 
@@ -75,13 +75,13 @@ module WordNet
 			:meronym		=> '%',
 			:holonym		=> '#',
 			:cause			=> '>',
-			:verbGroup		=> %{$},
-			:similarTo		=> '&',
+			:verb_group		=> %{$},
+			:similar_to		=> '&',
 			:participle		=> '<',
 			:pertainym		=> '\\',
 			:attribute		=> '=',
-			:derivedFrom	=> '\\',
-			:seeAlso		=> '^',
+			:derived_from	=> '\\',
+			:see_also		=> '^',
 			:derivation		=> '+',
 			:domain			=> ';',
 			:member			=> '-',

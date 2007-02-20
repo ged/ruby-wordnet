@@ -96,7 +96,7 @@ class WordNet::TestCase < Test::Unit::TestCase
 
     ### Cleanly close the lexicon
     def teardown
-        @lexicon.cleanLogs
+        @lexicon.clean_logs
         @lexicon.close
     end
 

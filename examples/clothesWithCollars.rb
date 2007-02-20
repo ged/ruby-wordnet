@@ -11,10 +11,10 @@ require "wordnet"
 lex = WordNet::Lexicon.new
 
 # Look up the clothing synset as the origin
-clothing = lex.lookupSynsets( "clothing", WordNet::Noun, 1 )
+clothing = lex.lookup_synsets( "clothing", WordNet::Noun, 1 )
 
 part_word = ARGV.shift || "collar"
-part = lex.lookupSynsets( part_word, WordNet::Noun, 1 ) or
+part = lex.lookup_synsets( part_word, WordNet::Noun, 1 ) or
 	abort( "Couldn't find synset for #{part_word}" )
 
 
@@ -26,11 +26,11 @@ puts "Looking for instances of:",
 
 # Now traverse all hyponyms of the clothing synset, and check for "part" among
 # each one's meronyms, printing any we find
-clothing.traverse( :hyponyms ) {|syn,depth|
+clothing.traverse( :hyponyms ) do |syn,depth|
 	if syn.search( :meronyms, part )
 		puts "Has a #{part_word}: #{syn}"
 	else
 		puts "Doesn't have a #{part_word}: #{syn}" if $DEBUG
 	end
-}
+end
 

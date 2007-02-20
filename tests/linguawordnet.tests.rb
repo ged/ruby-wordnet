@@ -4,15 +4,19 @@ require "wntestcase"
 
 class LexiconTests < WordNet::TestCase
 
-	BaseballOffset = '00466621%n'
+	OldBaseballOffset = '00466621%n'
+	BaseballOffset = '00471613%n'
 
 	def test_perl_tests
 		synset = nil
 		synset2 = nil
 
-		assert_nothing_raised do
-			synset = @lexicon.lookupSynsetsByKey( BaseballOffset )
+		begin
+			synset = @lexicon.lookup_synsets_by_key( BaseballOffset )
+		rescue WordNet::LookupError
+			synset = @lexicon.lookup_synsets_by_key( OldBaseballOffset )
 		end
+
 		assert_instance_of WordNet::Synset, synset
 
 		words = ''
@@ -23,7 +27,7 @@ class LexiconTests < WordNet::TestCase
 		assert_match( /hardball/, words )
 
 		words = ''
-		synset2 = @lexicon.lookupSynsets( "travel", WordNet::Verb, 2 )
+		synset2 = @lexicon.lookup_synsets( "travel", WordNet::Verb, 2 )
 		synset2.words.each {|word| words += "#{word}, "}
 		assert_match( /journey/, words )
 

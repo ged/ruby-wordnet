@@ -22,3 +22,4 @@ lib/**/*.rb
 test.rb
 tests/**/*
 utils.rb
+examples/*.rb

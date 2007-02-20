@@ -83,15 +83,15 @@ module WordNet
 			### either a key or a value of WordNet::Constants::PointerTypes. The
 			### +offset+ is the unique identifier of the target synset, and
 			### +pos+ is its part-of-speech, which must be either a key or value
-			### of WordNet::Constants::SyntacticCategories. The +sourceWn+ and
-			### +targetWn+ are numerical values which distinguish lexical and
-			### semantic pointers. +sourceWn+ indicates the word number in the
-			### current (source) synset, and +targetWn+ indicates the word
+			### of WordNet::Constants::SyntacticCategories. The +source_wn+ and
+			### +target_wn+ are numerical values which distinguish lexical and
+			### semantic pointers. +source_wn+ indicates the word number in the
+			### current (source) synset, and +target_wn+ indicates the word
 			### number in the target synset. If both are 0 (the default) it
 			### means that the pointer type of the pointer represents a semantic
 			### relation between the current (source) synset and the target
 			### synset indicated by +offset+.
-			def initialize( type, offset, pos=Noun, sourceWn=0, targetWn=0 )
+			def initialize( type, offset, pos=Noun, source_wn=0, target_wn=0 )
 
 				# Allow type = '!', 'antonym', or :antonym. Also handle
 				# splitting of compound pointers (e.g., :memberMeronym / '%m')
@@ -123,20 +123,20 @@ module WordNet
 					@type.nil?
 
 				# Allow pos = 'n', 'noun', or :noun
-				@partOfSpeech = nil
+				@part_of_speech = nil
 				if pos.to_s.length == 1
-					@partOfSpeech = SyntacticSymbols[ pos ]
+					@part_of_speech = SyntacticSymbols[ pos ]
 				else
-					@partOfSpeech = pos.to_sym if
+					@part_of_speech = pos.to_sym if
 						SyntacticCategories.key?( pos.to_sym )
 				end
 				raise ArgumentError, "No such part of speech %p" % pos if
-					@partOfSpeech.nil?
+					@part_of_speech.nil?
 
 				# Other attributes
 				@offset		= offset
-				@sourceWn	= sourceWn
-				@targetWn	= targetWn
+				@source_wn	= source_wn
+				@target_wn	= target_wn
 			end
 
 
@@ -157,13 +157,13 @@ module WordNet
 
 			# The part-of-speech of the target synset. Will be one of the keys
 			# of WordNet::SyntacticCategories.
-			attr_accessor :partOfSpeech
+			attr_accessor :part_of_speech
 
 			# The word number in the source synset
-			attr_accessor :sourceWn
+			attr_accessor :source_wn
 
 			# The word number in the target synset
-			attr_accessor :targetWn
+			attr_accessor :target_wn
 
 
 			### Return the Pointer as a human-readable String suitable for
@@ -187,12 +187,12 @@ module WordNet
 
 			### Return the syntactic category symbol for this pointer
 			def pos
-				return SyntacticCategories[ @partOfSpeech ]
+				return SyntacticCategories[ @part_of_speech ]
 			end
 
 
 			### Return the pointer type symbol for this pointer
-			def typeSymbol
+			def type_symbol
 				unless @subtype
 					return PointerTypes[ @type ]
 				else
@@ -213,11 +213,11 @@ module WordNet
 			### Return the pointer in its stringified form.
 			def to_s
 				"%s %d%%%s %02x%02x" % [ 
-					ptr.typeSymbol,
+					ptr.type_symbol,
 					ptr.offset,
 					ptr.posSymbol,
-					ptr.sourceWn,
-					ptr.targetWn,
+					ptr.source_wn,
+					ptr.target_wn,
 				]
 			end
 		end # class Pointer
@@ -293,15 +293,15 @@ module WordNet
 		#############################################################
 
 		### Create a new Synset object in the specified +lexicon+ for the
-		### specified +word+ and +partOfSpeech+. If +data+ is specified,
+		### specified +word+ and +part_of_speech+. If +data+ is specified,
 		### initialize the synset's other object data from it. This method
 		### shouldn't be called directly: you should use one of the Lexicon
-		### class's factory methods: #createSynset, #lookupSynsets, or
-		### #lookupSynsetsByOffset.
+		### class's factory methods: #create_synset, #lookup_synsets, or
+		### #lookup_synsetsByOffset.
 		def initialize( lexicon, offset, pos, word=nil, data=nil )
 			@lexicon		= lexicon or
 				raise ArgumentError, "%p is not a WordNet::Lexicon" % lexicon
-			@partOfSpeech	= SyntacticSymbols[ pos ] or
+			@part_of_speech	= SyntacticSymbols[ pos ] or
 				raise ArgumentError, "No such part of speech %p" % pos
 			@mutex			= Sync::new
 			@pointers		= []
@@ -327,10 +327,10 @@ module WordNet
 
 		# The syntactic category of this Synset. Will be one of "n" (noun), "v"
 		# (verb), "a" (adjective), "r" (adverb), or "s" (other).
-		attr_accessor :partOfSpeech
+		attr_accessor :part_of_speech
 
 		# The original byte offset of the synset in the data file; acts as the
-		# unique identifier (when combined with #partOfSpeech) of this Synset in
+		# unique identifier (when combined with #part_of_speech) of this Synset in
 		# the database.
 		attr_accessor :offset
 
@@ -369,7 +369,7 @@ module WordNet
 				self.object_id * 2,
 				self.offset,
 				self.words.join(", "),
-				self.partOfSpeech,
+				self.part_of_speech,
 				self.gloss,
 				pointerCounts,
 			]
@@ -386,7 +386,7 @@ module WordNet
 		### The symbol which represents this synset's syntactic category. Will
 		### be one of :noun, :verb, :adjective, :adverb, or :other.
 		def pos
-			return SyntacticCategories[ @partOfSpeech ]
+			return SyntacticCategories[ @part_of_speech ]
 		end
 
 
@@ -429,29 +429,27 @@ module WordNet
 
 		### Add the specified +newWords+ to this synset's wordlist. Alias:
 		### +add_words+.
-		def addWords( *newWords )
+		def add_words( *newWords )
 			@mutex.synchronize( Sync::EX ) {
 				self.words |= newWords
 			}
 		end
-		alias_method :add_words, :addWords unless method_defined?( :add_words )
 
 
 		### Delete the specified +oldWords+ from this synset's wordlist. Alias:
 		### +delete_words+.
-		def deleteWords( *oldWords )
+		def delete_words( *oldWords )
 			@mutex.synchronize( Sync::EX ) {
 				self.words -= oldWords
 			}
 		end
-		alias_method :delete_words, :deleteWords unless method_defined?( :delete_words )
 
 
 		### Return the synset as a string. Alias: +overview+.
 		def to_s
 			@mutex.synchronize( Sync::SH ) {
 				wordlist = self.words.join(", ").gsub( /%\d/, '' ).gsub( /_/, ' ' )
-				return "#{wordlist} [#{self.partOfSpeech}] -- (#{self.gloss})"
+				return "#{wordlist} [#{self.part_of_speech}] -- (#{self.gloss})"
 			}
 		end
 		alias_method :overview, :to_s
@@ -462,7 +460,7 @@ module WordNet
 		### before #write is called, the changes are lost.
 		def store
 			@mutex.synchronize( Sync::EX ) {
-				self.lexicon.storeSynset( self )
+				self.lexicon.store_synset( self )
 			}
 		end
 		alias_method :write, :store
@@ -471,7 +469,7 @@ module WordNet
 		### Removes this synset from the database.
 		def remove
 			@mutex.synchronize( Sync::EX ) {
-				self.lexicon.removeSynset( self )
+				self.lexicon.remove_synset( self )
 			}
 		end
 
@@ -498,17 +496,17 @@ module WordNet
 		#   ==> [#<WordNet::Synset:0x010a9acc/454927 clear (adjective): "free
 		#        from cloudiness; allowing light to pass through; "clear water";
 		#        "clear plastic bags"; "clear glass"; "the air is clear and
-		#        clean"" (similarTos: 6, attributes: 1, derivations: 2,
-		#        antonyms: 1, seeAlsos: 1)>]
+		#        clean"" (similar_tos: 6, attributes: 1, derivations: 2,
+		#        antonyms: 1, see_alsos: 1)>]
 		def_pointer_methods :antonyms
 
 		# Synsets for the receiver's entailments (a verb X entails Y if X cannot
-		# be done unless Y is, or has been, done). E.g.,
+		# be done unless Y is or has been done). E.g.,
 		#   $lexicon.lookup_synsets( 'rasp', :verb, 1 ).entailment
 		#   ==> [#<WordNet::Synset:0x010dc24c rub (verb): "move over something
 		#        with pressure; "rub my hands"; "rub oil into her skin""
 		#        (derivations: 2, entailments: 1, hypernyms: 1, hyponyms: 13,
-		#        seeAlsos: 4)>]
+		#        see_alsos: 4)>]
 		def_pointer_methods :entailment
 
 		# Get/set synsets for the receiver's cause pointers (a verb X causes Y
@@ -517,12 +515,12 @@ module WordNet
 
 		# Get/set synsets for the receiver's verb groups. Verb groups link verbs
 		# with similar senses together.
-		def_pointer_methods :verbGroups
+		def_pointer_methods :verb_groups
 
 		# Get/set list of synsets for the receiver's "similar to" pointers. This
 		# type of pointer links together head adjective synsets with its
 		# satellite adjective synsets.
-		def_pointer_methods :similarTo
+		def_pointer_methods :similar_to
 
 		# Get/set synsets for the receiver's participles. Participles are
 		# non-finite forms of a verb; used adjectivally and to form compound
@@ -539,14 +537,14 @@ module WordNet
 		# Get/set synsets for the receiver's attributes. 
 		def_pointer_methods :attributes
 
-		# Get/set synsets for the receiver's derivedFrom.
-		def_pointer_methods :derivedFrom
+		# Get/set synsets for the receiver's derived_from.
+		def_pointer_methods :derived_from
 
 		# Get/set synsets for the receiver's derivations.
 		def_pointer_methods :derivations
 
-		# Get/set synsets for the receiver's seeAlso.
-		def_pointer_methods :seeAlso
+		# Get/set synsets for the receiver's see_also.
+		def_pointer_methods :see_also
 
 
 		# Auto-generate types with subtypes
@@ -559,7 +557,7 @@ module WordNet
 		#          (derivations: 1, hypernyms: 1, hyponyms: 7)>]
 		# Also generates accessors for subtypes:
 		# 
-		# [instanceHypernyms]
+		# [instance_hypernyms]
 		#   A proper noun that refers to a particular, unique referent (as
         #   distinguished from nouns that refer to classes).
  		def_pointer_methods :hypernyms
@@ -574,25 +572,25 @@ module WordNet
 		# general accessors for all meronyms, there are also accessors for
 		# subtypes as well:
 		#
-		# [memberMeronyms]
+		# [member_meronyms]
 		#   Get/set synsets for the receiver's "member" meronyms (HAS MEMBER
 		#   relation).
-		# [stuffMeronyms]
+		# [stuff_meronyms]
 		#   Get/set synsets for the receiver's "stuff" meronyms (IS MADE OUT OF
 		#   relation).
-		# [portionMeronyms]
+		# [portion_meronyms]
 		#   Get/set synsets for the receiver's "portion" meronyms (HAS PORTION
 		#   relation).
-		# [componentMeronyms]
+		# [component_meronyms]
 		#   Get/set synsets for the receiver's "component" meronyms (HAS
 		#   COMPONENT relation).
-		# [featureMeronyms]
+		# [feature_meronyms]
 		#   Get/set synsets for the receiver's "feature" meronyms (HAS FEATURE
 		#   relation).
-		# [phaseMeronyms]
+		# [phase_meronyms]
 		#   Get/set synsets for the receiver's "phase" meronyms (HAS PHASE
 		#   relation).
-		# [placeMeronyms]
+		# [place_meronyms]
 		#   Get/set synsets for the receiver's "place" meronyms (HAS PLACE
 		#   relation).
 		def_pointer_methods :meronyms
@@ -601,25 +599,25 @@ module WordNet
 		# general accessors for all holonyms, there are also accessors for
 		# subtypes as well:
 		#
-		# [memberHolonyms]
+		# [member_holonyms]
 		#   Get/set synsets for the receiver's "member" holonyms (IS A MEMBER OF
 		#   relation).
-		# [stuffHolonyms]
+		# [stuff_holonyms]
 		#   Get/set synsets for the receiver's "stuff" holonyms (IS MATERIAL OF
 		#   relation).
-		# [portionHolonyms]
+		# [portion_holonyms]
 		#   Get/set synsets for the receiver's "portion" holonyms (IS A PORTION
 		#   OF relation).
-		# [componentHolonyms]
+		# [component_holonyms]
 		#   Get/set synsets for the receiver's "component" holonyms (IS A
 		#   COMPONENT OF relation).
-		# [featureHolonyms]
+		# [feature_holonyms]
 		#   Get/set synsets for the receiver's "feature" holonyms (IS A FEATURE
 		#   OF relation).
-		# [phaseHolonyms]
+		# [phase_holonyms]
 		#   Get/set synsets for the receiver's "phase" holonyms (IS A PHASE OF
 		#   relation).
-		# [placeHolonyms]
+		# [place_holonyms]
 		#   Get/set synsets for the receiver's "place" holonyms (IS A PLACE IN
 		#   relation).
 		def_pointer_methods :holonyms
@@ -628,13 +626,13 @@ module WordNet
 		# to the general members accessor, there are also accessors for
 		# membership subtypes:
 		#
-		# [categoryMembers]
+		# [category_members]
 		#   Get/set synsets for the receiver's
 		# "category" topical domain members.
-		# [regionMembers]
+		# [region_members]
 		#   Get/set synsets for the receiver's "region"
 		# topical domain members.
-		# [usageMembers]
+		# [usage_members]
 		#   Get/set synsets for the receiver's "usage"
 		# topical domain members.
 		def_pointer_methods :members
@@ -643,13 +641,13 @@ module WordNet
 		# to the general domains accessor, there are also accessors for
 		# domainship subtypes:
 		#
-		# [categoryDomains]
+		# [category_domains]
 		#   Get/set synsets for the receiver's
 		#   "category" topical domain domains.
-		# [regionDomains]
+		# [region_domains]
 		#   Get/set synsets for the receiver's "region"
 		#   topical domain domains.
-		# [usageDomains]
+		# [usage_domains]
 		#   Get/set synsets for the receiver's "usage"
 		#   topical domain domains.
 		def_pointer_methods :domains
@@ -665,7 +663,7 @@ module WordNet
 
 		### Return the name of the "lexicographer's file" associated with this
 		### synset.
-		def lexInfo
+		def lex_info
 			@mutex.synchronize( Sync::SH ) {
 				return Lexfiles[ self.filenum.to_i ]
 			}
@@ -873,7 +871,7 @@ module WordNet
 							subtype.nil? || ptr.subtype == subtype
 					}.
 					collect {|ptr| ptr.synset }.
-					collect {|key| @lexicon.lookupSynsetsByKey( key )}
+					collect {|key| @lexicon.lookup_synsets_by_key( key )}
 			end
 
 			return synsets.flatten
