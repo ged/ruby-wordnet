@@ -121,7 +121,7 @@ class LexiconTests < WordNet::TestCase
 		res = nil
 
 		assert_nothing_raised do
-			res = @lexicon.reverseMorph( "angry" )
+			res = @lexicon.reverse_morph( "angry" )
 		end
 
 		# Don't want this to fail if WordNet data changes, so just match the
@@ -150,7 +150,7 @@ class LexiconTests < WordNet::TestCase
 
 		TestWords.each {|word,pos|
 			assert_nothing_raised do
-				rval, rest = @lexicon.lookupSynsets( word, pos )
+				rval, rest = @lexicon.lookup_synsets( word, pos )
 			end
 
 			assert_instance_of WordNet::Synset, rval
@@ -166,13 +166,36 @@ class LexiconTests < WordNet::TestCase
 		synset = nil
 
 		assert_nothing_raised do
-			synset = @lexicon.createSynset( "Ruby", WordNet::Noun )
+			synset = @lexicon.create_synset( "Ruby", WordNet::Noun )
 		end
 		assert_instance_of WordNet::Synset, synset
 	end
 
 
-	# :TODO: Test storeSynset()?
+	def test_lexicon_should_be_readonly_if_opened_in_readonly_mode
+		make_testing_directory do |path|
+			lex = WordNet::Lexicon::new( path, :readwrite ).checkpoint
+			lex = nil
+			
+			lex = WordNet::Lexicon.new( path, :readonly )
+			assert_equal true, lex.readonly?
+			assert_equal false, lex.readwrite?
+		end
+	end
+
+
+	def test_lexicon_should_be_readwrite_if_opened_in_readwrite_mode
+		make_testing_directory do |path|
+			lex = WordNet::Lexicon::new( path, :readwrite )
+
+			assert_equal false, lex.readonly?
+			assert_equal true, lex.readwrite?
+		end
+	end
+
+
+
+	# :TODO: Test store_synset()?
 
 
 	#######

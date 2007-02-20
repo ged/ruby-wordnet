@@ -13,7 +13,7 @@ raise RuntimeError, "No word specified." if ARGV.empty?
 lex = WordNet::Lexicon.new
 
 # Look up the synsets for the specified word
-origins = lex.lookupSynsets( ARGV[0], WordNet::Noun )
+origins = lex.lookup_synsets( ARGV[0], WordNet::Noun )
 
 # Use the analyzer to traverse meronyms of the synset, adding a string for each
 # one with indentation for the level

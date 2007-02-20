@@ -6,7 +6,7 @@ require "bdb"
 class SynsetTests < WordNet::TestCase
 
 	Accessors = [
-		:partOfSpeech,
+		:part_of_speech,
 		:offset,
 		:filenum,
 		:wordlist,
@@ -21,42 +21,42 @@ class SynsetTests < WordNet::TestCase
 		:entailment,
 		:hyponyms,
 		:causes,
-		:verbGroups,
-		:similarTo,
+		:verb_groups,
+		:similar_to,
 		:participles,
 		:pertainyms,
 		:attributes,
-		:derivedFrom,
+		:derived_from,
 		:derivations,
-		:seeAlso,
+		:see_also,
 
-        :instanceHyponyms,
+        :instance_hyponyms,
 
-        :instanceHypernyms,
+        :instance_hypernyms,
 
-		:memberMeronyms,
-		:stuffMeronyms,
-		:portionMeronyms,
-		:componentMeronyms,
-		:featureMeronyms,
-		:phaseMeronyms,
-		:placeMeronyms,
+		:member_meronyms,
+		:stuff_meronyms,
+		:portion_meronyms,
+		:component_meronyms,
+		:feature_meronyms,
+		:phase_meronyms,
+		:place_meronyms,
 
-		:memberHolonyms,
-		:stuffHolonyms,
-		:portionHolonyms,
-		:componentHolonyms,
-		:featureHolonyms,
-		:phaseHolonyms,
-		:placeHolonyms,
+		:member_holonyms,
+		:stuff_holonyms,
+		:portion_holonyms,
+		:component_holonyms,
+		:feature_holonyms,
+		:phase_holonyms,
+		:place_holonyms,
 
-		:categoryDomains,
-		:regionDomains,
-		:usageDomains,
+		:category_domains,
+		:region_domains,
+		:usage_domains,
 
-		:categoryMembers,
-		:regionMembers,
-		:usageMembers,
+		:category_members,
+		:region_members,
+		:usage_members,
 	]
 
 	AggregateRelationMethods = [
@@ -72,7 +72,7 @@ class SynsetTests < WordNet::TestCase
         super
 
 		@blankSyn = WordNet::Synset::new( @lexicon, "1%n", WordNet::Noun )
-		@traversalSyn = @lexicon.lookupSynsets( 'linguistics', :noun, 1 )
+		@traversalSyn = @lexicon.lookup_synsets( 'linguistics', :noun, 1 )
 	end
 
 
@@ -117,7 +117,7 @@ class SynsetTests < WordNet::TestCase
 	end
 
 	### Aggregate relation methods
-	def test_aggregateRelations
+	def test_aggregate_relations
 		printTestHeader "Synset: Aggregate relations"
 		rval = nil
 		
@@ -235,12 +235,12 @@ class SynsetTests < WordNet::TestCase
 	end
 
 
-	### Part of speech: partOfSpeech
+	### Part of speech: part_of_speech
 	def test_part_of_speech_should_return_the_symbol_part_of_speech
-		printTestHeader "Synset: partOfSpeech"
+		printTestHeader "Synset: part_of_speech"
 		rval = nil
 
-		assert_nothing_raised { rval = @traversalSyn.partOfSpeech }
+		assert_nothing_raised { rval = @traversalSyn.part_of_speech }
 		assert_equal :noun, rval
 	end
 

@@ -98,10 +98,10 @@ class WordNet::Lexicon
 		raise ArgumentError, "Cannot find data directory '#{dbenv}'" unless
 			File::directory?( dbenv )
 
-		mode = normalize_mode( mode )
+		@mode = normalize_mode( mode )
 		debug_msg "Mode is: %04o" % [ mode ] if $DEBUG
 
-		if (mode & 0200).nonzero?
+		unless self.readonly?
 			debug_msg "Using read/write flags"
 			envflags = EnvFlagsRW
 			dbflags = BDB::CREATE
@@ -116,11 +116,11 @@ class WordNet::Lexicon
 
 		begin
 			@env = BDB::Env::new( dbenv, envflags, EnvOptions )
-			@indexDb = @env.open_db( BDB::BTREE, "index", nil, dbflags, mode )
-			@dataDb = @env.open_db( BDB::BTREE, "data", nil, dbflags, mode )
-			@morphDb = @env.open_db( BDB::BTREE, "morph", nil, dbflags, mode )
+			@index_db = @env.open_db( BDB::BTREE, "index", nil, dbflags, @mode )
+			@data_db = @env.open_db( BDB::BTREE, "data", nil, dbflags, @mode )
+			@morph_db = @env.open_db( BDB::BTREE, "morph", nil, dbflags, @mode )
 		rescue StandardError => err
-			msg = "Error while opening Ruby-WordNet data files: %s" % 
+			msg = "Error while opening Ruby-WordNet data files: #{dbenv}: %s" % 
 				[ err.message ]
 			raise err, msg, err.backtrace
 		end
@@ -136,14 +136,26 @@ class WordNet::Lexicon
 	attr_reader :env
 
 	# The handle to the index table
-	attr_reader :indexDb
+	attr_reader :index_db
 
 	# The handle to the synset data table
-	attr_reader :dataDb
+	attr_reader :data_db
 
 	# The handle to the morph table
-	attr_reader :morphDb
+	attr_reader :morph_db
 
+
+	### Returns +true+ if the lexicon was opened in read-only mode.
+	def readonly?
+		( @mode & 0200 ).nonzero? ? false : true
+	end
+	
+	
+	### Returns +true+ if the lexicon was opened in read-write mode.
+	def readwrite?
+		! self.readonly?
+	end
+	
 
 	### Close the lexicon's database environment
 	def close
@@ -166,40 +178,41 @@ class WordNet::Lexicon
 
 	### Remove any archival logfiles for the lexicon's database
 	### environment. (BerkeleyDB-specific).
-	def cleanLogs
-		self.archlogs.each {|logfile|
+	def clean_logs
+		return unless self.readwrite?
+		self.archlogs.each do |logfile|
 			File::chmod( 0777, logfile )
 			File::delete( logfile )
-		}
+		end
 	end
 
 
 	### Returns an integer of the familiarity/polysemy count for +word+ as a
-	### +partOfSpeech+. Note that polysemy can be identified for a given
-	### word by counting the synsets returned by #lookupSynsets.
-	def familiarity( word, partOfSpeech, polyCount=nil )
-		wordkey = self.makeWordKey( word, partOfSpeech )
-		return nil unless @indexDb.key?( wordkey )
-		@indexDb[ wordkey ].split( WordNet::SubDelimRe ).length
+	### +part_of_speech+. Note that polysemy can be identified for a given
+	### word by counting the synsets returned by #lookup_synsets.
+	def familiarity( word, part_of_speech, polyCount=nil )
+		wordkey = self.make_word_key( word, part_of_speech )
+		return nil unless @index_db.key?( wordkey )
+		@index_db[ wordkey ].split( WordNet::SubDelimRe ).length
 	end
 
 
 	### Look up sysets (Wordnet::Synset objects) matching +text+ as a
-	### +partOfSpeech+, where +partOfSpeech+ is one of +WordNet::Noun+,
+	### +part_of_speech+, where +part_of_speech+ is one of +WordNet::Noun+,
 	### +WordNet::Verb+, +WordNet::Adjective+, or +WordNet::Adverb+. Without
-	### +sense+, #lookupSynsets will return all matches that are a
-	### +partOfSpeech+. If +sense+ is specified, only the synset object that
-	### matches that particular +partOfSpeech+ and +sense+ is returned.
-	def lookupSynsets( word, partOfSpeech, sense=nil )
-		wordkey = self.makeWordKey( word, partOfSpeech )
-		pos = self.makePos( partOfSpeech )
+	### +sense+, #lookup_synsets will return all matches that are a
+	### +part_of_speech+. If +sense+ is specified, only the synset object that
+	### matches that particular +part_of_speech+ and +sense+ is returned.
+	def lookup_synsets( word, part_of_speech, sense=nil )
+		wordkey = self.make_word_key( word, part_of_speech )
+		pos = self.make_pos( part_of_speech )
 		synsets = []
 
 		# Look up the index entry, trying first the word as given, and if
 		# that fails, trying morphological conversion.
-		entry = @indexDb[ wordkey ]
-		if entry.nil? && (word = self.morph( word, partOfSpeech ))
-			entry = @indexDb[ wordkey ]
+		entry = @index_db[ wordkey ]
+		if entry.nil? && (word = self.morph( word, part_of_speech ))
+			entry = @index_db[ wordkey ]
 		end
 
 		# If the lookup failed both ways, just abort
@@ -209,9 +222,9 @@ class WordNet::Lexicon
 		# requested if one was specified.
 		synkeys = entry.split( SubDelimRe ).collect {|off| "#{off}%#{pos}" }
 		if sense
-			return lookupSynsetsByKey( synkeys[sense - 1] )
+			return lookup_synsets_by_key( synkeys[sense - 1] )
 		else
-			return [ lookupSynsetsByKey(*synkeys) ].flatten
+			return [ lookup_synsets_by_key(*synkeys) ].flatten
 		end
 	end
 
@@ -219,36 +232,36 @@ class WordNet::Lexicon
 	### Returns the WordNet::Synset objects corresponding to the +keys+
 	### specified. The +keys+ are made up of the target synset's "offset"
 	### and syntactic category catenated together with a '%' character.
-	def lookupSynsetsByKey( *keys )
+	def lookup_synsets_by_key( *keys )
 		synsets = []
 
 		keys.each {|key|
-			raise LookupError, "Failed lookup of synset '#{key}':"\
-				"No such synset" unless @dataDb.key?( key )
+			raise WordNet::LookupError, "Failed lookup of synset '#{key}':"\
+				"No such synset" unless @data_db.key?( key )
 
-			data = @dataDb[ key ]
-			offset, partOfSpeech = key.split( /%/, 2 )
-			synsets << WordNet::Synset::new( self, offset, partOfSpeech, nil, data )
+			data = @data_db[ key ]
+			offset, part_of_speech = key.split( /%/, 2 )
+			synsets << WordNet::Synset::new( self, offset, part_of_speech, nil, data )
 		}
 
 		return *synsets
 	end
-	alias_method :lookupSynsetsByOffset, :lookupSynsetsByKey
+	alias_method :lookup_synsetsByOffset, :lookup_synsets_by_key
 
 
-	### Returns a form of +word+ as a part of speech +partOfSpeech+, as
-	### found in the WordNet morph files. The #lookupSynsets method perfoms
+	### Returns a form of +word+ as a part of speech +part_of_speech+, as
+	### found in the WordNet morph files. The #lookup_synsets method perfoms
 	### morphological conversion automatically, so a call to #morph is not
 	### required.
-	def morph( word, partOfSpeech )
-		return @morphDb[ self.makeWordKey(word, partOfSpeech) ]
+	def morph( word, part_of_speech )
+		return @morph_db[ self.make_word_key(word, part_of_speech) ]
 	end
 
 
 	### Returns the result of looking up +word+ in the inverse of the WordNet
 	### morph files. _(This is undocumented in Lingua::Wordnet)_
-	def reverseMorph( word )
-		@morphDb.invert[ word ]
+	def reverse_morph( word )
+		@morph_db.invert[ word ]
 	end
 
 
@@ -260,7 +273,7 @@ class WordNet::Lexicon
 		
 		# Grab a cursor into the database and fetch while the key matches
 		# the target text
-		cursor = @indexDb.cursor
+		cursor = @index_db.cursor
 		rec = cursor.set_range( text )
 		while /^#{text}/ =~ rec[0]
 			words.push rec[0]
@@ -273,21 +286,21 @@ class WordNet::Lexicon
 
 
 	### Factory method: Creates and returns a new WordNet::Synset object in
-	### this lexicon for the specified +word+ and +partOfSpeech+.
-	def createSynset( word, partOfSpeech )
-		return WordNet::Synset::new( self, '', partOfSpeech, word )
+	### this lexicon for the specified +word+ and +part_of_speech+.
+	def create_synset( word, part_of_speech )
+		return WordNet::Synset::new( self, '', part_of_speech, word )
 	end
-	alias_method :newSynset, :createSynset
+	alias_method :new_synset, :create_synset
 
 
 	### Store the specified +synset+ (a WordNet::Synset object) in the
 	### lexicon. Returns the key of the stored synset.
-	def storeSynset( synset )
+	def store_synset( synset )
 		strippedOffset = nil
 		pos = nil
 
 		# Start a transaction
-		@env.begin( BDB::TXN_COMMIT, @dataDb ) do |txn,datadb|
+		@env.begin( BDB::TXN_COMMIT, @data_db ) do |txn,datadb|
 
 			# If this is a new synset, generate an offset for it
 			if synset.offset == 1
@@ -299,7 +312,7 @@ class WordNet::Lexicon
 			datadb[ synset.key ] = synset.serialize
 				
 			# Write the index entries
-			txn.begin( BDB::TXN_COMMIT, @indexDb ) do |txn,indexdb|
+			txn.begin( BDB::TXN_COMMIT, @index_db ) do |txn,indexdb|
 
 				# Make word/part-of-speech pairs from the words in the synset
 				synset.words.collect {|word| word + "%" + pos }.each {|word|
@@ -313,7 +326,7 @@ class WordNet::Lexicon
 						indexdb[ word ] = synset.offset
 					end
 				}
-			end # transaction on @indexDb
+			end # transaction on @index_db
 		end # transaction on @dataDB
 
 		return synset.offset
@@ -322,17 +335,17 @@ class WordNet::Lexicon
 
 	### Remove the specified +synset+ (a WordNet::Synset object) in the
 	### lexicon. Returns the offset of the stored synset.
-	def removeSynset( synset )
+	def remove_synset( synset )
 		# If it's not in the database (ie., doesn't have a real offset),
 		# just return.
 		return nil if synset.offset == 1
 
 		# Start a transaction on the data table
-		@env.begin( BDB::TXN_COMMIT, @dataDb ) do |txn,datadb|
+		@env.begin( BDB::TXN_COMMIT, @data_db ) do |txn,datadb|
 
 			# First remove the index entries for this synset by iterating
 			# over each of its words
-			txn.begin( BDB::TXN_COMMIT, @indexDb ) do |txn,indexdb|
+			txn.begin( BDB::TXN_COMMIT, @index_db ) do |txn,indexdb|
 				synset.words.collect {|word| word + "%" + pos }.each {|word|
 
 					# If the index contains an entry for this word, either
@@ -345,9 +358,9 @@ class WordNet::Lexicon
 							reject {|offset| offset == synset.offset}
 
 						unless offsets.empty?
-							indexDb[ word ] = newoffsets.join( SubDelim )
+							index_db[ word ] = newoffsets.join( SubDelim )
 						else
-							indexDb.delete( word )
+							index_db.delete( word )
 						end
 					end
 				}
@@ -372,7 +385,7 @@ class WordNet::Lexicon
 	### which may be the name (e.g., "noun"); +nil+, in which case it
 	### defaults to the indicator for a noun; or the indicator character
 	### itself, in which case it is returned unmodified.
-	def makePos( original )
+	def make_pos( original )
 		return WordNet::Noun if original.nil?
 		osym = original.to_s.intern
 		return WordNet::SyntacticCategories[ osym ] if
@@ -384,8 +397,8 @@ class WordNet::Lexicon
 
 	### Make a lexicon key out of the given +word+ and part of speech
 	### (+pos+).
-	def makeWordKey( word, pos )
-		pos = self.makePos( pos )
+	def make_word_key( word, pos )
+		pos = self.make_pos( pos )
 		word = word.gsub( /\s+/, '_' )
 		return "#{word}%#{pos}"
 	end

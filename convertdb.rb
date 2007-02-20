@@ -121,9 +121,9 @@ def convertdb( errorLimit=0 )
 
 	# Process each fileset
 	[	  # Fileset,  name,    database handle, processor
-		Fileset::new( IndexFiles, "index", lexicon.indexDb, method(:parseIndexLine) ),
-		Fileset::new( MorphFiles, "morph", lexicon.morphDb, method(:parseMorphLine) ),
-		Fileset::new( DataFiles,  "data",  lexicon.dataDb,  method(:parseSynsetLine) ),
+		Fileset::new( IndexFiles, "index", lexicon.index_db, method(:parseIndexLine) ),
+		Fileset::new( MorphFiles, "morph", lexicon.morph_db, method(:parseMorphLine) ),
+		Fileset::new( DataFiles,  "data",  lexicon.data_db,  method(:parseSynsetLine) ),
 	].each {|set|
 		message "Converting %s files...\n" % set.name
 		set.db.truncate
@@ -172,7 +172,7 @@ def convertdb( errorLimit=0 )
 
 		message "Checkpointing DB and cleaning logs..."
 		lexicon.checkpoint
-		lexicon.cleanLogs
+		lexicon.clean_logs
 		puts "done."
 	}
 

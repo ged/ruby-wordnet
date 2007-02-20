@@ -6,20 +6,17 @@
 $: << "lib"
 require "WordNet"
 
-$stderr.puts "This doesn't work yet."
-exit
+lex = WordNet::Lexicon.new( "ruby-wordnet" )
 
-lex = WordNet::Lexicon.new
+boot = lex.lookup_synsets( "boot", "n", 1 )
+laced_boot = lex.create_synset( "laced boot", "n" )
+tongue = lex.lookup_synsets( "tongue", "n", 6 )
 
-boot = lex.lookupSynset( "boot", "n", 1 )
-lacedBoot = lex.createSynset( "laced boot", "n" )
-tongue = lex.lookupSynset( "tongue", "n", 6 )
-
-lacedBoot.addHypernyms( boot )
-lacedBoot.addComponentMeronyms( tongue )
+laced_boot.add_hypernyms( boot )
+laced_boot.add_component_meronyms( tongue )
 
 lex.unlock {
-	lacedBoot.write
+	laced_boot.write
 	boot.write
 	tongue.write
 }
