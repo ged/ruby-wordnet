@@ -54,7 +54,6 @@ begin
 end
 
 require "test/unit"
-require "test/unit/mock"
 require "wordnet"
 
 ### The abstract base class for WordNet test cases.
