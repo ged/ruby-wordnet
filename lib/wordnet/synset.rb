@@ -555,6 +555,7 @@ module WordNet
 		#          stick that is larger at one end; "he carried a club in self
 		#          defense"; "he felt as if he had been hit with a club""
 		#          (derivations: 1, hypernyms: 1, hyponyms: 7)>]
+		# 
 		# Also generates accessors for subtypes:
 		# 
 		# [instance_hypernyms]
