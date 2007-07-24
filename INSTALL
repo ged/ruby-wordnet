@@ -13,11 +13,11 @@ Prerequisites
 Versions listed are the ones I've tested with. Earlier versions may work, but
 your mileage may vary.
 
-* Ruby (>= 1.8.0)
+* Ruby (>= 1.8.6)
   Home page: http://www.ruby-lang.org/
-  Download: ftp://ftp.ruby-lang.org/pub/ruby/ruby-1.8.0.tar.gz
+  Download: ftp://ftp.ruby-lang.org/pub/ruby/ruby-1.8.6.tar.gz
 
-* WordNet (>= 2.0)
+* WordNet (>= 3.0)
   Home page: http://www.cogsci.princeton.edu/~wn/
 
 * bdb (>=0.2.5)
