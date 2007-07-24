@@ -7,7 +7,7 @@ of human lexical memory. English nouns, verbs, adjectives and adverbs are
 organized into synonym sets, each representing one underlying lexical
 concept. Different relations link the synonym sets.
 
-You can find out more about WordNet® at <http://www.cogsci.princeton.edu/~wn/>.
+You can find out more about WordNet® at <http://wordnet.princeton.edu/>.
 
 This code was loosely based on the Lingua::Wordnet Perl module by Dan Brian, and
 uses a similar strategy of converting the WordNet data files into a BerkeleyDB
@@ -28,11 +28,6 @@ mostly a matter of playing around.
 
 == Caveats
 
-IMPORTANT: This is a *beta* release. It might blow up, compromise your security,
-write random data to sensitive portions of your hard drive, or otherwise fail to
-work as advertised. It is intended to be used by developers who are interested
-in helping out or curious onlookers who don't mind getting a bit wet.
-
 The database-writing portions of this code have not been extensively tested, and
 there are almost certainly bugs which will cause data to be lost or
 miswritten. You should make backups of changes you make periodically.
@@ -45,23 +40,21 @@ welcome. Relevant patches are particularly helpful. I may be reached at
 
 == Installation
 
-For installation instructions (such as they are at this point), see the INSTALL
-file.
+For installation instructions, see the INSTALL file.
 
 
 == More Information
 
 There is a project page for Ruby-WordNet which can be found at:
-<http://www.deveiate.org/code/Ruby-WordNet.shtml>.
+<http://deveiate.org/code/Ruby-WordNet.shtml>.
 
 This library was developed as part of the FaerieMUD Project. For more
-information about the FaerieMUD project as a whole, and about the FaerieMUD
-Consortium, see <http://www.FaerieMUD.org/> and the FaerieMUD Documentation Wiki
-at <http://docs.FaerieMUD.org/>.
+information about the FaerieMUD project see <http://www.FaerieMUD.org/>.
 
-You may also access a web interface to the FaerieMUD CVS repository at:
-<http://cvs.FaerieMUD.org/>, which includes instructions on checking out the CVS
-version of this module.
+You may also check out the latest development source for this module (which may or
+may not be different than the release) using Subversion from the following URL:
+
+  svn://deveiate.org/Ruby-WordNet/trunk
 
 
 == Authors
@@ -71,7 +64,7 @@ version of this module.
 
 == Legal
 
-Ruby-WordNet is Open Source Software which is Copyright © 2001-2003 by The
+Ruby-WordNet is Open Source Software which is Copyright © 2001-2007 by The
 FaerieMUD Consortium.
 
 You may use, modify, and/or redistribute this software under the terms of the
