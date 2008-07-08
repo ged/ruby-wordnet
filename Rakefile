@@ -34,10 +34,13 @@ RAKEDIR       = BASEDIR + 'rake'
 RDOCDIR       = BASEDIR + 'docs'
 PKGDIR        = BASEDIR + 'pkg'
 
+RAKE_TASKDIR  = BASEDIR + 'rake'
 ARTIFACTS_DIR = Pathname.new( ENV['CC_BUILD_ARTIFACTS'] || '' )
 
-TEXT_FILES    = %w( Rakefile README LICENSE LICENSE.txt ).
+TEXT_FILES    = %w( Rakefile ChangeLog INSTALL README LICENSE ).
 	collect {|filename| BASEDIR + filename }
+
+BUILD_FILES   = %w( convertdb.rb utils.rb )
 
 SPECDIR       = BASEDIR + 'spec'
 SPEC_FILES    = Pathname.glob( (SPECDIR + '**/*_spec.rb').to_s ).
@@ -50,7 +53,7 @@ LIB_FILES     = Pathname.glob( LIBDIR + '**/*.rb').
 
 RELEASE_FILES = TEXT_FILES + LIB_FILES + SPEC_FILES
 
-require RAKEDIR + 'helpers'
+require RAKE_TASKDIR + 'helpers.rb'
 
 ### Package constants
 PKG_NAME      = 'wordnet'
@@ -59,11 +62,24 @@ PKG_FILE_NAME = "#{PKG_NAME}-#{PKG_VERSION}"
 
 RELEASE_NAME  = "REL #{PKG_VERSION}"
 
-# Load task plugins
-Pathname.glob( RAKEDIR + '*.rb' ).each do |tasklib|
-	next if tasklib =~ %r{/helpers.rb$}
-	require tasklib
+### Load task libraries
+require RAKE_TASKDIR + 'svn.rb'
+require RAKE_TASKDIR + 'verifytask.rb'
+Pathname.glob( RAKE_TASKDIR + '*.rb' ).each do |tasklib|
+	next if tasklib =~ %r{/(helpers|svn|verifytask)\.rb$}
+	begin
+		require tasklib
+	rescue ScriptError => err
+		fail "Task library '%s' failed to load: %s: %s" %
+			[ tasklib, err.class.name, err.message ]
+		trace "Backtrace: \n  " + err.backtrace.join( "\n  " )
+	rescue => err
+		log "Task library '%s' failed to load: %s: %s. Some tasks may not be available." %
+			[ tasklib, err.class.name, err.message ]
+		trace "Backtrace: \n  " + err.backtrace.join( "\n  " )
+	end
 end
+
 
 if Rake.application.options.trace
 	$trace = true
