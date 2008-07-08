@@ -23,13 +23,13 @@ include UtilityFunctions, FileUtils, Config
 
 
 # SVN Revision
-SVNRev = %q$Rev: 13 $
+SVNRev = %q$Rev$
 
 # SVN Id
 SVNId = %q$Id$
 
 # SVN URL
-SVNURL = %q$URL: svn+ssh://svn.FaerieMUD.org/usr/local/svn/project-utils/trunk/makedist.rb $
+SVNURL = %q$URL$
 
 $Programs = {
 	'tar'	=> nil,

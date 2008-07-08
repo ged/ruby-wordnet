@@ -74,7 +74,7 @@ CommitThreshold = 2000
 
 # Temporary location for the lexicon data files
 BuildDir = Pathname.new( __FILE__ ).expand_path.dirname + 
-           Pathname.new( WordNet::Lexicon::DefaultDbEnv ).basename
+           Pathname.new( WordNet::Lexicon::DEFAULT_DB_ENV ).basename
 
 
 
@@ -89,7 +89,7 @@ def convertdb( errorLimit=0 )
 	message "This program will convert WordNet data files into databases\n"\
 		"used by Ruby-WordNet. This will not affect existing WordNet files,\n"\
 		"but will require up to 40Mb of disk space.\n"
-	exit unless /^y/i =~ promptWithDefault("Continue?", "y")
+	exit unless /^y/i =~ prompt_with_default("Continue?", "y")
 
 	# Open the database and check to be sure it's empty. Confirm overwrite if
 	# not. Checkpoint and set up logging proc if debugging.
@@ -97,25 +97,32 @@ def convertdb( errorLimit=0 )
 		message ">>> Warning: Existing data in the Ruby-WordNet databases\n"\
 			"will be overwritten.\n"
 		abort( "user cancelled." ) unless 
-			/^y/i =~ promptWithDefault( "Continue?", "n" )
+			/^y/i =~ prompt_with_default( "Continue?", "n" )
 		BuildDir.rmtree
 	end
 
 	# Find the source data files
 	if ARGV.empty?
+		default = nil
+		
+		if wndirs = Pathname.glob( Pathname.getwd + 'WordNet-*' )
+			default = wndirs.first
+		else
+			default = '/usr/local/WordNet-3.0'
+		end
 
         # :TODO: Do some more intelligent searching here
 		message "Where can I find the WordNet data files?\n"
-		datadir = promptWithDefault( "Data directory", "/usr/local/WordNet-2.1/dict" )
+		datadir = prompt_with_default( "Data directory", default + "dict" )
 	else
 		datadir = ARGV.shift
 	end
+	datadir = Pathname.new( datadir )
 
-	abort( "Directory '#{datadir}' does not exist" ) unless File::exists?( datadir )
-	abort( "'#{datadir}' is not a directory" ) unless File::directory?( datadir )
-	testfile = File::join(datadir, "data.noun")
-	abort( "'#{datadir}' doesn't seem to contain the necessary files.") unless
-		File::exists?( testfile )
+	abort( "Directory '#{datadir}' does not exist" ) unless datadir.exist?
+	abort( "'#{datadir}' is not a directory" ) unless datadir.directory?
+	testfile = datadir + "data.noun"
+	abort( "'#{datadir}' doesn't seem to contain the necessary files.") unless testfile.exist?
 
 	# Open the lexicon readwrite into the temporary datadir
 	BuildDir.mkpath
