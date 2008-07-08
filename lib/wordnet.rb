@@ -76,9 +76,12 @@ module WordNet
 	# Id tag
 	SvnId = %q$Id$
 
-end # module WordNet
+	# Release version
+	VERSION = '1.0.0'
 
-require 'wordnet/constants'
-require 'wordnet/lexicon'
-require 'wordnet/synset'
+	require 'wordnet/constants'
+	require 'wordnet/lexicon'
+	require 'wordnet/synset'
+
+end # module WordNet
 

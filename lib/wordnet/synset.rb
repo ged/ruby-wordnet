@@ -18,7 +18,7 @@
 #
 # Michael Granger <ged@FaerieMUD.org>
 # 
-# Copyright (c) 2002, 2003, 2005 The FaerieMUD Consortium. All rights reserved.
+# Copyright (c) 2002-2008 The FaerieMUD Consortium. All rights reserved.
 # 
 # This module is free software. You may use, modify, and/or redistribute this
 # software under the terms of the Perl Artistic License. (See
@@ -65,7 +65,7 @@ module WordNet
 
 			### Make an Array of WordNet::Synset::Pointer objects out of the
 			### given +pointerList+. The pointerlist is a string of pointers
-			### delimited by Constants::SubDelim. Pointers are in the form:
+			### delimited by Constants::SUB_DELIM. Pointers are in the form:
 			###   "<pointer_symbol> <synset_offset>%<pos> <source/target>"
 			def self::parse( pointerString )
 				type, offsetPos, ptrNums = pointerString.split(/\s+/)
@@ -80,10 +80,10 @@ module WordNet
 
 			### Create a new synset pointer with the given arguments. The
 			### +ptrType+ is the type of the link between synsets, and must be
-			### either a key or a value of WordNet::Constants::PointerTypes. The
+			### either a key or a value of WordNet::Constants::POINTER_TYPES. The
 			### +offset+ is the unique identifier of the target synset, and
 			### +pos+ is its part-of-speech, which must be either a key or value
-			### of WordNet::Constants::SyntacticCategories. The +source_wn+ and
+			### of WordNet::Constants::SYNTACTIC_CATEGORIES. The +source_wn+ and
 			### +target_wn+ are numerical values which distinguish lexical and
 			### semantic pointers. +source_wn+ indicates the word number in the
 			### current (source) synset, and +target_wn+ indicates the word
@@ -98,23 +98,23 @@ module WordNet
 				# into their correct type/subtype parts.
 				@type = @subtype = nil
 				if type.to_s.length == 1
-					@type = PointerSymbols[ type[0,1] ]
+					@type = POINTER_SYMBOLS[ type[0,1] ]
 					
 				elsif type.to_s.length == 2
-					@type = PointerSymbols[ type[0,1] ]
+					@type = POINTER_SYMBOLS[ type[0,1] ]
 					raise "No known subtypes for '%s'" % [@type] unless
-						PointerSubTypes.key?( @type )
-					@subtype = PointerSubTypes[ @type ].index( type ) or
+						POINTER_SUBTYPES.key?( @type )
+					@subtype = POINTER_SUBTYPES[ @type ].index( type ) or
 						raise "Unknown subtype '%s' for '%s'" %
 						[ type, @type ]
 						
 				else
-					if PointerTypes.key?( type.to_sym )
+					if POINTER_TYPES.key?( type.to_sym )
 						@type = type.to_sym
 					elsif /([a-z]+)([A-Z][a-z]+)/ =~ type.to_s
 						subtype, maintype = $1, $2.downcase
 						@type = maintype.to_sym if
-							PointerTypes.key?( maintype.to_sym )
+							POINTER_TYPES.key?( maintype.to_sym )
 						@subtype = subtype.to_sym
 					end
 				end
@@ -125,10 +125,10 @@ module WordNet
 				# Allow pos = 'n', 'noun', or :noun
 				@part_of_speech = nil
 				if pos.to_s.length == 1
-					@part_of_speech = SyntacticSymbols[ pos ]
+					@part_of_speech = SYNTACTIC_SYMBOLS[ pos ]
 				else
 					@part_of_speech = pos.to_sym if
-						SyntacticCategories.key?( pos.to_sym )
+						SYNTACTIC_CATEGORIES.key?( pos.to_sym )
 				end
 				raise ArgumentError, "No such part of speech %p" % pos if
 					@part_of_speech.nil?
@@ -145,18 +145,18 @@ module WordNet
 			######
 
 			# The type of the pointer. Will be one of the keys of
-			# WordNet::PointerTypes (e.g., :meronym).
+			# WordNet::POINTER_TYPES (e.g., :meronym).
 			attr_accessor :type
 
 			# The subtype of the pointer, if any. Will be one of the keys of one
-			# of the hashes in PointerSubTypes (e.g., :portion).
+			# of the hashes in POINTER_SUBTYPES (e.g., :portion).
 			attr_accessor :subtype
 
 			# The offset of the target synset
 			attr_accessor :offset
 
 			# The part-of-speech of the target synset. Will be one of the keys
-			# of WordNet::SyntacticCategories.
+			# of WordNet::SYNTACTIC_CATEGORIES.
 			attr_accessor :part_of_speech
 
 			# The word number in the source synset
@@ -187,16 +187,16 @@ module WordNet
 
 			### Return the syntactic category symbol for this pointer
 			def pos
-				return SyntacticCategories[ @part_of_speech ]
+				return SYNTACTIC_CATEGORIES[ @part_of_speech ]
 			end
 
 
 			### Return the pointer type symbol for this pointer
 			def type_symbol
 				unless @subtype
-					return PointerTypes[ @type ]
+					return POINTER_TYPES[ @type ]
 				else
-					return PointerSubTypes[ @type ][ @subtype ]
+					return POINTER_SUBTYPES[ @type ][ @subtype ]
 				end
 			end
 
@@ -233,7 +233,7 @@ module WordNet
 		### a trailing 's' is tried (e.g., 'def_pointer_methods :antonyms' will
 		### create methods called #antonyms and #antonyms=, but will fetch
 		### pointers of type :antonym). If the pointer type has subtypes
-		### (according to WordNet::PointerSubTypes), accessors/mutators for the
+		### (according to WordNet::POINTER_SUBTYPES), accessors/mutators for the
 		### subtypes will be generated as well.
 		def self::def_pointer_methods( symbol ) # :nodoc:
 			name = symbol.to_s
@@ -243,24 +243,27 @@ module WordNet
 			$stderr.puts '-' * 50, 
 				">>> defining pointer methods for %p" % [symbol] if $DEBUG
 			
-			if PointerTypes.key?( symbol )
-                symbol
-            elsif PointerTypes.key?( symbol.to_s.sub(/s$/, '').to_sym )
+			if POINTER_TYPES.key?( symbol )
+                type = symbol
+            elsif POINTER_TYPES.key?( symbol.to_s.sub(/s$/, '').to_sym )
                 type = symbol.to_s.sub(/s$/, '').to_sym
             else
                 raise ArgumentError, "Unknown pointer type %p" % symbol
             end
 
 			# Define the accessor
-			$deferr.puts "Defining reader for #{name}" if $DEBUG
-			define_method( name.to_sym ) { self.fetchSynsetPointers(type) }
+			$stderr.puts "Defining accessors for %p" % [ type ] if $DEBUG
+			define_method( name.to_sym ) { self.fetch_synset_pointers(type) }
+			define_method( "#{name}=".to_sym ) do |*synsets|
+				self.set_synset_pointers( type, synsets, nil )
+			end
 
 			# If the pointer is one that has subtypes, make the variants list
 			# out of the subtypes. If it doesn't have subtypes, make the only
 			# variant nil, which will cause the mutators to be defined for the
 			# main pointer type.
-			if PointerSubTypes.key?( type )
-				variants = PointerSubTypes[ type ].keys
+			if POINTER_SUBTYPES.key?( type )
+				variants = POINTER_SUBTYPES[ type ].keys
 			else
 				variants = [nil]
 			end
@@ -268,24 +271,22 @@ module WordNet
 			# Define a set of methods for each variant, or for the main method
 			# if the variant is nil.
 			variants.each do |subtype|
-                
-				varname = subtype ? subtype.to_s + casename : name
-				varcname = subtype ? subtype.to_s.capitalize + casename : casename
+				varname = subtype ? [subtype, name].join('_') : name
 
                 unless subtype.nil?
-                    $deferr.puts "Defining reader for #{varname}" if $DEBUG
-                    define_method( varname ) {
-                        self.fetchSynsetPointers( type, subtype )
-                    }
+                    $stderr.puts "Defining reader for #{varname}" if $DEBUG
+                    define_method( varname ) do
+                        self.fetch_synset_pointers( type, subtype )
+                    end
                 else
-                    $deferr.puts "No subtype for %s (subtype = %p)" %
+                    $stderr.puts "No subtype for %s (subtype = %p)" %
                         [ varname, subtype ] if $DEBUG
                 end
                 
-                $deferr.puts "Defining mutator for #{varname}" if $DEBUG
-				define_method( "#{varname}=" ) {|*synsets|
-					self.setSynsetPointers( type, synsets, subtype )
-				}
+                $stderr.puts "Defining mutator for #{varname}" if $DEBUG
+				define_method( "#{varname}=" ) do |*synsets|
+					self.set_synset_pointers( type, synsets, subtype )
+				end
 			end
 		end
 
@@ -301,17 +302,17 @@ module WordNet
 		### class's factory methods: #create_synset, #lookup_synsets, or
 		### #lookup_synsetsByOffset.
 		def initialize( lexicon, offset, pos, word=nil, data=nil )
-			@lexicon		= lexicon or
+			@lexicon = lexicon or
 				raise ArgumentError, "%p is not a WordNet::Lexicon" % lexicon
-			@part_of_speech	= SyntacticSymbols[ pos ] or
+			@part_of_speech	= SYNTACTIC_SYMBOLS[ pos ] or
 				raise ArgumentError, "No such part of speech %p" % pos
-			@mutex			= Sync::new
-			@pointers		= []
+			@mutex = Sync::new
+			@pointers = []
 
 			if data
 				@offset = offset.to_i
 				@filenum, @wordlist, @pointerlist,
-					@frameslist, @gloss = data.split( DelimRe )
+					@frameslist, @gloss = data.split( DELIM_RE )
 			else
 				@offset = 1
 				@wordlist = word ? word : ''
@@ -362,7 +363,7 @@ module WordNet
 		### Return a human-readable representation of the Synset suitable for
 		### debugging.
 		def inspect
-			pointerCounts = self.pointerMap.collect {|type,ptrs|
+			pointer_counts = self.pointer_map.collect {|type,ptrs|
 				"#{type}s: #{ptrs.length}"
 			}.join( ", " )
 
@@ -373,7 +374,7 @@ module WordNet
 				self.words.join(", "),
 				self.part_of_speech,
 				self.gloss,
-				pointerCounts,
+				pointer_counts,
 			]
 		end
 
@@ -388,7 +389,7 @@ module WordNet
 		### The symbol which represents this synset's syntactic category. Will
 		### be one of :noun, :verb, :adjective, :adverb, or :other.
 		def pos
-			return SyntacticCategories[ @part_of_speech ]
+			return SYNTACTIC_CATEGORIES[ @part_of_speech ]
 		end
 
 
@@ -413,7 +414,7 @@ module WordNet
 		### synset.
 		def words
 			@mutex.synchronize( Sync::SH ) {
-				self.wordlist.split( SubDelimRe ).collect do |word|
+				self.wordlist.split( SUB_DELIM_RE ).collect do |word|
 					word.gsub( /_/, ' ' ).sub( /%.*$/, '' )
 				end
 			}
@@ -424,7 +425,7 @@ module WordNet
 		### Set the words in this synset's wordlist to +newWords+
 		def words=( *newWords )
 			@mutex.synchronize( Sync::EX ) {
-				@wordlist = newWords.join( SubDelim )
+				@wordlist = newWords.join( SUB_DELIM )
 			}
 		end
 
@@ -486,7 +487,7 @@ module WordNet
 					@pointerlist,
 					@frameslist,
 					@gloss
-				].join( WordNet::Delim )
+				].join( WordNet::DELIM )
 			}
 		end
 
@@ -565,11 +566,20 @@ module WordNet
         #   distinguished from nouns that refer to classes).
  		def_pointer_methods :hypernyms
 
-		# Get/set synsets for the receiver's hyponyms (more-specific terms). E.g., 
 
+		# :TODO: Generate an example for this
+
+		# Get/set synsets for the receiver's hyponyms (more-specific terms). E.g., 
+		#   $lexicon.lookup_synsets( "cudgel", :noun, 1 ).hyponyms
+		#     ==> [...]
 		# [instance_hyponyms]
 		#   The specific term used to designate a member of a class. X  is a 
 		#   hyponym of Y  if X  is a (kind of) Y.
+		# Also generates accessors for subtypes:
+		# 
+		# [instance_hyponyms]
+		#   A proper noun that refers to a particular, unique referent (as
+        #   distinguished from nouns that refer to classes).
 		def_pointer_methods :hyponyms
 
 
@@ -670,17 +680,17 @@ module WordNet
 		### synset.
 		def lex_info
 			@mutex.synchronize( Sync::SH ) {
-				return Lexfiles[ self.filenum.to_i ]
+				return LEXFILES[ self.filenum.to_i ]
 			}
 		end
 
 
 		### Sets the "lexicographer's file" association for this synset to
 		### +id+. The value in +id+ should correspond to one of the values in
-		### #WordNet::Lexfiles
+		### #WordNet::LEXFILES
 		def lexInfo=( id )
-			raise ArgumentError, "Bad index: Lexinfo id must be within Lexfiles" unless
-				Lexfiles[id]
+			raise ArgumentError, "Bad index: Lexinfo id must be within LEXFILES" unless
+				LEXFILES[id]
 			@mutex.synchronize( Sync::EX ) {
 				self.filenum = id
 			}
@@ -689,7 +699,7 @@ module WordNet
 
 		### Returns an +Array+ of verb frame +String+s for the synset.
 		def frames
-			frarray = self.frameslist.split( WordNet::SubDelimRe )
+			frarray = self.frameslist.split( WordNet::SUB_DELIM_RE )
 			verbFrames = []
 
 			@mutex.synchronize( Sync::SH ) {
@@ -697,9 +707,9 @@ module WordNet
 					fnum, wnum = fr.split
 					if wnum > 0
 						wordtext = " (" + self.words[wnum] + ")"
-						verbFrames.push VerbSents[ fnum ] + wordtext
+						verbFrames.push VERB_SENTS[ fnum ] + wordtext
 					else
-						verbFrames.push VerbSents[ fnum ]
+						verbFrames.push VERB_SENTS[ fnum ]
 					end
 				}
 			}
@@ -828,7 +838,7 @@ module WordNet
 		def pointers
 			@mutex.synchronize( Sync::SH ) {
 				@mutex.synchronize( Sync::EX ) {
-					@pointers = @pointerlist.split(SubDelimRe).collect {|pstr|
+					@pointers = @pointerlist.split(SUB_DELIM_RE).collect {|pstr|
 						Pointer::parse( pstr )
 					}
 				} if @pointers.empty?
@@ -840,14 +850,14 @@ module WordNet
 		### Set the pointers in this synset's pointerlist to +newPointers+
 		def pointers=( *newPointers )
 			@mutex.synchronize( Sync::EX ) {
-				@pointerlist = newPointers.collect {|ptr| ptr.to_s}.join( SubDelim )
+				@pointerlist = newPointers.collect {|ptr| ptr.to_s}.join( SUB_DELIM )
 				@pointers = newPointers
 			}
 		end
 
 
 		### Returns the synset's pointers in a Hash keyed by their type.
-		def pointerMap
+		def pointer_map
 			return self.pointers.inject( {} ) do |hsh,ptr|
 				hsh[ ptr.type ] ||= []
 				hsh[ ptr.type ] << ptr
@@ -863,7 +873,7 @@ module WordNet
 
 		### Returns an Array of synset objects for the receiver's pointers of the
 		### specified +type+.
-		def fetchSynsetPointers( type, subtype=nil )
+		def fetch_synset_pointers( type, subtype=nil )
 			synsets = nil
 
 			# Iterate over this synset's pointers, looking for ones that match
@@ -885,9 +895,9 @@ module WordNet
 
 		### Sets the receiver's synset pointers for the specified +type+ to
 		### the specified +synsets+.
-		def setSynsetPointers( type, synsets, subtype=nil )
+		def set_synset_pointers( type, synsets, subtype=nil )
 			synsets = [ synsets ] unless synsets.is_a?( Array )
-			pmap = self.pointerMap
+			pmap = self.pointer_map
 			pmap[ type ] = synsets
 			self.pointers = pmap.values
 		end
