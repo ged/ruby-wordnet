@@ -38,6 +38,7 @@ begin
     end
 end
 
+require 'pathname'
 require 'strscan'
 require 'wordnet'
 require 'optparse'
@@ -72,7 +73,8 @@ Fileset = Struct::new( "WordNetFileset", :files, :name, :db, :processor )
 CommitThreshold = 2000
 
 # Temporary location for the lexicon data files
-BuildDir = File::join( File::dirname(__FILE__), File::basename(WordNet::Lexicon::DefaultDbEnv) )
+BuildDir = Pathname.new( __FILE__ ).expand_path.dirname + 
+           Pathname.new( WordNet::Lexicon::DefaultDbEnv ).basename
 
 
 
@@ -91,12 +93,12 @@ def convertdb( errorLimit=0 )
 
 	# Open the database and check to be sure it's empty. Confirm overwrite if
 	# not. Checkpoint and set up logging proc if debugging.
-	if File::exists?( BuildDir )
+	if BuildDir.exist?
 		message ">>> Warning: Existing data in the Ruby-WordNet databases\n"\
 			"will be overwritten.\n"
 		abort( "user cancelled." ) unless 
 			/^y/i =~ promptWithDefault( "Continue?", "n" )
-		FileUtils::rm_rf( BuildDir )
+		BuildDir.rmtree
 	end
 
 	# Find the source data files
@@ -116,21 +118,21 @@ def convertdb( errorLimit=0 )
 		File::exists?( testfile )
 
 	# Open the lexicon readwrite into the temporary datadir
-	FileUtils::mkdir( BuildDir )
-	lexicon = WordNet::Lexicon::new( BuildDir, 0666 )
+	BuildDir.mkpath
+	lexicon = WordNet::Lexicon::new( BuildDir.to_s, 0666 )
 
 	# Process each fileset
 	[	  # Fileset,  name,    database handle, processor
-		Fileset::new( IndexFiles, "index", lexicon.index_db, method(:parseIndexLine) ),
-		Fileset::new( MorphFiles, "morph", lexicon.morph_db, method(:parseMorphLine) ),
-		Fileset::new( DataFiles,  "data",  lexicon.data_db,  method(:parseSynsetLine) ),
-	].each {|set|
+		Fileset::new( IndexFiles, "index", lexicon.index_db, method(:parse_index_line) ),
+		Fileset::new( MorphFiles, "morph", lexicon.morph_db, method(:parse_morph_line) ),
+		Fileset::new( DataFiles,  "data",  lexicon.data_db,  method(:parse_synset_line) ),
+	].each do |set|
 		message "Converting %s files...\n" % set.name
 		set.db.truncate
 
 		# Process each file in the set with the appropriate processor method and
 		# insert results into the corresponding table.
-		set.files.each {|file,pos|
+		set.files.each do |file,pos|
 			message "    #{file}..."
 
 			filepath = File::join( datadir, file )
@@ -141,7 +143,7 @@ def convertdb( errorLimit=0 )
 
 			txn, dbh = lexicon.env.txn_begin( 0, set.db )
 			entries = lineNumber = errors = 0
-			File::readlines( filepath ).each {|line|
+			File::readlines( filepath ).each do |line|
 				lineNumber += 1
 				next if /^\s/ =~ line
 
@@ -163,18 +165,26 @@ def convertdb( errorLimit=0 )
 					txn.commit( BDB::TXN_NOSYNC )
 					txn, dbh = lexicon.env.txn_begin( 0, set.db )
 				end
-			}
+			end
+			
 			message "committing..."
 			txn.commit( BDB::TXN_SYNC )
 			message "done (%d entries, %d errors).\n" %
 				[ entries, errors ]
-		}
+		end
+
+		lock_stats = lexicon.env.lock_stat
+		message "Lock statistics:\n"
+		puts "  Lock objects: #{lock_stats['st_nobjects']}/#{lock_stats['st_maxnobjects']}",
+			 "  Locks: #{lock_stats['st_nlocks']}/#{lock_stats['st_maxnlocks']}",
+			 "  Lockers: #{lock_stats['st_nlockers']}/#{lock_stats['st_maxnlockers']}"
+		
 
 		message "Checkpointing DB and cleaning logs..."
 		lexicon.checkpoint
 		lexicon.clean_logs
 		puts "done."
-	}
+	end
 
 	message "done.\n\n"
 end
@@ -190,7 +200,7 @@ SynsetId		= /(\d{8})\s*/
 ### data. Returns +nil+ if any part of the netry isn't able to be parsed. The
 ### +pos+ argument is not used -- it's just to make the interface between all
 ### three processor methods the same.
-def parseIndexLine( string, lineNumber, pos=nil )
+def parse_index_line( string, lineNumber, pos=nil )
 	$scanner.string = string
 	synsets = []
 	lemma, pos, polycnt = nil, nil, nil
@@ -232,7 +242,7 @@ end
 
 
 ### "Parse" a morph line and return it as a key and value.
-def parseMorphLine( string, lineNumber, pos )
+def parse_morph_line( string, lineNumber, pos )
 	key, value = string.split
 	return "#{key}%#{pos}", value
 rescue => err
@@ -258,7 +268,7 @@ SynGloss	= /\s*\|\s*(.+)?/
 
 ### Parse an entry from a data file and return the key and data. Returns +nil+
 ### if any part of the entry isn't able to be parsed.
-def parseSynsetLine( string, lineNumber, pos )
+def parse_synset_line( string, lineNumber, pos )
 	$scanner.string = string
 	
 	filenum, synsetType, gloss = nil, nil, nil
