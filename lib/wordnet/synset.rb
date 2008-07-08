@@ -236,10 +236,12 @@ module WordNet
 		### (according to WordNet::PointerSubTypes), accessors/mutators for the
 		### subtypes will be generated as well.
 		def self::def_pointer_methods( symbol ) # :nodoc:
-			name = symbol.id2name
+			name = symbol.to_s
 			casename = name.dup
 			casename[ 0,1 ] = casename[ 0,1 ].upcase
 			type = nil
+			$stderr.puts '-' * 50, 
+				">>> defining pointer methods for %p" % [symbol] if $DEBUG
 			
 			if PointerTypes.key?( symbol )
                 symbol
@@ -565,7 +567,9 @@ module WordNet
 
 		# Get/set synsets for the receiver's hyponyms (more-specific terms). E.g., 
 
-		# 
+		# [instance_hyponyms]
+		#   The specific term used to designate a member of a class. X  is a 
+		#   hyponym of Y  if X  is a (kind of) Y.
 		def_pointer_methods :hyponyms
 
 

@@ -11,7 +11,7 @@ BEGIN {
 	include UtilityFunctions
 }
 
-verboseOff {
+verbose_off {
 	require 'tests/wntestcase'
 	require 'find'
 	require 'test/unit'
@@ -33,12 +33,12 @@ ARGV.options {|oparser|
 
 	oparser.on( "--debug", "-d", TrueClass, "Turn debugging on" ) {
 		$DEBUG = true
-		debugMsg "Turned debugging on."
+		debug_msg "Turned debugging on."
 	}
 
 	oparser.on( "--verbose", "-v", TrueClass, "Make progress verbose" ) {
 		$VERBOSE = true
-		debugMsg "Turned verbose on."
+		debug_msg "Turned verbose on."
 	}
 
 	# Handle the 'help' option
@@ -64,9 +64,9 @@ Find.find("tests") {|file|
  		Find.prune unless patterns.find {|pat| pat =~ file}
  	end
 
-	debugMsg "Considering '%s': " % file
+	debug_msg "Considering '%s': " % file
 	next unless file =~ /\.tests.rb$/
-	debugMsg "Requiring '%s'..." % file
+	debug_msg "Requiring '%s'..." % file
 	require "#{file}"
 	requires << file
 }
