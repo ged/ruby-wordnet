@@ -10,7 +10,7 @@ require './utils'
 include UtilityFunctions
 
 def colored( prompt, *args )
-	return ansiCode( *(args.flatten) ) + prompt + ansiCode( 'reset' )
+	return ansi_code( *(args.flatten) ) + prompt + ansi_code( 'reset' )
 end
 
 
@@ -25,11 +25,15 @@ IRB.conf[:PROMPT_MODE] = :MUES
 
 # Try to require the 'wordnet' library
 begin
+	require 'pathname'
+	basedir = Pathname.new( __FILE__ ).dirname
+	datadir = basedir + 'ruby-wordnet'
+	
 	puts "Requiring 'wordnet'..."
 	require 'wordnet'
 
     puts "Instantiating the lexicon as $lex"
-    $lex = WordNet::Lexicon.new
+    $lex = WordNet::Lexicon.new( datadir )
 rescue => e
 	$stderr.puts "Ack! WordNet failed to load: #{e.message}\n\t" +
 		e.backtrace.join( "\n\t" )

@@ -16,7 +16,7 @@
 # 
 # == Copyright
 #
-# Copyright (c) 2003, 2005 The FaerieMUD Consortium. All rights reserved.
+# Copyright (c) 2003-2008 The FaerieMUD Consortium. All rights reserved.
 # 
 # This module is free software. You may use, modify, and/or redistribute this
 # software under the terms of the Perl Artistic License. (See
@@ -227,7 +227,7 @@ def parse_index_line( string, lineNumber, pos=nil )
 
 	# Make the index entry and return it
 	key = lemma + "%" + pos
-	data = synsets.join(WordNet::SubDelim)
+	data = synsets.join(WordNet::SUB_DELIM)
 
 	return key, data
 rescue => err
@@ -341,11 +341,11 @@ def parse_synset_line( string, lineNumber, pos )
 	key = [ offset, synsetType ].join("%")
 	data = [
 		filenum,
-		words.join( WordNet::SubDelim ),
-		ptrs.join( WordNet::SubDelim ),
-		frames.join( WordNet::SubDelim ),
+		words.join( WordNet::SUB_DELIM ),
+		ptrs.join( WordNet::SUB_DELIM ),
+		frames.join( WordNet::SUB_DELIM ),
 		gloss,
-	].join( WordNet::Delim )
+	].join( WordNet::DELIM )
 
 	return key, data
 rescue => err

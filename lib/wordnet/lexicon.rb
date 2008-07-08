@@ -30,6 +30,7 @@
 # 
 
 require 'rbconfig'
+require 'pathname'
 require 'bdb'
 require 'sync'
 
@@ -64,26 +65,19 @@ class WordNet::Lexicon
 
 	# The path to the WordNet BerkeleyDB Env. It lives in the directory that
 	# this module is in.
-	DefaultDbEnv = File::join( Config::CONFIG['datadir'], "ruby-wordnet" )
+	DEFAULT_DB_ENV = File::join( Config::CONFIG['datadir'], "ruby-wordnet" )
 
 	# Options for the creation of the Env object
-	EnvOptions = {
+	ENV_OPTIONS = {
 		:set_timeout	=> 50,
 		:set_lk_detect	=> 1,
 		:set_verbose	=> false,
+		:set_lk_max     => 3000,
 	}
 
 	# Flags for the creation of the Env object (read-write and read-only)
-	EnvFlagsRW = BDB::CREATE|BDB::INIT_TRANSACTION|BDB::RECOVER|BDB::INIT_MPOOL
-	EnvFlagsRO = BDB::INIT_MPOOL
-
-	# Table names (actually database names in BerkeleyDB)
-	TableNames = {
-		:index => "index",
-		:data => "data",
-		:morph => "morph",
-	}
-
+	ENV_FLAGS_RW = BDB::CREATE|BDB::INIT_TRANSACTION|BDB::RECOVER|BDB::INIT_MPOOL
+	ENV_FLAGS_RO = BDB::INIT_MPOOL
 
 
 	#############################################################
@@ -94,20 +88,20 @@ class WordNet::Lexicon
 	### the given +dbenv+ (a BerkeleyDB env directory). The database will be
 	### opened with the specified +mode+, which can either be a numeric 
 	### octal mode (e.g., 0444) or one of (:readonly, :readwrite).
-	def initialize( dbenv=DefaultDbEnv, mode=:readonly )
-		raise ArgumentError, "Cannot find data directory '#{dbenv}'" unless
-			File::directory?( dbenv )
-
+	def initialize( dbenv=DEFAULT_DB_ENV, mode=:readonly )
 		@mode = normalize_mode( mode )
-		debug_msg "Mode is: %04o" % [ mode ] if $DEBUG
+		debug_msg "Mode is: %04o" % [ mode ]
+
+		envflags = 0
+		dbflags  = 0
 
 		unless self.readonly?
 			debug_msg "Using read/write flags"
-			envflags = EnvFlagsRW
+			envflags = ENV_FLAGS_RW
 			dbflags = BDB::CREATE
 		else
 			debug_msg "Using readonly flags"
-			envflags = EnvFlagsRO
+			envflags = ENV_FLAGS_RO
 			dbflags = 0
 		end
 
@@ -115,7 +109,7 @@ class WordNet::Lexicon
 			[ envflags.to_s(2), dbflags.to_s(2) ]
 
 		begin
-			@env = BDB::Env::new( dbenv, envflags, EnvOptions )
+			@env = BDB::Env.new( dbenv, envflags, ENV_OPTIONS )
 			@index_db = @env.open_db( BDB::BTREE, "index", nil, dbflags, @mode )
 			@data_db = @env.open_db( BDB::BTREE, "data", nil, dbflags, @mode )
 			@morph_db = @env.open_db( BDB::BTREE, "morph", nil, dbflags, @mode )
@@ -193,7 +187,7 @@ class WordNet::Lexicon
 	def familiarity( word, part_of_speech, polyCount=nil )
 		wordkey = self.make_word_key( word, part_of_speech )
 		return nil unless @index_db.key?( wordkey )
-		@index_db[ wordkey ].split( WordNet::SubDelimRe ).length
+		@index_db[ wordkey ].split( WordNet::SUB_DELIM_RE ).length
 	end
 
 
@@ -220,7 +214,7 @@ class WordNet::Lexicon
 
 		# Make synset keys from the entry, narrowing it to just the sense
 		# requested if one was specified.
-		synkeys = entry.split( SubDelimRe ).collect {|off| "#{off}%#{pos}" }
+		synkeys = entry.split( SUB_DELIM_RE ).collect {|off| "#{off}%#{pos}" }
 		if sense
 			return lookup_synsets_by_key( synkeys[sense - 1] )
 		else
@@ -320,7 +314,7 @@ class WordNet::Lexicon
 					# If the index already has this word, but not this
 					# synset, add it
 					if indexdb.key?( word )
-						indexdb[ word ] << SubDelim << synset.offset unless
+						indexdb[ word ] << SUB_DELIM << synset.offset unless
 							indexdb[ word ].include?( synset.offset )
 					else
 						indexdb[ word ] = synset.offset
@@ -354,11 +348,11 @@ class WordNet::Lexicon
 					# entry if it's the only one.
 					if indexdb.key?( word )
 						offsets = indexdb[ word ].
-							split( SubDelimRe ).
+							split( SUB_DELIM_RE ).
 							reject {|offset| offset == synset.offset}
 
 						unless offsets.empty?
-							index_db[ word ] = newoffsets.join( SubDelim )
+							index_db[ word ] = newoffsets.join( SUB_DELIM )
 						else
 							index_db.delete( word )
 						end
@@ -388,9 +382,9 @@ class WordNet::Lexicon
 	def make_pos( original )
 		return WordNet::Noun if original.nil?
 		osym = original.to_s.intern
-		return WordNet::SyntacticCategories[ osym ] if
-			WordNet::SyntacticCategories.key?( osym )
-		return original if SyntacticSymbols.key?( original )
+		return WordNet::SYNTACTIC_CATEGORIES[ osym ] if
+			WordNet::SYNTACTIC_CATEGORIES.key?( osym )
+		return original if SYNTACTIC_SYMBOLS.key?( original )
 		return nil
 	end
 
