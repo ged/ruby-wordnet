@@ -62,22 +62,28 @@ describe WordNet::Lexicon do
 	###	T E S T S
 	#################################################################
 
-	it "passes a read-only flagset to BDB when created in :readonly mode" do
+	it "defaults to being in :readonly mode" do
 		env = stub( "bdb environment handle", :open_db => nil )
 		BDB::Env.should_receive( :new ).
 			with( @path.to_s, WordNet::Lexicon::ENV_FLAGS_RO, WordNet::Lexicon::ENV_OPTIONS ).
 			and_return( env )
 
-		WordNet::Lexicon.new( @path.to_s )
+		lex = WordNet::Lexicon.new( @path.to_s )
+
+		lex.should be_readonly()
+		lex.should_not be_readwrite()
 	end
 	
-	it "passes a read/write flagset to BDB when created in :writable mode" do
+	it "can be created in :writable mode" do
 		env = stub( "bdb environment handle", :open_db => nil )
 		BDB::Env.should_receive( :new ).
 			with( @path.to_s, WordNet::Lexicon::ENV_FLAGS_RW, WordNet::Lexicon::ENV_OPTIONS ).
 			and_return( env )
 
-		WordNet::Lexicon.new( @path.to_s, :writable )
+		lex = WordNet::Lexicon.new( @path.to_s, :writable )
+
+		lex.should_not be_readonly()
+		lex.should be_readwrite()
 	end
 	
 	it "passes a read/write flagset to BDB when created in :readwrite mode" do
@@ -86,11 +92,70 @@ describe WordNet::Lexicon do
 			with( @path.to_s, WordNet::Lexicon::ENV_FLAGS_RW, WordNet::Lexicon::ENV_OPTIONS ).
 			and_return( env )
 
-		WordNet::Lexicon.new( @path.to_s, :readwrite )
+		lex = WordNet::Lexicon.new( @path.to_s, :readwrite )
+
+		lex.should_not be_readonly()
+		lex.should be_readwrite()
 	end
 	
 
-	describe "created in the default configuration" do
+	describe "created in readonly mode" do
+
+		before( :each ) do
+			@env = mock( "bdb environment handle" )
+			BDB::Env.stub!( :new ).and_return( @env )
+			@env.stub!( :open_db )
+
+			@lexicon = WordNet::Lexicon.new( @path.to_s, :readonly )
+		end
+
+
+		it "doesn't try to remove logs" do
+			@env.should_not_receive( :log_archive )
+			@lexicon.clean_logs
+		end
+		
+		
+	end
+
+
+	describe "created in readwrite mode" do
+
+		before( :each ) do
+			@env = mock( "bdb environment handle" )
+			BDB::Env.stub!( :new ).and_return( @env )
+			@env.stub!( :open_db )
+
+			@lexicon = WordNet::Lexicon.new( @path.to_s, :readwrite )
+		end
+		
+
+		it "can be closed" do
+			@env.should_receive( :close )
+			@lexicon.close
+		end
+
+		it "provides a delegator for the checkpoint method of the underlying database" do
+			@env.should_receive( :checkpoint )
+			@lexicon.checkpoint
+		end
+	
+		it "provides an interface to clean up database transaction logs" do
+			@env.should_receive( :log_archive ).with( BDB::ARCH_ABS ).
+				and_return([ :log1, :log2 ])
+			File.should_receive( :chmod ).with( 0777, :log1 )
+			File.should_receive( :delete ).with( :log1 )
+			File.should_receive( :chmod ).with( 0777, :log2 )
+			File.should_receive( :delete ).with( :log2 )
+			
+			@lexicon.clean_logs
+		end
+		
+	
+	end
+	
+
+	describe "with a converted WordNet database" do
 
 		before( :all ) do
 			@basedir = Pathname.new( __FILE__ ).dirname.parent.parent
@@ -112,18 +177,34 @@ describe WordNet::Lexicon do
 		end
 		
 		
-		it "returns the root word as the morphology of a dictionary word it knows about" do
+		it "returns the root word as the morphological conversion of a dictionary word it knows about" do
 			@lexicon.morph( "angriest", WordNet::Adjective ).should == 'angry'
 		end
 
 
-		it "returns nil as the morphology of a dictionary word it doesn't know about" do
+		it "returns nil as the morphological conversion of a dictionary word it doesn't know about" do
 			@lexicon.morph( "Passomoquoddy", WordNet::Noun ).should be_nil()
 		end
 
 
 		it "returns the 'reverse morph' of dictionary words it knows about" do
 			@lexicon.reverse_morph( "angry" ).should == 'angriest%a'
+		end
+
+
+		it "tries looking up a failing via its morphological conversion if the original fails" do
+			synsets = @lexicon.lookup_synsets( 'angriest', WordNet::Adjective )
+			
+			synsets.should_not be_nil()
+			synsets.first.should be_an_instance_of( WordNet::Synset )
+			synsets.first.words.should include( 'angry' )
+		end
+
+
+		it "returns only the requested sense if a sense is specified" do
+			synset = @lexicon.lookup_synsets( 'run', WordNet::Verb, 4 )
+			synset.should be_an_instance_of( WordNet::Synset )
+			synset.words.first.should =~ /operate/i
 		end
 		
 		
@@ -160,46 +241,8 @@ describe WordNet::Lexicon do
 			@lexicon.create_synset( "Ruby", WordNet::Noun ).
 				should be_an_instance_of( WordNet::Synset )
 		end
-		
+
 	end
-
-
-	### Test synset creation via factory method
-	def test_lexicon_create_synset_should_create_a_new_synset
-		synset = nil
-
-		assert_nothing_raised do
-			synset = @lexicon.create_synset( "Ruby", WordNet::Noun )
-		end
-		assert_instance_of WordNet::Synset, synset
-	end
-
-
-	def test_lexicon_should_be_readonly_if_opened_in_readonly_mode
-		make_testing_directory do |path|
-			lex = WordNet::Lexicon::new( path, :readwrite ).checkpoint
-			lex = nil
-			
-			lex = WordNet::Lexicon.new( path, :readonly )
-			assert_equal true, lex.readonly?
-			assert_equal false, lex.readwrite?
-		end
-	end
-
-
-	def test_lexicon_should_be_readwrite_if_opened_in_readwrite_mode
-		make_testing_directory do |path|
-			lex = WordNet::Lexicon::new( path, :readwrite )
-
-			assert_equal false, lex.readonly?
-			assert_equal true, lex.readwrite?
-		end
-	end
-
-
-
-	# :TODO: Test store_synset()?
-
 
 end
 

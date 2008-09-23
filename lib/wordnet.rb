@@ -77,11 +77,13 @@ module WordNet
 	SvnId = %q$Id$
 
 	# Release version
-	VERSION = '1.0.0'
+	VERSION = '0.0.5'
 
 	require 'wordnet/constants'
 	require 'wordnet/lexicon'
 	require 'wordnet/synset'
+
+	include WordNet::Constants
 
 end # module WordNet
 

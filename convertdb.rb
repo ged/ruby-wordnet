@@ -49,322 +49,332 @@ require 'fileutils'
 $senseIndex = {}
 $scanner = StringScanner::new( "" )
 
-# Source WordNet files
-IndexFiles = %w[ index.noun index.verb index.adj index.adv ]
-MorphFiles = {
-	'adj.exc'		=> WordNet::Adjective,
-	'adv.exc'		=> WordNet::Adverb,
-	'noun.exc'		=> WordNet::Noun,
-	'verb.exc'		=> WordNet::Verb,
-	'cousin.exc'	=> '',
-}
-DataFiles =  {
-	'data.adj'		=> WordNet::Adjective,
-	'data.adv'		=> WordNet::Adverb,
-	'data.noun'		=> WordNet::Noun,
-	'data.verb'		=> WordNet::Verb,
-}
+class WordNetConverter
 
-# Struct which represents a list of files, a database, and a processor function
-# for moving records from each of the files into the database.
-Fileset = Struct::new( "WordNetFileset", :files, :name, :db, :processor )
+	# Source WordNet files
+	IndexFiles = %w[ index.noun index.verb index.adj index.adv ]
+	MorphFiles = {
+		'adj.exc'		=> WordNet::Adjective,
+		'adv.exc'		=> WordNet::Adverb,
+		'noun.exc'		=> WordNet::Noun,
+		'verb.exc'		=> WordNet::Verb,
+		'cousin.exc'	=> '',
+	}
+	DataFiles =  {
+		'data.adj'		=> WordNet::Adjective,
+		'data.adv'		=> WordNet::Adverb,
+		'data.noun'		=> WordNet::Noun,
+		'data.verb'		=> WordNet::Verb,
+	}
 
-# How many records to insert between commits
-CommitThreshold = 2000
+	# Struct which represents a list of files, a database, and a processor function
+	# for moving records from each of the files into the database.
+	Fileset = Struct::new( "WordNetFileset", :files, :name, :db, :processor )
 
-# Temporary location for the lexicon data files
-BuildDir = Pathname.new( __FILE__ ).expand_path.dirname + 
-           Pathname.new( WordNet::Lexicon::DEFAULT_DB_ENV ).basename
+	# How many records to insert between commits
+	CommitThreshold = 2000
+
+	# Temporary location for the lexicon data files
+	BuildDir = Pathname.new( __FILE__ ).expand_path.dirname + 
+	           Pathname.new( WordNet::Lexicon::DEFAULT_DB_ENV ).basename
 
 
-
-#####################################################################
-###	M A I N   P R O G R A M
-#####################################################################
-def convertdb( errorLimit=0 )
-	$stderr.sync = $stdout.sync = true
-	header "WordNet Lexicon Converter"
-
-	# Make sure the user knows what they're in for
-	message "This program will convert WordNet data files into databases\n"\
-		"used by Ruby-WordNet. This will not affect existing WordNet files,\n"\
-		"but will require up to 40Mb of disk space.\n"
-	exit unless /^y/i =~ prompt_with_default("Continue?", "y")
-
-	# Open the database and check to be sure it's empty. Confirm overwrite if
-	# not. Checkpoint and set up logging proc if debugging.
-	if BuildDir.exist?
-		message ">>> Warning: Existing data in the Ruby-WordNet databases\n"\
-			"will be overwritten.\n"
-		abort( "user cancelled." ) unless 
-			/^y/i =~ prompt_with_default( "Continue?", "n" )
-		BuildDir.rmtree
+	### Create a new converter that will dump WordNet dictionary files into a BerkeleyDB 
+	### in the given +builddir+ 
+	def initialize( builddir=BuildDir )
+		@builddir = Pathname.new( builddir )
 	end
+	
 
-	# Find the source data files
-	if ARGV.empty?
-		default = nil
-		
-		if wndirs = Pathname.glob( Pathname.getwd + 'WordNet-*' )
-			default = wndirs.first
-		else
-			default = '/usr/local/WordNet-3.0'
+	### Convert the various dict files from the WordNet project into a BerkeleyDB database
+	def convertdb( errorLimit=0 )
+		$stderr.sync = $stdout.sync = true
+		header "WordNet Lexicon Converter"
+
+		# Make sure the user knows what they're in for
+		message "This program will convert WordNet data files into databases\n"\
+			"used by Ruby-WordNet. This will not affect existing WordNet files,\n"\
+			"but will require up to 40Mb of disk space.\n"
+		exit unless /^y/i =~ prompt_with_default("Continue?", "y")
+
+		# Open the database and check to be sure it's empty. Confirm overwrite if
+		# not. Checkpoint and set up logging proc if debugging.
+		if @builddir.exist? && ( @builddir + 'data' ).exist?
+			message ">>> Warning: Existing data in the Ruby-WordNet databases\n"\
+				"will be overwritten.\n"
+			abort( "user cancelled." ) unless 
+				/^y/i =~ prompt_with_default( "Continue?", "n" )
+			@builddir.rmtree
 		end
 
-        # :TODO: Do some more intelligent searching here
+		# Find the source data files
+		default = nil
+		wndirs = Pathname.glob( Pathname.getwd + 'WordNet-*' )
+		localdict = Pathname.getwd + 'dict'
+		if !wndirs.empty?
+			default = wndirs.first + 'dict'
+		elsif localdict.exist?
+			default = localdict
+		else
+			default = '/usr/local/WordNet-3.0/dict'
+		end
+
 		message "Where can I find the WordNet data files?\n"
-		datadir = prompt_with_default( "Data directory", default + "dict" )
-	else
-		datadir = ARGV.shift
-	end
-	datadir = Pathname.new( datadir )
+		datadir = prompt_with_default( "Data directory", default )
+		datadir = Pathname.new( datadir )
 
-	abort( "Directory '#{datadir}' does not exist" ) unless datadir.exist?
-	abort( "'#{datadir}' is not a directory" ) unless datadir.directory?
-	testfile = datadir + "data.noun"
-	abort( "'#{datadir}' doesn't seem to contain the necessary files.") unless testfile.exist?
+		abort( "Directory '#{datadir}' does not exist" ) unless datadir.exist?
+		abort( "'#{datadir}' is not a directory" ) unless datadir.directory?
+		testfile = datadir + "data.noun"
+		abort( "'#{datadir}' doesn't seem to contain the necessary files.") unless testfile.exist?
 
-	# Open the lexicon readwrite into the temporary datadir
-	BuildDir.mkpath
-	lexicon = WordNet::Lexicon::new( BuildDir.to_s, 0666 )
+		# Open the lexicon readwrite into the temporary datadir
+		@builddir.mkpath
+		lexicon = WordNet::Lexicon::new( @builddir.to_s, 0666 )
 
-	# Process each fileset
-	[	  # Fileset,  name,    database handle, processor
-		Fileset::new( IndexFiles, "index", lexicon.index_db, method(:parse_index_line) ),
-		Fileset::new( MorphFiles, "morph", lexicon.morph_db, method(:parse_morph_line) ),
-		Fileset::new( DataFiles,  "data",  lexicon.data_db,  method(:parse_synset_line) ),
-	].each do |set|
-		message "Converting %s files...\n" % set.name
-		set.db.truncate
+		# Process each fileset
+		[	  # Fileset,  name,    database handle, processor
+			Fileset::new( IndexFiles, "index", lexicon.index_db, method(:parse_index_line) ),
+			Fileset::new( MorphFiles, "morph", lexicon.morph_db, method(:parse_morph_line) ),
+			Fileset::new( DataFiles,  "data",  lexicon.data_db,  method(:parse_synset_line) ),
+		].each do |set|
+			message "Converting %s files...\n" % set.name
+			set.db.truncate
 
-		# Process each file in the set with the appropriate processor method and
-		# insert results into the corresponding table.
-		set.files.each do |file,pos|
-			message "    #{file}..."
+			# Process each file in the set with the appropriate processor method and
+			# insert results into the corresponding table.
+			set.files.each do |file,pos|
+				message "    #{file}..."
 
-			filepath = File::join( datadir, file )
-			if !File::exists?( filepath )
-				message "missing: skipped\n"
-				next
-			end
+				filepath = File::join( datadir, file )
+				if !File::exists?( filepath )
+					message "missing: skipped\n"
+					next
+				end
 
-			txn, dbh = lexicon.env.txn_begin( 0, set.db )
-			entries = lineNumber = errors = 0
-			File::readlines( filepath ).each do |line|
-				lineNumber += 1
-				next if /^\s/ =~ line
+				txn, dbh = lexicon.env.txn_begin( 0, set.db )
+				entries = lineNumber = errors = 0
+				File::readlines( filepath ).each do |line|
+					lineNumber += 1
+					next if /^\s/ =~ line
 
-				key, value = set.processor.call( line.chomp, lineNumber, pos )
-				unless key
-					errors += 1
-					if errorLimit.nonzero? && errors >= errorLimit
-						abort( "Too many errors" )
+					key, value = set.processor.call( line.chomp, lineNumber, pos )
+					unless key
+						errors += 1
+						if errorLimit.nonzero? && errors >= errorLimit
+							abort( "Too many errors" )
+						end
+					end
+
+					dbh[ key ] = value
+					entries += 1
+					print "%d%s" % [ entries, "\x08" * entries.to_s.length ]
+
+					# Commit and start a new transaction every 1000 records
+					if (entries % CommitThreshold).zero?
+						print "."
+						txn.commit( BDB::TXN_NOSYNC )
+						txn, dbh = lexicon.env.txn_begin( 0, set.db )
 					end
 				end
-
-				dbh[ key ] = value
-				entries += 1
-				print "%d%s" % [ entries, "\x08" * entries.to_s.length ]
-
-				# Commit and start a new transaction every 1000 records
-				if (entries % CommitThreshold).zero?
-					print "."
-					txn.commit( BDB::TXN_NOSYNC )
-					txn, dbh = lexicon.env.txn_begin( 0, set.db )
-				end
-			end
 			
-			message "committing..."
-			txn.commit( BDB::TXN_SYNC )
-			message "done (%d entries, %d errors).\n" %
-				[ entries, errors ]
-		end
+				message "committing..."
+				txn.commit( BDB::TXN_SYNC )
+				message "done (%d entries, %d errors).\n" %
+					[ entries, errors ]
+			end
 
-		lock_stats = lexicon.env.lock_stat
-		message "Lock statistics:\n"
-		puts "  Lock objects: #{lock_stats['st_nobjects']}/#{lock_stats['st_maxnobjects']}",
-			 "  Locks: #{lock_stats['st_nlocks']}/#{lock_stats['st_maxnlocks']}",
-			 "  Lockers: #{lock_stats['st_nlockers']}/#{lock_stats['st_maxnlockers']}"
+			lock_stats = lexicon.env.lock_stat
+			message "Lock statistics:\n"
+			puts "  Lock objects: #{lock_stats['st_nobjects']}/#{lock_stats['st_maxnobjects']}",
+				 "  Locks: #{lock_stats['st_nlocks']}/#{lock_stats['st_maxnlocks']}",
+				 "  Lockers: #{lock_stats['st_nlockers']}/#{lock_stats['st_maxnlockers']}"
 		
 
-		message "Checkpointing DB and cleaning logs..."
-		lexicon.checkpoint
-		lexicon.clean_logs
-		puts "done."
+			message "Checkpointing DB and cleaning logs..."
+			lexicon.checkpoint
+			lexicon.clean_logs
+			puts "done."
+		end
+
+		message "done.\n\n"
 	end
 
-	message "done.\n\n"
-end
 
+	#######
+	private
+	#######
 
-# Index entry patterns
-IndexEntry		= /^(\S+)\s(\w)\s(\d+)\s(\d+)\s/
-PointerSymbol	= /(\S{1,2})\s/
-SenseCounts		= /(\d+)\s(\d+)\s/
-SynsetId		= /(\d{8})\s*/
+	# Index entry patterns
+	IndexEntry		= /^(\S+)\s(\w)\s(\d+)\s(\d+)\s/
+	PointerSymbol	= /(\S{1,2})\s/
+	SenseCounts		= /(\d+)\s(\d+)\s/
+	SynsetId		= /(\d{8})\s*/
 
-### Parse an entry from one of the index files and return the key and
-### data. Returns +nil+ if any part of the netry isn't able to be parsed. The
-### +pos+ argument is not used -- it's just to make the interface between all
-### three processor methods the same.
-def parse_index_line( string, lineNumber, pos=nil )
-	$scanner.string = string
-	synsets = []
-	lemma, pos, polycnt = nil, nil, nil
+	### Parse an entry from one of the index files and return the key and
+	### data. Returns +nil+ if any part of the netry isn't able to be parsed. The
+	### +pos+ argument is not used -- it's just to make the interface between all
+	### three processor methods the same.
+	def parse_index_line( string, lineNumber, pos=nil )
+		$scanner.string = string
+		synsets = []
+		lemma, pos, polycnt = nil, nil, nil
 
-	raise "whole error" unless $scanner.scan( IndexEntry )
-	lemma, pos, polycnt, pcnt = $scanner[1], $scanner[2], $scanner[3], $scanner[4]
+		raise "whole error" unless $scanner.scan( IndexEntry )
+		lemma, pos, polycnt, pcnt = $scanner[1], $scanner[2], $scanner[3], $scanner[4]
 
-	# Discard pointer symbols
-	pcnt.to_i.times do |i|
-		$scanner.skip( PointerSymbol ) or raise "couldn't skip pointer #{i}"
+		# Discard pointer symbols
+		pcnt.to_i.times do |i|
+			$scanner.skip( PointerSymbol ) or raise "couldn't skip pointer #{i}"
+		end
+
+		# Parse sense and tagsense counts
+		$scanner.scan( SenseCounts ) or raise "couldn't parse sense counts"
+		senseCount, tagSenseCount = $scanner[1], $scanner[2]
+
+		# Find synsets
+		senseCount.to_i.times do |i|
+			$scanner.scan( SynsetId ) or raise "couldn't parse synset #{i}"
+			synset = $scanner[1]
+			synsets.push( synset )
+			$senseIndex[ synset + "%" + pos + "%" + lemma ] = i.to_s
+		end
+
+		# Make the index entry and return it
+		key = lemma + "%" + pos
+		data = synsets.join(WordNet::SUB_DELIM)
+
+		return key, data
+	rescue => err
+		message "Index entry did not parse: %s at '%s...' (line %d)\n\t%s\n" % [
+			err.message,
+			$scanner.rest[0,20],
+			lineNumber,
+			err.backtrace[0]
+		]
+		return nil
 	end
 
-	# Parse sense and tagsense counts
-	$scanner.scan( SenseCounts ) or raise "couldn't parse sense counts"
-	senseCount, tagSenseCount = $scanner[1], $scanner[2]
 
-	# Find synsets
-	senseCount.to_i.times do |i|
-		$scanner.scan( SynsetId ) or raise "couldn't parse synset #{i}"
-		synset = $scanner[1]
-		synsets.push( synset )
-		$senseIndex[ synset + "%" + pos + "%" + lemma ] = i.to_s
+	### "Parse" a morph line and return it as a key and value.
+	def parse_morph_line( string, lineNumber, pos )
+		key, value = string.split
+		return "#{key}%#{pos}", value
+	rescue => err
+		message "Morph entry did not parse: %s for %s (pos = %s, line %d)\n\t%s\n" % [
+			err.message,
+			string.inspect,
+			pos.inspect,
+			lineNumber,
+			err.backtrace[0]
+		]
+		return nil
 	end
 
-	# Make the index entry and return it
-	key = lemma + "%" + pos
-	data = synsets.join(WordNet::SUB_DELIM)
 
-	return key, data
-rescue => err
-	message "Index entry did not parse: %s at '%s...' (line %d)\n\t%s\n" % [
-		err.message,
-		$scanner.rest[0,20],
-		lineNumber,
-		err.backtrace[0]
-	]
-	return nil
-end
+	# Synset data patterns
+	Synset		= /(\d+)\s(\d{2})\s(\w)\s(\w{2})\s/
+	SynWord		= /(\S+)\s(\w)*\s*/
+	SynPtrCnt	= /(\d{3})\s/
+	SynPtr		= /(\S{1,2})\s(\d+)\s(\w)\s(\w{4})\s/
+	SynFrameCnt	= /\s*(\d{2})\s/
+	SynFrame	= /\+\s(\d{2})\s(\w{2})\s/
+	SynGloss	= /\s*\|\s*(.+)?/
 
-
-### "Parse" a morph line and return it as a key and value.
-def parse_morph_line( string, lineNumber, pos )
-	key, value = string.split
-	return "#{key}%#{pos}", value
-rescue => err
-	message "Morph entry did not parse: %s for %s (pos = %s, line %d)\n\t%s\n" % [
-		err.message,
-		string.inspect,
-		pos.inspect,
-		lineNumber,
-		err.backtrace[0]
-	]
-	return nil
-end
-
-
-# Synset data patterns
-Synset		= /(\d+)\s(\d{2})\s(\w)\s(\w{2})\s/
-SynWord		= /(\S+)\s(\w)*\s*/
-SynPtrCnt	= /(\d{3})\s/
-SynPtr		= /(\S{1,2})\s(\d+)\s(\w)\s(\w{4})\s/
-SynFrameCnt	= /\s*(\d{2})\s/
-SynFrame	= /\+\s(\d{2})\s(\w{2})\s/
-SynGloss	= /\s*\|\s*(.+)?/
-
-### Parse an entry from a data file and return the key and data. Returns +nil+
-### if any part of the entry isn't able to be parsed.
-def parse_synset_line( string, lineNumber, pos )
-	$scanner.string = string
+	### Parse an entry from a data file and return the key and data. Returns +nil+
+	### if any part of the entry isn't able to be parsed.
+	def parse_synset_line( string, lineNumber, pos )
+		$scanner.string = string
 	
-	filenum, synsetType, gloss = nil, nil, nil
-	words = []
-	ptrs = []
-	frames = []
+		filenum, synsetType, gloss = nil, nil, nil
+		words = []
+		ptrs = []
+		frames = []
 
-	# Parse the first part of the synset
-	$scanner.scan( Synset ) or raise "unable to parse synset"
-	offset, filenum, synsetType, wordCount =
-		$scanner[1], $scanner[2], $scanner[3], $scanner[4]
+		# Parse the first part of the synset
+		$scanner.scan( Synset ) or raise "unable to parse synset"
+		offset, filenum, synsetType, wordCount =
+			$scanner[1], $scanner[2], $scanner[3], $scanner[4]
 
-	# Parse the words
-	wordCount.to_i(16).times do |i|
-		$scanner.scan( SynWord ) or raise "unable to parse word #{i}"
-		word, lexid = $scanner[1], $scanner[2]
-		senseKey = (offset + "%" + pos + "%" + word).downcase
-		if !$senseIndex.key?( senseKey )
-			newKey = senseKey.sub( /\(\w+\)$/, '' )
-			if !$senseIndex.key?( newKey )
-				raise "Sense index does not contain sense '#{senseKey}' "\
-					"(tried #{newKey}, too)."
+		# Parse the words
+		wordCount.to_i(16).times do |i|
+			$scanner.scan( SynWord ) or raise "unable to parse word #{i}"
+			word, lexid = $scanner[1], $scanner[2]
+			senseKey = (offset + "%" + pos + "%" + word).downcase
+			if !$senseIndex.key?( senseKey )
+				newKey = senseKey.sub( /\(\w+\)$/, '' )
+				if !$senseIndex.key?( newKey )
+					raise "Sense index does not contain sense '#{senseKey}' "\
+						"(tried #{newKey}, too)."
+				end
+				senseKey = newKey
 			end
-			senseKey = newKey
-		end
 
-		words.push( word + "%" + $senseIndex[senseKey].to_s )
-	end
+			words.push( word + "%" + $senseIndex[senseKey].to_s )
+		end
 	
-	# Parse pointers
-	if $scanner.scan( SynPtrCnt )
-		$scanner[1].to_i.times do |i|
-			$scanner.scan( SynPtr ) or raise "unable to parse synptr #{i}"
-			ptrs.push "%s %s%%%s %s" % [
-				$scanner[1],
-				$scanner[2],
-				$scanner[3],
-				$scanner[4],
-			]
-		end
-	else
-		raise "Couldn't parse pointer count"
-	end
-
-	# Parse frames if this synset is a verb
-	if synsetType == WordNet::Verb
-		if $scanner.scan( SynFrameCnt )
+		# Parse pointers
+		if $scanner.scan( SynPtrCnt )
 			$scanner[1].to_i.times do |i|
-				$scanner.scan( SynFrame ) or raise "unable to parse frame #{i}"
-				frames.push "#{$scanner[1]} #{$scanner[2]}"
+				$scanner.scan( SynPtr ) or raise "unable to parse synptr #{i}"
+				ptrs.push "%s %s%%%s %s" % [
+					$scanner[1],
+					$scanner[2],
+					$scanner[3],
+					$scanner[4],
+				]
 			end
 		else
-			raise "Couldn't parse frame count"
+			raise "Couldn't parse pointer count"
 		end
+
+		# Parse frames if this synset is a verb
+		if synsetType == WordNet::Verb
+			if $scanner.scan( SynFrameCnt )
+				$scanner[1].to_i.times do |i|
+					$scanner.scan( SynFrame ) or raise "unable to parse frame #{i}"
+					frames.push "#{$scanner[1]} #{$scanner[2]}"
+				end
+			else
+				raise "Couldn't parse frame count"
+			end
+		end
+
+		# Find the gloss
+		if $scanner.scan( SynGloss )
+			gloss = $scanner[1].strip
+		end
+
+		# This should never happen, as the gloss matches pretty much anything to
+		# the end of line.
+		if !$scanner.empty?
+			raise "Trailing miscellaneous found at end of entry"
+		end
+
+		# Build the synset entry and return it
+		synsetType = WordNet::Adjective if synsetType == WordNet::Other
+		key = [ offset, synsetType ].join("%")
+		data = [
+			filenum,
+			words.join( WordNet::SUB_DELIM ),
+			ptrs.join( WordNet::SUB_DELIM ),
+			frames.join( WordNet::SUB_DELIM ),
+			gloss,
+		].join( WordNet::DELIM )
+
+		return key, data
+	rescue => err
+		message "Synset did not parse: %s at '%s...' (pos = %s, line %d)\n\t%s\n" % [
+			err.message,
+			$scanner.rest[0,20],
+			pos.inspect,
+			lineNumber,
+			err.backtrace[0]
+		]
+		return nil
 	end
 
-	# Find the gloss
-	if $scanner.scan( SynGloss )
-		gloss = $scanner[1].strip
-	end
-
-	# This should never happen, as the gloss matches pretty much anything to
-	# the end of line.
-	if !$scanner.empty?
-		raise "Trailing miscellaneous found at end of entry"
-	end
-
-	# Build the synset entry and return it
-	synsetType = WordNet::Adjective if synsetType == WordNet::Other
-	key = [ offset, synsetType ].join("%")
-	data = [
-		filenum,
-		words.join( WordNet::SUB_DELIM ),
-		ptrs.join( WordNet::SUB_DELIM ),
-		frames.join( WordNet::SUB_DELIM ),
-		gloss,
-	].join( WordNet::DELIM )
-
-	return key, data
-rescue => err
-	message "Synset did not parse: %s at '%s...' (pos = %s, line %d)\n\t%s\n" % [
-		err.message,
-		$scanner.rest[0,20],
-		pos.inspect,
-		lineNumber,
-		err.backtrace[0]
-	]
-	return nil
-end
+end # class WordNetConverter
 
 
 # Start the program if it's run directly
@@ -402,6 +412,6 @@ if $0 == __FILE__
 		oparser.parse!
 	}
 
-    convertdb( errorLimit )
+    WordNetConverter.new.convertdb( errorLimit )
 end
 

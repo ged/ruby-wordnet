@@ -90,7 +90,7 @@ class WordNet::Lexicon
 	### octal mode (e.g., 0444) or one of (:readonly, :readwrite).
 	def initialize( dbenv=DEFAULT_DB_ENV, mode=:readonly )
 		@mode = normalize_mode( mode )
-		debug_msg "Mode is: %04o" % [ mode ]
+		debug_msg "Mode is: %04o" % [ @mode ]
 
 		envflags = 0
 		dbflags  = 0
@@ -163,13 +163,6 @@ class WordNet::Lexicon
 	end
 
 
-	### Return a list of archival logfiles that can be removed
-	### safely. (BerkeleyDB-specific).
-	def archlogs
-		return @env.log_archive( BDB::ARCH_ABS )
-	end
-
-
 	### Remove any archival logfiles for the lexicon's database
 	### environment. (BerkeleyDB-specific).
 	def clean_logs
@@ -191,7 +184,7 @@ class WordNet::Lexicon
 	end
 
 
-	### Look up sysets (Wordnet::Synset objects) matching +text+ as a
+	### Look up synsets (Wordnet::Synset objects) matching +text+ as a
 	### +part_of_speech+, where +part_of_speech+ is one of +WordNet::Noun+,
 	### +WordNet::Verb+, +WordNet::Adjective+, or +WordNet::Adverb+. Without
 	### +sense+, #lookup_synsets will return all matches that are a
@@ -205,7 +198,9 @@ class WordNet::Lexicon
 		# Look up the index entry, trying first the word as given, and if
 		# that fails, trying morphological conversion.
 		entry = @index_db[ wordkey ]
+
 		if entry.nil? && (word = self.morph( word, part_of_speech ))
+			wordkey = self.make_word_key( word, part_of_speech )
 			entry = @index_db[ wordkey ]
 		end
 
@@ -235,7 +230,7 @@ class WordNet::Lexicon
 
 			data = @data_db[ key ]
 			offset, part_of_speech = key.split( /%/, 2 )
-			synsets << WordNet::Synset::new( self, offset, part_of_speech, nil, data )
+			synsets << WordNet::Synset.new( self, offset, part_of_speech, nil, data )
 		}
 
 		return *synsets
@@ -282,7 +277,7 @@ class WordNet::Lexicon
 	### Factory method: Creates and returns a new WordNet::Synset object in
 	### this lexicon for the specified +word+ and +part_of_speech+.
 	def create_synset( word, part_of_speech )
-		return WordNet::Synset::new( self, '', part_of_speech, word )
+		return WordNet::Synset.new( self, '', part_of_speech, word )
 	end
 	alias_method :new_synset, :create_synset
 
@@ -395,6 +390,13 @@ class WordNet::Lexicon
 		pos = self.make_pos( pos )
 		word = word.gsub( /\s+/, '_' )
 		return "#{word}%#{pos}"
+	end
+
+
+	### Return a list of archival logfiles that can be removed
+	### safely. (BerkeleyDB-specific).
+	def archlogs
+		return @env.log_archive( BDB::ARCH_ABS )
 	end
 
 
