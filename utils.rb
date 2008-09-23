@@ -291,6 +291,26 @@ module UtilityFunctions
 	end
 
 
+	### Display a description of a potentially-dangerous task, and prompt
+	### for confirmation. If the user answers with anything that begins
+	### with 'y', yield to the block, else raise with an error.
+	def ask_for_confirmation( description )
+		puts description
+
+		answer = prompt_with_default( "Continue?", 'n' ) do |input|
+			input =~ /^[yn]/i
+		end
+
+		case answer
+		when /^y/i
+			yield
+		else
+			error "Aborted."
+			fail
+		end
+	end
+
+
 	### Search for the program specified by the given <tt>progname</tt> in the
 	### user's <tt>PATH</tt>, and return the full path to it, or <tt>nil</tt> if
 	### no such program is in the path.

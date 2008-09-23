@@ -40,13 +40,22 @@ welcome. Relevant patches are particularly helpful. I may be reached at
 
 == Installation
 
-For installation instructions, see the INSTALL file.
+If you use RubyGems, you can install via:
+
+  $ sudo gem install wordnet
+
+You can also install as a site library via the Rakefile:
+
+  $ wget http://deveiate.org/code/wordnet-x.y.z.tar.gz
+  $ tar xzvf wordnet-x.y.z.tar.gz
+  $ cd wordnet-x.y.z
+  $ sudo rake install
 
 
 == More Information
 
 There is a project page for Ruby-WordNet which can be found at:
-<http://deveiate.org/code/Ruby-WordNet.shtml>.
+<http://deveiate.org/projects/Ruby-WordNet/>.
 
 This library was developed as part of the FaerieMUD Project. For more
 information about the FaerieMUD project see <http://www.FaerieMUD.org/>.
@@ -64,24 +73,12 @@ may not be different than the release) using Subversion from the following URL:
 
 == Legal
 
-Ruby-WordNet is Open Source Software which is Copyright © 2001-2007 by The
+Ruby-WordNet is Open Source Software which is Copyright © 2001-2008 by The
 FaerieMUD Consortium.
 
-You may use, modify, and/or redistribute this software under the terms of the
-Perl Artistic License, a copy of which should have been included in this
-distribution (See the file Artistic). If it was not, a copy of it may be
-obtained from http://language.perl.com/misc/Artistic.html or
-http://www.faeriemud.org/artistic.html).
-
-THIS PACKAGE IS PROVIDED "AS IS" AND WITHOUT ANY EXPRESS OR IMPLIED WARRANTIES,
-INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF MERCHANTIBILITY AND
-FITNESS FOR A PARTICULAR PURPOSE.
-
---
+It is licensed under the modified BSD license. See the LICENSE file for details.
 
 WordNet® is a registered trademark of Princeton University. 
-
---
 
 Lingua::Wordnet is code licensed under the following terms:
 
@@ -91,8 +88,6 @@ Lingua::Wordnet is code licensed under the following terms:
   This program is free software; you can redistribute it and/or modify
   it under the same terms as Perl itself.
 
-
-=== Version
 
 $Id$
 

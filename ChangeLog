@@ -1,349 +1,720 @@
-2003-09-03 14:24  Michael Granger <ged@FaerieMUD.org>
+-- Fri, 05 Sep 2008 18:49:25 -0000 by deveiant (r95) -----
+   Changed: Rakefile.local
+            README
+            LICENSE
+            Rakefile
+            TODO
+            INSTALL (and 2 other/s)
 
-	* TODO (1.3, RELEASE_0_02):
+    * Updated build system and license
+
+
+-- Fri, 25 Jul 2008 02:47:42 -0000 by deveiant (r94) -----
+   Changed: Rakefile.local
+            Rakefile
+            utils.rb
+            project.yml
+            convertdb.rb
+
+   Updated build system
+
+
+-- Sat, 12 Jul 2008 00:56:49 -0000 by deveiant (r93) -----
+   Added:   spec/wordnet/synset_spec.rb
+            -> renamed from /branches/rakefile-work/spec/wordnet/synset.tests.rb@r92
+   Changed: spec/wordnet/lexicon_spec.rb
+            lib/wordnet/lexicon.rb
+            Rakefile
+   Deleted: spec/wordnet/synset.tests.rb
+
+    * Synched Rakefile with rake-tasklibs
+    * Started conversion of synset tests to specs
+    * Finished converting lexicon tests to specs
+
+
+-- Thu, 10 Jul 2008 13:27:07 -0000 by deveiant (r92) -----
+   Changed: Rakefile
+            convertdb.rb
+   Deleted: makedist.rb
+            MANIFEST
+
+    * Fixed the test for an existing data directory in the conversion script 
+    * Set coverage minimum to 83% until I can get more tests written
+    * Removed some more old files
 
-	- Fixed list for RDoc.
-	
-2003-09-03 08:15  Michael Granger <ged@FaerieMUD.org>
 
-	* tests/synset.tests.rb (1.5, RELEASE_0_02):
+-- Wed, 09 Jul 2008 23:52:38 -0000 by deveiant (r91) -----
+   Added:   Rakefile.local (new)
+            LICENSE (new)
+            project.yml (new)
+   Changed: /branches/rakefile-work
 
-	- Fixed tests for relation pointer methods: verbgroups => verbGroups and delete
-	  'functions'.
-	
-2003-09-03 01:47  Michael Granger <ged@FaerieMUD.org>
+   Adding some files I forgot to commit.
 
-	* lib/wordnet/synset.rb (1.5, RELEASE_0_02):
 
-	- Corrected pointer-method docs.
-	
-2003-09-03 00:47  Michael Granger <ged@FaerieMUD.org>
+-- Wed, 09 Jul 2008 23:02:53 -0000 by deveiant (r90) -----
+   Changed: lib/wordnet.rb
+            lib/wordnet/synset.rb
+            /branches/rakefile-work
+            Rakefile
+            lib/wordnet/constants.rb
+            convertdb.rb (and 1 other/s)
 
-	* INSTALL (1.6, RELEASE_0_02):
+   Checkpoint -- conversion of database files and basic rake infrastructure from rake-tasklibs external
+   working.
 
-	- Updated requirements list.
-	
-2003-09-03 00:42  Michael Granger <ged@FaerieMUD.org>
 
-	* tests/: linguawordnet.tests.rb (1.4, RELEASE_0_02),
-	synset.tests.rb (1.4):
+-- Wed, 09 Jul 2008 13:50:46 -0000 by deveiant (r89) -----
+   Changed: /branches/rakefile-work
+   Deleted: rake
 
-	- Modified to reflect WordNet-2.0 changes and API changes.
-	
-	- Added some more tests.
-	
-2003-09-03 00:41  Michael Granger <ged@FaerieMUD.org>
+   Trying out the new rake tasklibs as an external
 
-	* lib/wordnet/synset.rb (1.4):
 
-	- Added new class: WordNet::Synset::Pointer which is the generic type which
-	  contains a reference from one synset to another.
-	
-	- Refactored all pointer-specific code into Pointer.
-	
-	- Refactored some of the more complex methods into several submethods.
-	
-	- Removed all addFoo()/deleteFoo() methods to fit a more Ruby-ish '+=' and '-='
-	  idiom.
-	
-	- Documentation additions/fixes.
-	
-2003-09-03 00:37  Michael Granger <ged@FaerieMUD.org>
+-- Wed, 09 Jul 2008 13:46:00 -0000 by deveiant (r88) -----
+   Added:   /branches/rakefile-work
+            -> renamed from /trunk@r87
 
-	* lib/wordnet/lexicon.rb (1.4, RELEASE_0_02):
+   Branching for work on the rakefile build system
 
-	- [COMPAT] Simplified index entry-parsing by removing redundant count.
-	
-	-  New method: removeSynset() -- still experimental.
-	
-	- Changed internal terminology to more closely match WordNet's terms to reduce
-	  future maintainer confusion.
-	
-2003-09-03 00:29  Michael Granger <ged@FaerieMUD.org>
 
-	* lib/wordnet/constants.rb (1.2, RELEASE_0_02):
+-- Tue, 08 Jul 2008 15:07:04 -0000 by deveiant (r87) -----
+   Added:   /trunk/spec/wordnet/synset.tests.rb
+            -> renamed from /trunk/tests/synset.tests.rb@r86
+            /trunk/spec/linguawordnet.tests.rb
+            -> renamed from /trunk/tests/linguawordnet.tests.rb@r86
+            /trunk/redist/bdb-0.6.5.tar.gz (new)
+   Changed: /trunk/examples/clothesWithCollars.rb
+            /trunk
+            /trunk/utils.rb
+            /trunk/makedist.rb
+            /trunk/examples/hyponymTree.rb
+            /trunk/lib/wordnet/constants.rb (and 19 other/s)
+   Deleted: /trunk/tests
+            /trunk/install.rb
+            /trunk/redist/bdb-0.5.9.tar.bz2
+            /trunk/test.rb
+
+   Checkpoint commit:
+   * started work on integrating dict conversion into the Rakefile. Not quite done yet.
+   * removed the coverage check from the svn:ci task until I get all the specs converted.
+   * started cleaning up the distribution
+   * updated the included bdb library to the latest release
+   * added support for conversion of the dict files directly from a WordNet-x.x.tar.bz2 tarball
+   extracted in the top-level directory
+
+
+-- Tue, 08 Jul 2008 14:25:54 -0000 by deveiant (r86) -----
+   Added:   /trunk/spec/lib (new)
+            /trunk/spec/lib/helpers.rb (new)
+            /trunk/rake/verifytask.rb (new)
+            /trunk/spec/wordnet (new)
+            /trunk/Rakefile (new)
+            /trunk/rake (new) (and 5 other/s)
+   Changed: /trunk/lib/wordnet/constants.rb
+            /trunk/.irbrc
+            /trunk/lib/wordnet/synset.rb
+            /trunk/convertdb.rb
+            /trunk/lib/wordnet.rb
+            /trunk/lib/wordnet/lexicon.rb (and 1 other/s)
+   Deleted: /trunk/WordNet Project.tmproj
 
-	- Rewritten to group constants into Hashes by function, with maps into real
-	  constants for convenience.
-	
-2003-09-03 00:28  Michael Granger <ged@FaerieMUD.org>
+   Checkpoint commit
 
-	* lib/wordnet/.cvsignore (1.1, RELEASE_0_02):
 
-	Initial checkin.
-	
-2003-09-03 00:27  Michael Granger <ged@FaerieMUD.org>
+-- Tue, 08 Jul 2008 03:39:04 -0000 by deveiant (r85) -----
+   Changed: /trunk/lib/wordnet/synset.rb
+            /trunk/test.rb
+            /trunk/utils.rb
+            /trunk/WordNet Project.tmproj
+            /trunk/lib/wordnet/constants.rb
+            /trunk/convertdb.rb (and 2 other/s)
 
-	* lib/wordnet.rb (1.4, RELEASE_0_02):
+   Checkpoint commit
 
-	- Updated synopsis to reflect changes to the API.
-	
-	- Added optional require of CrossCase module.
-	
-2003-09-02 23:34  Michael Granger <ged@FaerieMUD.org>
 
-	* examples/: holonymTree.rb (1.3), meronymTree.rb (1.3) (utags:
-	RELEASE_0_02):
+-- Tue, 24 Jul 2007 22:50:30 -0000 by deveiant (r83) -----
+   Changed: /trunk/README
+            /trunk/WordNet Project.tmproj
+            /trunk/INSTALL
 
-	- Modified to reflect changes in method names.
-	
-2003-09-02 23:33  Michael Granger <ged@FaerieMUD.org>
+   Doc updates
 
-	* examples/domainTree.rb (1.1), examples/memberTree.rb (1.1),
-	docs/.cvsignore (1.1) (utags: RELEASE_0_02):
 
-	Initial checkin.
-	
-2003-09-02 23:33  Michael Granger <ged@FaerieMUD.org>
+-- Mon, 18 Jun 2007 14:48:38 -0000 by deveiant (r82) -----
+   Changed: /trunk/lib/wordnet/synset.rb
+            /trunk/docs/CATALOG
+            /trunk/WordNet Project.tmproj
 
-	* docs/makedocs.rb (1.2, RELEASE_0_02):
+   Cosmetic fixes
 
-	- Added --promiscuous and --show-hash options to RDoc invocation.
-	
-2003-09-02 23:32  Michael Granger <ged@FaerieMUD.org>
 
-	* install.rb (1.4, RELEASE_0_02):
+-- Sun, 17 Jun 2007 19:50:12 -0000 by deveiant (r81) -----
+   Changed: /trunk
 
-	- Fixed 1.8 String =~ String warning.
-	
-	- Added filter to installation file list.
-	
-2003-09-02 23:32  Michael Granger <ged@FaerieMUD.org>
+   Updating project version for release
 
-	* convertdb.rb (1.5, RELEASE_0_02):
 
-	- Fixed to work with a dictdir argument.
-	
-	- COMPAT: Modified to no longer store the redundant pointer count in the index.
-	
-2003-09-02 23:30  Michael Granger <ged@FaerieMUD.org>
+-- Sun, 17 Jun 2007 19:32:12 -0000 by deveiant (r80) -----
+   Changed: /trunk
+            /trunk/WordNet Project.tmproj
+            /trunk/tests/wntestcase.rb
 
-	* TODO (1.2):
+    * Fixed mimetype for the project file
+    * Eliminated unused Test::Unit::Mock from the testcase class
 
-	- Updated for new release.
-	
-2003-08-06 02:08  Michael Granger <ged@FaerieMUD.org>
 
-	* lib/wordnet/synset.rb (1.3):
+-- Tue, 20 Feb 2007 19:07:32 -0000 by deveiant (r79) -----
+   Changed: /trunk/examples/clothesWithCollars.rb
+            /trunk
+            /trunk/docs/CATALOG
+            /trunk/examples/hyponymTree.rb
+            /trunk/tests/lexicon.tests.rb
+            /trunk/MANIFEST (and 18 other/s)
 
-	- Changed to reflect changes in the API.
-	
-2003-08-06 02:07  Michael Granger <ged@FaerieMUD.org>
+   source:trunk/convertdb.rb
+   source:trunk/tests/wntestcase.rb
+   source:trunk/tests/linguawordnet.tests.rb
+   source:trunk/tests/synset.tests.rb
+   source:trunk/lib/wordnet/synset.rb
+   source:trunk/lib/wordnet/constants.rb
+   source:trunk/lib/wordnet.rb
+   source:trunk/examples/clothesWithCollars.rb
+   source:trunk/examples/clothesWithTongues.rb
+   source:trunk/examples/hyponymTree.rb
+   source:trunk/examples/holonymTree.rb
+   source:trunk/examples/meronymTree.rb
+   source:trunk/examples/domainTree.rb
+   source:trunk/examples/memberTree.rb
+   source:trunk/examples/addLacedBoots.rb
+   source:trunk/examples/distance.rb
+   source:trunk/examples/hypernymTree.rb
+   source:trunk/examples/gcs.rb
+   * camelCase to under_barred conversions
+   source:trunk/tests/lexicon.tests.rb
+   source:trunk/lib/wordnet/lexicon.rb
+   * Fix for readonly mode
+   source:trunk/MANIFEST
+   * Include examples
 
-	* lib/wordnet/lexicon.rb (1.3):
 
-	- Modified to use BDB transactions.
-	
-	- Made changes to reflect change in constant names.
-	
-2003-08-06 02:04  Michael Granger <ged@FaerieMUD.org>
+-- Sun, 08 Oct 2006 22:36:15 -0000 by ged (r77) -----
+   Added:   /trunk/redist/bdb-0.5.9.tar.bz2 (new)
+            /trunk/redist (new)
 
-	* lib/wordnet.rb (1.3):
 
-	- Moved constants into a separate module.
-	
-2003-08-06 02:03  Michael Granger <ged@FaerieMUD.org>
+    * Added supported version of the bdb library to redist/
 
-	* examples/: clothesWithTongues.rb (1.2, RELEASE_0_02), distance.rb
-	(1.2, RELEASE_0_02), gcs.rb (1.2, RELEASE_0_02), holonymTree.rb
-	(1.2), hypernymTree.rb (1.2, RELEASE_0_02), hyponymTree.rb (1.2,
-	RELEASE_0_02), meronymTree.rb (1.2):
 
-	- Updated to use new API.
-	
-2003-08-06 02:01  Michael Granger <ged@FaerieMUD.org>
+-- Sun, 08 Oct 2006 22:18:06 -0000 by ged (r76) -----
+   Added:   /trunk/WordNet Project.tmproj
+            -> renamed from /trunk/WordNet.tmproj@r75
+   Changed: /trunk/tests/lexicon.tests.rb
+            /trunk/lib/wordnet/lexicon.rb
+   Deleted: /trunk/WordNet.tmproj
 
-	* test.rb (1.3, RELEASE_0_02), tests/lexicon.tests.rb (1.3,
-	RELEASE_0_02), tests/linguawordnet.tests.rb (1.3),
-	tests/synset.tests.rb (1.3):
 
-	- Converted to use Test::Unit.
-	
-2003-08-06 02:00  Michael Granger <ged@FaerieMUD.org>
+    * Fixed permissions/options in read-only mode.
 
-	* install.rb (1.3):
 
-	- Modified to reflect self-build of wordnet DBs.
-	
-2003-08-06 01:59  Michael Granger <ged@FaerieMUD.org>
+-- Fri, 30 Jun 2006 18:28:33 -0000 by ged (r75) -----
+   Changed: /trunk/install.rb
 
-	* convertdb.rb (1.4):
+   Make install.rb executable
 
-	- Changed to look for WordNet-2.0 dicts by default.
-	
-2003-08-06 01:59  Michael Granger <ged@FaerieMUD.org>
 
-	* TODO (1.1), makedist.rb (1.1, RELEASE_0_02), utils.rb (1.1,
-	RELEASE_0_02), docs/makedocs.rb (1.1),
-	examples/clothesWithCollars.rb (1.1, RELEASE_0_02),
-	lib/wordnet/constants.rb (1.1), tests/wntestcase.rb (1.1,
-	RELEASE_0_02):
+-- Fri, 09 Dec 2005 20:47:22 -0000 by ged (r74) -----
+   Changed: /trunk/utils.rb
 
-	Initial checkin.
-	
-2003-08-06 01:57  Michael Granger <ged@FaerieMUD.org>
+   - Synched utils.rb with updated one from project-utils.
 
-	* INSTALL (1.5), README (1.5, RELEASE_0_02):
 
-	- Updated for pending release.
-	
-2003-08-06 01:46  Michael Granger <ged@FaerieMUD.org>
+-- Fri, 09 Dec 2005 00:35:21 -0000 by ged (r72) -----
+   Changed: /trunk
 
-	* lib/WordNet.rb (1.3):
+   - svn:ignore additions.
 
-	- Renamed to 'wordnet.rb' to follow Ruby module-naming convention.
-	
-2003-08-06 01:42  Michael Granger <ged@FaerieMUD.org>
 
-	* docs/CATALOG (1.1, RELEASE_0_02):
+-- Fri, 09 Dec 2005 00:33:44 -0000 by ged (r71) -----
+   Added:   /trunk/WordNet.tmproj (new)
 
-	Initial checkin.
-	
-2003-06-17 22:51  Michael Granger <ged@FaerieMUD.org>
+   - Adding Textmate project file.
 
-	* convertdb.rb (1.3):
 
-	- Fixed stupid bug caused by using the append operator (<<) instead of
-	  catenation (+) to build the keys and values of the parsing methods.
-	
-	- Fixed several bugs of verying degrees of stupidity in the gloss-parsing code.
-	
-2003-06-17 12:11  Michael Granger <ged@FaerieMUD.org>
+-- Fri, 09 Dec 2005 00:33:06 -0000 by ged (r70) -----
+   Changed: /trunk/.irbrc
 
-	* convertdb.rb (1.2):
+   - Load the default lexicon into a global.
 
-	- Added async transactions to speed database functions.
-	
-2003-06-17 09:01  Michael Granger <ged@FaerieMUD.org>
 
-	* convertdb.rb (1.1):
+-- Fri, 09 Dec 2005 00:32:20 -0000 by ged (r69) -----
+   Added:   /trunk/examples/TEMPLATE.rb.tpl (new)
 
-	Initial checkin.
-	
-2002-01-14 06:44  Michael Granger <ged@FaerieMUD.org>
+   Initial checkin.
 
-	* tests/: lexicon.tests.rb (1.2), linguawordnet.tests.rb (1.2),
-	synset.tests.rb (1.2) (utags: RELEASE_0_01):
 
-	- Converted to RubyUnit
-	
-2002-01-14 06:44  Michael Granger <ged@FaerieMUD.org>
+-- Fri, 09 Dec 2005 00:30:58 -0000 by ged (r68) -----
+   Changed: /trunk/lib/wordnet/synset.rb
 
-	* lib/wordnet/synset.rb (1.2, RELEASE_0_01):
+   - Only alias if CrossCase hasn't done it already.
 
-	- Small header/comment corrections
-	
-	- Made raw pointer methods 'protected' instead of 'public'
-	
-	- Added underbar-style method name aliases
-	
-	- Added traversal iterator and a bunch of derived analysis methods.
-	
-2002-01-14 06:41  Michael Granger <ged@FaerieMUD.org>
 
-	* lib/wordnet/lexicon.rb (1.2, RELEASE_0_01):
+-- Fri, 09 Dec 2005 00:29:53 -0000 by ged (r67) -----
+   Changed: /trunk/examples/clothesWithCollars.rb
 
-	- Small header/comment corrections
-	
-	- Added optional block form to #unlock
-	
-	- Changed all instances of 'pos' to 'partOfSpeech' for clarity
-	
-	- Fixed misnamed-database bug in #write
-	
-2002-01-14 06:36  Michael Granger <ged@FaerieMUD.org>
+   - Playing, mostly.
 
-	* lib/: WordNet.rb (1.2), wordnet.rb (1.2) (utags: RELEASE_0_01):
 
-	- Small header/comment corrections
-	
-2002-01-14 06:34  Michael Granger <ged@FaerieMUD.org>
+-- Thu, 08 Dec 2005 11:15:42 -0000 by ged (r66) -----
+   Changed: /trunk/lib/wordnet/synset.rb
+            /trunk/tests/wntestcase.rb
+            /trunk/lib/wordnet/constants.rb
+            /trunk/tests/lexicon.tests.rb
+            /trunk/tests/linguawordnet.tests.rb
+            /trunk/convertdb.rb (and 3 other/s)
 
-	* test.rb (1.2, RELEASE_0_01):
+   - Test and fix for new compound pointer types (fixes #3)
+   - Added mode-specification and path specification to Lexicon constructor. This
+   is to support modifying WordNet databases as well as being able to open them
+   read-only. This addresses the "writable data files" bug (fixes #2).
+   - Moved default location for data files to CONFIG['datadir']
+   - Added quite a bit more documentation which is visible if you use the included
+   docs/makedocs.rb script or manually specify an 'accessors' option to rdoc.
 
-	- Converted to a RubyUnit test, and walkit is no longer maintained or available.
-	
-2002-01-14 06:33  Michael Granger <ged@FaerieMUD.org>
 
-	* install.rb (1.2, RELEASE_0_01):
+-- Thu, 08 Dec 2005 11:01:42 -0000 by ged (r65) -----
+   Changed: /trunk/utils.rb
+            /trunk/install.rb
 
-	- Added code to rewrite the DICTDIR in lib/WordNet.rb
-	
-2002-01-14 06:31  Michael Granger <ged@FaerieMUD.org>
+   - Synced utility scripts with project-utils.
 
-	* examples/addLacedBoots.rb (1.2, RELEASE_0_02, RELEASE_0_01):
 
-	- Added abort code until writing is tested.
-	
-2002-01-14 06:30  Michael Granger <ged@FaerieMUD.org>
+-- Sat, 12 Nov 2005 18:14:54 -0000 by ged (r64) -----
+   Added:   /trunk/experiments (new)
+            /trunk/experiments/unhandled_pointer_types.rb (new)
 
-	* examples/: addLacedBoots.rb (1.1), clothesWithTongues.rb (1.1,
-	RELEASE_0_01), distance.rb (1.1, RELEASE_0_01), gcs.rb (1.1,
-	RELEASE_0_01), holonymTree.rb (1.1, RELEASE_0_01), hypernymTree.rb
-	(1.1, RELEASE_0_01), hyponymTree.rb (1.1, RELEASE_0_01),
-	meronymTree.rb (1.1, RELEASE_0_01):
+    * Adding minimal testcase for missing synset pointer types bug. (refs #3)
 
-	Initial import
-	
-2002-01-14 06:22  Michael Granger <ged@FaerieMUD.org>
 
-	* README (1.4, RELEASE_0_01):
+-- Sat, 12 Nov 2005 12:24:58 -0000 by ged (r63) -----
+   Changed: /trunk/lib/wordnet/synset.rb
 
-	- Added write-access methods warning.
-	
-2002-01-14 06:21  Michael Granger <ged@FaerieMUD.org>
+    * Made def_pointer_methods a bit more intelligent so that the second argument
+    isn't necessary.
+    * Added example values to some attributes
 
-	* INSTALL (1.4, RELEASE_0_01):
 
-	- Fixed up instructions.
-	
-2002-01-06 23:03  Michael Granger <ged@FaerieMUD.org>
+-- Sat, 12 Nov 2005 12:21:45 -0000 by ged (r62) -----
+   Changed: /trunk/makedist.rb
+            /trunk/install.rb
 
-	* README (1.3):
+    * Propagated updates from project-utils.
 
-	- Modified the statement about Lingua::Wordnet to make it clear that it does
-	  deviate from the module a bit more than a straight port.
-	
-2002-01-05 06:34  Michael Granger <ged@FaerieMUD.org>
 
-	* INSTALL (1.3):
+-- Sat, 12 Nov 2005 10:02:12 -0000 by ged (r61) -----
+   Changed: /trunk/docs/makedocs.rb
+            /trunk/docs/CATALOG
+            /trunk/utils.rb
 
-	- Fixed confusing first sentence.
-	
-2002-01-05 06:33  Michael Granger <ged@FaerieMUD.org>
+    * Added accessor-awareness from project-utils, and added accessors to CATALOG.
 
-	* INSTALL (1.2):
 
-	- Cleaned up, untabified.
-	
-2002-01-05 06:29  Michael Granger <ged@FaerieMUD.org>
+-- Fri, 11 Nov 2005 13:28:41 -0000 by ged (r60) -----
+   Changed: /trunk/convertdb.rb
 
-	* INSTALL (1.1):
+   * Fixed the segfault during conversion. Thanks to Claus W. Spitzer for finding
+   this and sending me a patch. (Fixes #1)
 
-	Initial release.
-	
-2002-01-05 05:32  Michael Granger <ged@FaerieMUD.org>
 
-	* README (1.2):
+-- Fri, 11 Nov 2005 04:38:14 -0000 by ged (r59) -----
+   Deleted: /trunk/.cvsignore
+            /trunk/docs/.cvsignore
+            /trunk/lib/wordnet/.cvsignore
 
-	- Cleaned up and finished. Untabified.
-	
-2002-01-04 14:52  Michael Granger <ged@FaerieMUD.org>
+   * Cleanup of old .cvsignore files.
 
-	* README (1.1), install.rb (1.1), test.rb (1.1), lib/WordNet.rb
-	(1.1), lib/wordnet.rb (1.1), lib/wordnet/lexicon.rb (1.1),
-	lib/wordnet/synset.rb (1.1), tests/lexicon.tests.rb (1.1),
-	tests/linguawordnet.tests.rb (1.1), tests/synset.tests.rb (1.1):
 
-	Initial revision
-	
-2002-01-04 14:52  Michael Granger <ged@FaerieMUD.org>
+-- Fri, 11 Nov 2005 04:34:33 -0000 by ged (r58) -----
+   Changed: /trunk/README
+            /trunk/tests/wntestcase.rb
+            /trunk/INSTALL
+            /trunk/MANIFEST
+            /trunk/lib/wordnet/constants.rb
+            /trunk/lib/wordnet.rb (and 2 other/s)
 
-	* README (1.1.1.1), install.rb (1.1.1.1), test.rb (1.1.1.1),
-	lib/WordNet.rb (1.1.1.1), lib/wordnet.rb (1.1.1.1),
-	lib/wordnet/lexicon.rb (1.1.1.1), lib/wordnet/synset.rb (1.1.1.1),
-	tests/lexicon.tests.rb (1.1.1.1), tests/linguawordnet.tests.rb
-	(1.1.1.1), tests/synset.tests.rb (1.1.1.1) (utags: ALPHA_1_1):
+   - Updated keywords, cleaned up for new work.
 
-	Initial import
-	
+
+-- Wed, 03 Sep 2003 20:32:42 -0000 by deveiant (r56) -----
+   Added:   /trunk/ChangeLog (new)
+
+   Initial checkin
+
+
+-- Wed, 03 Sep 2003 20:24:27 -0000 by deveiant (r55) -----
+   Changed: /trunk/TODO
+
+   - Fixed list for RDoc.
+
+
+-- Wed, 03 Sep 2003 14:15:14 -0000 by deveiant (r54) -----
+   Changed: /trunk/tests/synset.tests.rb
+
+   - Fixed tests for relation pointer methods: verbgroups => verbGroups and delete
+   'functions'.
+
+
+-- Wed, 03 Sep 2003 07:47:29 -0000 by deveiant (r53) -----
+   Changed: /trunk/lib/wordnet/synset.rb
+
+   - Corrected pointer-method docs.
+
+
+-- Wed, 03 Sep 2003 06:47:19 -0000 by deveiant (r52) -----
+   Changed: /trunk/INSTALL
+
+   - Updated requirements list.
+
+
+-- Wed, 03 Sep 2003 06:42:23 -0000 by deveiant (r51) -----
+   Changed: /trunk/tests/linguawordnet.tests.rb
+            /trunk/tests/synset.tests.rb
+
+   - Modified to reflect WordNet-2.0 changes and API changes.
+   - Added some more tests.
+
+
+-- Wed, 03 Sep 2003 06:41:39 -0000 by deveiant (r50) -----
+   Changed: /trunk/lib/wordnet/synset.rb
+
+   - Added new class: WordNet::Synset::Pointer which is the generic type which
+   contains a reference from one synset to another.
+   - Refactored all pointer-specific code into Pointer.
+   - Refactored some of the more complex methods into several submethods.
+   - Removed all addFoo()/deleteFoo() methods to fit a more Ruby-ish '+=' and '-='
+   idiom.
+   - Documentation additions/fixes.
+
+
+-- Wed, 03 Sep 2003 06:37:29 -0000 by deveiant (r49) -----
+   Changed: /trunk/lib/wordnet/lexicon.rb
+
+   - [COMPAT] Simplified index entry-parsing by removing redundant count.
+   -  New method: removeSynset() -- still experimental.
+   - Changed internal terminology to more closely match WordNet's terms to reduce
+   future maintainer confusion.
+
+
+-- Wed, 03 Sep 2003 06:29:17 -0000 by deveiant (r48) -----
+   Changed: /trunk/lib/wordnet/constants.rb
+
+   - Rewritten to group constants into Hashes by function, with maps into real
+   constants for convenience.
+
+
+-- Wed, 03 Sep 2003 06:28:09 -0000 by deveiant (r47) -----
+   Added:   /trunk/lib/wordnet/.cvsignore (new)
+   Changed: /trunk/lib/wordnet
+
+   Initial checkin.
+
+
+-- Wed, 03 Sep 2003 06:27:51 -0000 by deveiant (r46) -----
+   Changed: /trunk/lib/wordnet.rb
+
+   - Updated synopsis to reflect changes to the API.
+   - Added optional require of CrossCase module.
+
+
+-- Wed, 03 Sep 2003 05:34:35 -0000 by deveiant (r45) -----
+   Changed: /trunk/examples/holonymTree.rb
+            /trunk/examples/meronymTree.rb
+
+   - Modified to reflect changes in method names.
+
+
+-- Wed, 03 Sep 2003 05:34:12 -0000 by deveiant (r44) -----
+   Added:   /trunk/docs/.cvsignore (new)
+            /trunk/examples/domainTree.rb (new)
+            /trunk/examples/memberTree.rb (new)
+   Changed: /trunk/docs
+
+   Initial checkin.
+
+
+-- Wed, 03 Sep 2003 05:33:22 -0000 by deveiant (r43) -----
+   Changed: /trunk/docs/makedocs.rb
+
+   - Added --promiscuous and --show-hash options to RDoc invocation.
+
+
+-- Wed, 03 Sep 2003 05:32:47 -0000 by deveiant (r42) -----
+   Changed: /trunk/install.rb
+
+   - Fixed 1.8 String =~ String warning.
+   - Added filter to installation file list.
+
+
+-- Wed, 03 Sep 2003 05:32:08 -0000 by deveiant (r41) -----
+   Changed: /trunk/convertdb.rb
+
+   - Fixed to work with a dictdir argument.
+   - COMPAT: Modified to no longer store the redundant pointer count in the index.
+
+
+-- Wed, 03 Sep 2003 05:30:34 -0000 by deveiant (r40) -----
+   Changed: /trunk/TODO
+
+   - Updated for new release.
+
+
+-- Wed, 03 Sep 2003 05:30:14 -0000 by deveiant (r39) -----
+   Changed: /trunk/.irbrc
+
+   - Fixed comment.
+
+
+-- Wed, 06 Aug 2003 08:08:27 -0000 by deveiant (r38) -----
+   Changed: /trunk/tests/lexicon.tests.rb
+            /trunk/tests/linguawordnet.tests.rb
+            /trunk/tests/synset.tests.rb
+
+   - Converted to use Test::Unit.
+
+
+-- Wed, 06 Aug 2003 08:08:14 -0000 by deveiant (r37) -----
+   Changed: /trunk/lib/wordnet/synset.rb
+
+   - Changed to reflect changes in the API.
+
+
+-- Wed, 06 Aug 2003 08:07:04 -0000 by deveiant (r36) -----
+   Changed: /trunk/lib/wordnet/lexicon.rb
+
+   - Modified to use BDB transactions.
+   - Made changes to reflect change in constant names.
+
+
+-- Wed, 06 Aug 2003 08:05:39 -0000 by deveiant (r35) -----
+   Added:   /trunk/.cvsignore (new)
+            /trunk/examples/clothesWithCollars.rb (new)
+            /trunk/docs/makedocs.rb (new)
+            /trunk/utils.rb (new)
+            /trunk/makedist.rb (new)
+            /trunk/tests/wntestcase.rb (new) (and 4 other/s)
+   Changed: /trunk
+
+   Initial checkin.
+
+
+-- Wed, 06 Aug 2003 08:04:43 -0000 by deveiant (r34) -----
+   Changed: /trunk/lib/wordnet.rb
+
+   - Moved constants into a separate module.
+
+
+-- Wed, 06 Aug 2003 08:03:53 -0000 by deveiant (r33) -----
+   Changed: /trunk/examples/clothesWithTongues.rb
+            /trunk/examples/hyponymTree.rb
+            /trunk/examples/holonymTree.rb
+            /trunk/examples/meronymTree.rb
+            /trunk/examples/distance.rb
+            /trunk/examples/hypernymTree.rb (and 2 other/s)
+
+   - Updated to use new API.
+
+
+-- Wed, 06 Aug 2003 08:01:30 -0000 by deveiant (r32) -----
+   Changed: /trunk/test.rb
+
+   - Converted to use Test::Unit.
+
+
+-- Wed, 06 Aug 2003 08:00:52 -0000 by deveiant (r31) -----
+   Changed: /trunk/install.rb
+
+   - Modified to reflect self-build of wordnet DBs.
+
+
+-- Wed, 06 Aug 2003 07:59:44 -0000 by deveiant (r30) -----
+   Changed: /trunk/convertdb.rb
+
+   - Changed to look for WordNet-2.0 dicts by default.
+
+
+-- Wed, 06 Aug 2003 07:59:01 -0000 by deveiant (r29) -----
+   Changed: /trunk/README
+            /trunk/INSTALL
+
+   - Updated for pending release.
+
+
+-- Wed, 06 Aug 2003 07:57:36 -0000 by deveiant (r28) -----
+   Changed: /trunk/.irbrc
+
+   - Updated.
+
+
+-- Wed, 06 Aug 2003 07:46:35 -0000 by deveiant (r27) -----
+   Deleted: /trunk/lib/WordNet.rb
+
+   - Renamed to 'wordnet.rb' to follow Ruby module-naming convention.
+
+
+-- Wed, 06 Aug 2003 07:42:59 -0000 by deveiant (r26) -----
+   Added:   /trunk/docs/CATALOG (new)
+            /trunk/docs (new)
+
+   Initial checkin.
+
+
+-- Wed, 18 Jun 2003 04:51:47 -0000 by deveiant (r25) -----
+   Changed: /trunk/convertdb.rb
+
+   - Fixed stupid bug caused by using the append operator (<<) instead of
+   catenation (+) to build the keys and values of the parsing methods.
+   - Fixed several bugs of verying degrees of stupidity in the gloss-parsing code.
+
+
+-- Tue, 17 Jun 2003 18:11:21 -0000 by deveiant (r24) -----
+   Changed: /trunk/convertdb.rb
+
+   - Added async transactions to speed database functions.
+
+
+-- Tue, 17 Jun 2003 15:01:06 -0000 by deveiant (r23) -----
+   Added:   /trunk/convertdb.rb (new)
+
+   Initial checkin.
+
+
+-- Mon, 14 Jan 2002 13:44:36 -0000 by deveiant (r21) -----
+   Changed: /trunk/tests/lexicon.tests.rb
+            /trunk/tests/linguawordnet.tests.rb
+            /trunk/tests/synset.tests.rb
+
+   - Converted to RubyUnit
+
+
+-- Mon, 14 Jan 2002 13:44:09 -0000 by deveiant (r20) -----
+   Changed: /trunk/lib/wordnet/synset.rb
+
+   - Small header/comment corrections
+   - Made raw pointer methods 'protected' instead of 'public'
+   - Added underbar-style method name aliases
+   - Added traversal iterator and a bunch of derived analysis methods.
+
+
+-- Mon, 14 Jan 2002 13:41:27 -0000 by deveiant (r19) -----
+   Changed: /trunk/lib/wordnet/lexicon.rb
+
+   - Small header/comment corrections
+   - Added optional block form to #unlock
+   - Changed all instances of 'pos' to 'partOfSpeech' for clarity
+   - Fixed misnamed-database bug in #write
+
+
+-- Mon, 14 Jan 2002 13:36:31 -0000 by deveiant (r18) -----
+   Changed: /trunk/lib/WordNet.rb
+            /trunk/lib/wordnet.rb
+
+   - Small header/comment corrections
+
+
+-- Mon, 14 Jan 2002 13:34:06 -0000 by deveiant (r17) -----
+   Changed: /trunk/test.rb
+
+   - Converted to a RubyUnit test, and walkit is no longer maintained or available.
+
+
+-- Mon, 14 Jan 2002 13:33:24 -0000 by deveiant (r16) -----
+   Changed: /trunk/install.rb
+
+   - Added code to rewrite the DICTDIR in lib/WordNet.rb
+
+
+-- Mon, 14 Jan 2002 13:32:02 -0000 by deveiant (r15) -----
+   Added:   /trunk/.irbrc (new)
+
+   Initial import
+
+
+-- Mon, 14 Jan 2002 13:31:23 -0000 by deveiant (r14) -----
+   Changed: /trunk/examples/addLacedBoots.rb
+
+   - Added abort code until writing is tested.
+
+
+-- Mon, 14 Jan 2002 13:30:04 -0000 by deveiant (r13) -----
+   Added:   /trunk/examples (new)
+            /trunk/examples/clothesWithTongues.rb (new)
+            /trunk/examples/hyponymTree.rb (new)
+            /trunk/examples/holonymTree.rb (new)
+            /trunk/examples/meronymTree.rb (new)
+            /trunk/examples/addLacedBoots.rb (new) (and 4 other/s)
+
+   Initial import
+
+
+-- Mon, 14 Jan 2002 13:22:34 -0000 by deveiant (r12) -----
+   Changed: /trunk/README
+
+   - Added write-access methods warning.
+
+
+-- Mon, 14 Jan 2002 13:21:49 -0000 by deveiant (r11) -----
+   Changed: /trunk/INSTALL
+
+   - Fixed up instructions.
+
+
+-- Mon, 07 Jan 2002 06:03:06 -0000 by deveiant (r10) -----
+   Changed: /trunk/README
+
+   - Modified the statement about Lingua::Wordnet to make it clear that it does
+   deviate from the module a bit more than a straight port.
+
+
+-- Sat, 05 Jan 2002 13:34:21 -0000 by deveiant (r9) -----
+   Changed: /trunk/INSTALL
+
+   - Fixed confusing first sentence.
+
+
+-- Sat, 05 Jan 2002 13:33:49 -0000 by deveiant (r8) -----
+   Changed: /trunk/INSTALL
+
+   - Cleaned up, untabified.
+
+
+-- Sat, 05 Jan 2002 13:29:40 -0000 by deveiant (r7) -----
+   Added:   /trunk/INSTALL (new)
+
+   Initial release.
+
+
+-- Sat, 05 Jan 2002 12:32:33 -0000 by deveiant (r6) -----
+   Changed: /trunk/README
+
+   - Cleaned up and finished. Untabified.
+
+
+-- Fri, 04 Jan 2002 21:52:21 -0000 by deveiant (r2) -----
+   Added:   /trunk/README (new)
+            /trunk/lib/wordnet/synset.rb (new)
+            /trunk/test.rb (new)
+            /trunk/tests (new)
+            /trunk/lib (new)
+            /trunk/tests/lexicon.tests.rb (new) (and 8 other/s)
+
+   Initial revision
+
+
+-- Fri, 04 Jan 2002 21:52:21 -0000 by unknown (r1) -----
+   Added:   /trunk (new)
+            /branches (new)
+            /tags (new)
+
+   New repository initialized by cvs2svn.
+
+

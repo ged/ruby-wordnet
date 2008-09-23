@@ -1,0 +1,62 @@
+#!rake
+# 
+# Project-local tasks for Ruby-WordNet
+# $Id$
+# 
+# Authors:
+# * Michael Granger <ged@FaerieMUD.org>
+# 
+
+unless defined?( BASEDIR )
+	fail "This is meant to be loaded from the main Rakefile, not run directly."
+end
+
+
+require 'wordnet'
+require 'rake'
+
+CONVERT_UTIL = BASEDIR + 'convertdb.rb'
+DATA_BUILD_DIR = BASEDIR + File.basename( WordNet::Lexicon::DEFAULT_DB_ENV )
+DATA_DATABASE_FILE = DATA_BUILD_DIR + 'data'
+
+
+### Tasks
+
+# Add 'convert' to the default task, and the testing tasks
+task :local => :convert
+task :spec => :convert
+
+### Task: convert
+desc "Convert WordNet dict files to a database"
+task :convert => DATA_DATABASE_FILE
+
+# Conversion utility
+file CONVERT_UTIL.to_s
+
+# Build directory for the database files
+directory DATA_BUILD_DIR.to_s
+CLOBBER.include( DATA_BUILD_DIR.to_s )
+
+# BerkeleyDB main database file
+file DATA_DATABASE_FILE.to_s
+task DATA_DATABASE_FILE.to_s => CONVERT_UTIL do
+	load CONVERT_UTIL
+	WordNetConverter.new( DATA_BUILD_DIR ).convertdb
+end
+
+
+task :install => DATA_DATABASE_FILE do
+	datadir = Pathname.new( CONFIG['datadir'] )
+	log "Installing converted WordNet files in #{CONFIG['datadir']}"
+
+	datafiles = Pathname.glob( DATA_BUILD_DIR + '**/*' ).select {|pn| pn.file? }
+	datafiles.each do |file|
+		trace " installing #{file}"
+		relpath = file.expand_path.relative_path_from( Pathname.pwd )
+		target = datadir + relpath
+		FileUtils.mkpath target.dirname,
+			:mode => 0755, :verbose => true, :noop => $dryrun unless target.dirname.directory?
+		FileUtils.install relpath, target,
+			:mode => 0644, :verbose => true, :noop => $dryrun
+	end
+end
