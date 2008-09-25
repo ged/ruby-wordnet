@@ -60,3 +60,4 @@ task :install => DATA_DATABASE_FILE do
 			:mode => 0644, :verbose => true, :noop => $dryrun
 	end
 end
+

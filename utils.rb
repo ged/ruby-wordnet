@@ -293,21 +293,23 @@ module UtilityFunctions
 
 	### Display a description of a potentially-dangerous task, and prompt
 	### for confirmation. If the user answers with anything that begins
-	### with 'y', yield to the block, else raise with an error.
-	def ask_for_confirmation( description )
+	### with 'y', yield to the block. If +abort_on_decline+ is +true+,
+	### any non-'y' answer will fail with an error message.
+	def ask_for_confirmation( description, abort_on_decline=true )
 		puts description
 
 		answer = prompt_with_default( "Continue?", 'n' ) do |input|
 			input =~ /^[yn]/i
 		end
 
-		case answer
-		when /^y/i
-			yield
-		else
+		if answer =~ /^y/i
+			return yield
+		elsif abort_on_decline
 			error "Aborted."
 			fail
 		end
+
+		return false
 	end
 
 
@@ -808,6 +810,57 @@ module UtilityFunctions
 		catch(:IRB_EXIT) do
 			irb.eval_input
 		end
+	end
+	
+	
+	### Download the file at +sourceuri+ via HTTP and write it to +targetfile+.
+	def download( sourceuri, targetfile=nil )
+		oldsync = $defout.sync
+		$defout.sync = true
+		require 'net/http'
+		require 'uri'
+
+		targetpath = Pathname.new( targetfile )
+
+		log "Downloading %s to %s" % [sourceuri, targetfile]
+		targetpath.open( File::WRONLY|File::TRUNC|File::CREAT, 0644 ) do |ofh|
+
+			url = sourceuri.is_a?( URI ) ? sourceuri : URI.parse( sourceuri )
+			downloaded = false
+			limit = 5
+
+			until downloaded or limit.zero?
+				Net::HTTP.start( url.host, url.port ) do |http|
+					req = Net::HTTP::Get.new( url.path )
+
+					http.request( req ) do |res|
+						if res.is_a?( Net::HTTPSuccess )
+							log "Downloading..."
+							res.read_body do |buf|
+								ofh.print( buf )
+							end
+							downloaded = true
+							puts "done."
+
+						elsif res.is_a?( Net::HTTPRedirection )
+							url = URI.parse( res['location'] )
+							log "...following redirection to: %s" % [ url ]
+							limit -= 1
+							sleep 0.2
+							next
+
+						else
+							res.error!
+						end
+					end
+				end
+			end
+
+		end
+
+		return targetpath
+	ensure
+		$defout.sync = oldsync
 	end
 
 end # module UtilityFunctions
