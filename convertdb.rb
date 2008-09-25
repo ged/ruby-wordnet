@@ -43,6 +43,8 @@ require 'strscan'
 require 'wordnet'
 require 'optparse'
 require 'fileutils'
+require 'uri'
+require 'net/http'
 
 
 # Globals: Index of words => senses, StringScanner for parsing.
@@ -78,6 +80,17 @@ class WordNetConverter
 	BuildDir = Pathname.new( __FILE__ ).expand_path.dirname + 
 	           Pathname.new( WordNet::Lexicon::DEFAULT_DB_ENV ).basename
 
+	# Paths to search for WordNet dictionary files
+	WNDB_LOCAL_PATHS = [
+		'/usr/local/WordNet-3.0/dict',		# Default install
+		'/usr/WordNet-3.0/dict',			# Default with --prefix=/usr
+		'/usr/local/share/WordNet',	        # FreeBSD
+		'./dict',							# Extracted locally
+	]
+
+	# URL to the latest database file archive
+	WNDB_TARBALL_URL = URI.parse( 'http://wordnet.princeton.edu/3.0/WordNet-3.0.tar.gz' )
+
 
 	### Create a new converter that will dump WordNet dictionary files into a BerkeleyDB 
 	### in the given +builddir+ 
@@ -97,8 +110,7 @@ class WordNetConverter
 			"but will require up to 40Mb of disk space.\n"
 		exit unless /^y/i =~ prompt_with_default("Continue?", "y")
 
-		# Open the database and check to be sure it's empty. Confirm overwrite if
-		# not. Checkpoint and set up logging proc if debugging.
+		# Confirm if we're going to clobber an existing database directory
 		if @builddir.exist? && ( @builddir + 'data' ).exist?
 			message ">>> Warning: Existing data in the Ruby-WordNet databases\n"\
 				"will be overwritten.\n"
@@ -108,25 +120,9 @@ class WordNetConverter
 		end
 
 		# Find the source data files
-		default = nil
-		wndirs = Pathname.glob( Pathname.getwd + 'WordNet-*' )
-		localdict = Pathname.getwd + 'dict'
-		if !wndirs.empty?
-			default = wndirs.first + 'dict'
-		elsif localdict.exist?
-			default = localdict
-		else
-			default = '/usr/local/WordNet-3.0/dict'
-		end
-
-		message "Where can I find the WordNet data files?\n"
-		datadir = prompt_with_default( "Data directory", default )
-		datadir = Pathname.new( datadir )
-
-		abort( "Directory '#{datadir}' does not exist" ) unless datadir.exist?
-		abort( "'#{datadir}' is not a directory" ) unless datadir.directory?
+		datadir = find_data_files()
 		testfile = datadir + "data.noun"
-		abort( "'#{datadir}' doesn't seem to contain the necessary files.") unless testfile.exist?
+		abort( "'#{datadir}' doesn't seem to contain the necessary files." ) unless testfile.exist?
 
 		# Open the lexicon readwrite into the temporary datadir
 		@builddir.mkpath
@@ -200,10 +196,6 @@ class WordNetConverter
 		message "done.\n\n"
 	end
 
-
-	#######
-	private
-	#######
 
 	# Index entry patterns
 	IndexEntry		= /^(\S+)\s(\w)\s(\d+)\s(\d+)\s/
@@ -374,6 +366,24 @@ class WordNetConverter
 		return nil
 	end
 
+
+	### Find the path to the WordNet dict directory with the files we're 
+	### going to parse in it.
+	def find_data_files
+		datadir = WNDB_LOCAL_PATHS.collect {|pn| Pathname.new(pn) }.find {|pn| pn.exist? }
+		
+		unless datadir
+			message "Where can I find the WordNet data files?\n"
+			answer = prompt_with_default( "Data directory", WNDB_LOCAL_PATHS.first )
+			datadir = Pathname.new( answer )
+		end
+
+		abort( "Directory '#{datadir}' does not exist" ) unless datadir.exist?
+		abort( "'#{datadir}' is not a directory" ) unless datadir.directory?
+
+		return datadir
+	end
+	
 end # class WordNetConverter
 
 
