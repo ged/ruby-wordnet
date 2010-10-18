@@ -1,15 +1,18 @@
 --- 
+excluded_pkgfiles: []
+
 rubyforge_project: wordnet
 project_requirements: 
   bdb: ">= 0.6.5"
+project_pubdir: /usr/local/www/public/code
 project_description: |-
   A Ruby implementation of the WordNet lexical dictionary an online lexical reference system whose
   design is inspired by current psycholinguistic theories of human lexical memory.
 rubyforge_group: deveiate
-author_name: Michael Granger
+project_pubhost: deveiate
 project_homepage: http://deveiate.org/projects/Ruby-WordNet
-project_dependencies: {}
-
+project_dependencies: 
+  sequel: ">= 2.11.0"
 project_summary: a Ruby interface to the WordNet Lexical Database
 project_name: Ruby-WordNet
 version_file: wordnet.rb
@@ -19,4 +22,7 @@ additional_pkgfiles:
 - examples/*.rb
 dev_dependencies: {}
 
-author_email: ged@FaerieMUD.org
+authors: 
+  Michael Granger: "ged@FaerieMUD.org"
+
+post_install_message: ""
