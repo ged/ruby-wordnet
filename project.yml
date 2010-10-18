@@ -10,9 +10,10 @@ project_description: |-
   design is inspired by current psycholinguistic theories of human lexical memory.
 rubyforge_group: deveiate
 project_pubhost: deveiate
+gem_pubhost: rubygems.org
 project_homepage: http://deveiate.org/projects/Ruby-WordNet
 project_dependencies: 
-  sequel: ">= 2.11.0"
+  sequel: ">= 3.14.0"
 project_summary: a Ruby interface to the WordNet Lexical Database
 project_name: Ruby-WordNet
 version_file: wordnet.rb
