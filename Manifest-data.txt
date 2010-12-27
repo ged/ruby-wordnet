@@ -1,0 +1,3 @@
+README-data.md
+WordNet30-license.txt
+data/wordnet/wordnet30.sqlite

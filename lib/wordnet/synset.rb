@@ -1,41 +1,27 @@
 #!/usr/bin/ruby
 
 require 'wordnet/constants'
+require 'wordnet/mixins'
+require 'wordnet/word'
 
 # WordNet synonym-set object class
-# 
-# == Synopsis
-# 
-#   ss = lexicon.lookupSynset( "word", WordNet::Noun, 1 )
-#	puts "Definition: %s" % ss.gloss
-#   coords = ss.coordinates
-#
-# == Description
-# 
-# Instances of this class encapsulate the data for a synonym set ('synset') in a
-# Wordnet lexical database. A synonym set is a set of words that are
-# interchangeable in some context.
-# 
-# == Author
-#
-# Michael Granger <ged@FaerieMUD.org>
-# 
-# Copyright (c) 2002-2008 The FaerieMUD Consortium. All rights reserved.
-# 
-# This module is free software. You may use, modify, and/or redistribute this
-# software under the terms of the Perl Artistic License. (See
-# http://language.perl.com/misc/Artistic.html)
-# 
-# Much of this code was inspired by/ported from the Lingua::Wordnet Perl module
-# by Dan Brian.
-# 
-# == Version
-#
-#  $Id$
-# 
-class WordNet::Synset
+module WordNet::Synset
 	include WordNet::Constants
+	extend WordNet::ModelMixin
 
+	table_name :synsets
+
+	def self::included( mod )
+		super
+		mod.module_eval do
+			many_to_one :words
+		end
+	end
+
+end # module WordNet::Synset
+
+
+__END__
 	require 'wordnet/synset_pointer'
 
 	# Subversion ID
