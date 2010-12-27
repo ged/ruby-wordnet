@@ -1,48 +1,24 @@
 #!/usr/bin/ruby
 
-require 'wordnet'
+require 'pathname'
+require 'rbconfig'
+require 'wordnet' unless defined?( WordNet )
 
 # This is a module containing constants used in the WordNet interface for
 # Ruby. They are contained in a module to facilitate their easy inclusion in
 # other namespaces. All constants in this module are also contained in the
 # WordNet namespace itself.
-#
-# E.g.,
-#
-#	WordNet::Adjective == WordNet::Constants::Adjective
-#
-# If you do:
-#	include WordNet::Constants
-#
-# then:
-#	Adjective == WordNet::Adjective
-# 
-# == Synopsis
-# 
-#   require 'wordnet'
-#	include WordNet::Constants
-#
-#	lex = WordNet::Lexicon::new
-#	origins = lex.lookup_synsets( "shoe", Noun )
-# 
-# == Authors
-# 
-# * Michael Granger <ged@FaerieMUD.org>
-# 
-# == Copyright
-#
-# Copyright (c) 2003-2008 The FaerieMUD Consortium. All rights reserved.
-# 
-# This module is free software. You may use, modify, and/or redistribute this
-# software under the terms of the Perl Artistic License. (See
-# http://language.perl.com/misc/Artistic.html)
-# 
-# == Version
-#
-#  $Id$
-# 
-### Constant-container module
 module WordNet::Constants
+
+	# The path to the wordnet data directory
+	DEFAULTDB_DATADIR = if File.exist?( Config.datadir('wordnet-defaultdb') )
+			Pathname( Config.datadir('wordnet-defaultdb') )
+		else
+			Pathname( __FILE__ ).dirname.parent.parent + 'data/wordnet-defaultdb'
+		end
+
+	# The default database URI
+	DEFAULTDB_URI = 'sqlite://%s/wordnet30.sqlite' % [ DEFAULTDB_DATADIR ]
 
 	# Synset syntactic-category names -> indicators
 	SYNTACTIC_CATEGORIES = {

@@ -1,83 +1,17 @@
 #!/usr/bin/ruby
-#
-# WordNet Lexicon object class
-# 
-# == Synopsis
-# 
-#	lexicon = WordNet::Lexicon.new( dictpath )
-# 
-# == Description
-# 
-# Instances of this class abstract access to the various databases of the
-# WordNet lexicon. It can be used to look up and search for WordNet::Synsets.
-# 
-# == Author
-# 
-# Michael Granger <ged@FaerieMUD.org>
-# 
-# Copyright (c) 2002, 2003, 2005 The FaerieMUD Consortium. All rights reserved.
-# 
-# This module is free software. You may use, modify, and/or redistribute this
-# software under the terms of the Perl Artistic License. (See
-# http://language.perl.com/misc/Artistic.html)
-# 
-# Much of this code was inspired by/ported from the Lingua::Wordnet Perl module
-# by Dan Brian.
-# 
-# == Version
-#
-# $Id$
-# 
 
-require 'rbconfig'
 require 'pathname'
-require 'bdb'
-require 'sync'
+require 'sequel'
 
-require 'wordnet/constants'
-require 'wordnet/synset'
+require 'wordnet'
+require 'wordnet/mixins'
 
-### Lexicon exception - something has gone wrong in the internals of the
-### lexicon.
-class WordNet::LexiconError < StandardError ; end
 
-### Lookup error - the object being looked up either doesn't exist or is
-### malformed
-class WordNet::LookupError < StandardError ; end
-
-### WordNet lexicon class - abstracts access to the WordNet lexical
-### databases, and provides factory methods for looking up and creating new
-### WordNet::Synset objects.
+# WordNet lexicon class - abstracts access to the WordNet lexical
+# database, and provides factory methods for looking up words and synsets.
 class WordNet::Lexicon
-	include WordNet::Constants
-	include CrossCase if defined?( CrossCase )
-
-	# Subversion Id
-	SvnId = %q$Id$
-
-	# Subversion revision
-	SvnRev = %q$Rev$
-
-
-	#############################################################
-	### B E R K E L E Y D B	  C O N F I G U R A T I O N
-	#############################################################
-
-	# The path to the WordNet BerkeleyDB Env. It lives in the directory that
-	# this module is in.
-	DEFAULT_DB_ENV = File::join( Config::CONFIG['datadir'], "ruby-wordnet" )
-
-	# Options for the creation of the Env object
-	ENV_OPTIONS = {
-		:set_timeout	=> 50,
-		:set_lk_detect	=> 1,
-		:set_verbose	=> false,
-		:set_lk_max     => 3000,
-	}
-
-	# Flags for the creation of the Env object (read-write and read-only)
-	ENV_FLAGS_RW = BDB::CREATE|BDB::INIT_TRANSACTION|BDB::RECOVER|BDB::INIT_MPOOL
-	ENV_FLAGS_RO = BDB::INIT_MPOOL
+	include WordNet::Constants,
+	        WordNet::Loggable
 
 
 	#############################################################
@@ -85,99 +19,74 @@ class WordNet::Lexicon
 	#############################################################
 
 	### Create a new WordNet::Lexicon object that will read its data from
-	### the given +dbenv+ (a BerkeleyDB env directory). The database will be
-	### opened with the specified +mode+, which can either be a numeric 
-	### octal mode (e.g., 0444) or one of (:readonly, :readwrite).
-	def initialize( dbenv=DEFAULT_DB_ENV, mode=:readonly )
-		@mode = normalize_mode( mode )
-		debug_msg "Mode is: %04o" % [ @mode ]
+	### the given +database+.
+	def initialize( uri=DEFAULTDB_URI )
+		@uri = uri
+		@db  = nil
 
-		envflags = 0
-		dbflags  = 0
-
-		unless self.readonly?
-			debug_msg "Using read/write flags"
-			envflags = ENV_FLAGS_RW
-			dbflags = BDB::CREATE
-		else
-			debug_msg "Using readonly flags"
-			envflags = ENV_FLAGS_RO
-			dbflags = 0
-		end
-
-		debug_msg "Env flags are: %0s, dbflags are %0s" %
-			[ envflags.to_s(2), dbflags.to_s(2) ]
-
-		begin
-			@env = BDB::Env.new( dbenv, envflags, ENV_OPTIONS )
-			@index_db = @env.open_db( BDB::BTREE, "index", nil, dbflags, @mode )
-			@data_db = @env.open_db( BDB::BTREE, "data", nil, dbflags, @mode )
-			@morph_db = @env.open_db( BDB::BTREE, "morph", nil, dbflags, @mode )
-		rescue StandardError => err
-			msg = "Error while opening Ruby-WordNet data files: #{dbenv}: %s" % 
-				[ err.message ]
-			raise err, msg, err.backtrace
-		end
+		@model_classes = {}
 	end
-
 
 
 	######
 	public
 	######
 
-	# The BDB::Env object which contains the wordnet lexicon's databases.
-	attr_reader :env
+	# The database URI the lexicon will use to look up WordNet data
+	attr_reader :uri
 
-	# The handle to the index table
-	attr_reader :index_db
-
-	# The handle to the synset data table
-	attr_reader :data_db
-
-	# The handle to the morph table
-	attr_reader :morph_db
+	# The Hash of Class objects that correspond to the tables in the WordNet database
+	attr_reader :model_classes
 
 
-	### Returns +true+ if the lexicon was opened in read-only mode.
-	def readonly?
-		( @mode & 0200 ).nonzero? ? false : true
-	end
-	
-	
-	### Returns +true+ if the lexicon was opened in read-write mode.
-	def readwrite?
-		! self.readonly?
-	end
-	
-
-	### Close the lexicon's database environment
-	def close
-		@env.close if @env
+	### Return the Sequel::Database object the lexicon uses, establishing
+	### the connection if it hasn't already done so.
+	def db
+		@db ||= Sequel.connect( self.uri )
 	end
 
 
-	### Checkpoint the database. (BerkeleyDB-specific)
-	def checkpoint( bytes=0, minutes=0 )
-		@env.checkpoint
-	end
+	### Create a model class of the specified +type+ for this lexicon's database
+	### and return it.
+	### @param [#to_sym] type  the type of class to create/return
+	def model_class( type )
+		self.log.debug "Fetching the model class for %p" % [ type ]
+		type = type.to_sym
 
+		unless self.model_classes.key?( type )
+			mixin_name = WordNet.constants.find {|const| const.downcase.to_sym == type } or
+				raise ArgumentError, "unknown model type %p" % [ type ]
+			mixin = WordNet.const_get( mixin_name )
+			self.log.debug "  got model mixin: %p; its table is: %p" %
+				[ mixin, mixin.table_name ]
 
-	### Remove any archival logfiles for the lexicon's database
-	### environment. (BerkeleyDB-specific).
-	def clean_logs
-		return unless self.readwrite?
-		self.archlogs.each do |logfile|
-			File::chmod( 0777, logfile )
-			File::delete( logfile )
+			dataset = self.db[ mixin.table_name ]
+			self.log.debug "  table dataset is: %p" % [ dataset ]
+			newclass = Class.new( Sequel::Model(dataset) )
+			newclass.send( :include, mixin )
+
+			self.model_classes[ type ] = newclass
 		end
+
+		return self.model_classes[ type ]
 	end
 
+
+	### Find a word in the WordNet database and return it.
+	### @param [String, #to_s] word  the word to look up
+	### @return [WordNet::Word, nil] the word object if it was found, nil if it wasn't.
+	def find_word( word )
+		return self.model_class( :word ).filter( :lemma => word ).first
+	end
+
+end # class WordNet::Lexicon
+
+__END__
 
 	### Returns an integer of the familiarity/polysemy count for +word+ as a
 	### +part_of_speech+. Note that polysemy can be identified for a given
 	### word by counting the synsets returned by #lookup_synsets.
-	def familiarity( word, part_of_speech, polyCount=nil )
+	def familiarity( word, part_of_speech )
 		wordkey = self.make_word_key( word, part_of_speech )
 		return nil unless @index_db.key?( wordkey )
 		@index_db[ wordkey ].split( WordNet::SUB_DELIM_RE ).length
@@ -257,9 +166,9 @@ class WordNet::Lexicon
 	### Returns an array of compound words matching +text+.
 	def grep( text )
 		return [] if text.empty?
-		
+
 		words = []
-		
+
 		# Grab a cursor into the database and fetch while the key matches
 		# the target text
 		cursor = @index_db.cursor
@@ -296,10 +205,10 @@ class WordNet::Lexicon
 				synset.offset =
 					(datadb['offsetcount'] = datadb['offsetcount'].to_i + 1)
 			end
-			
+
 			# Write the data entry
 			datadb[ synset.key ] = synset.serialize
-				
+
 			# Write the index entries
 			txn.begin( BDB::TXN_COMMIT, @index_db ) do |txn,indexdb|
 
@@ -403,8 +312,8 @@ class WordNet::Lexicon
 	#######
 	private
 	#######
-	
-	### Turn the given +origmode+ into an octal file mode such as that 
+
+	### Turn the given +origmode+ into an octal file mode such as that
 	### given to File.open.
 	def normalize_mode( origmode )
 		case origmode
@@ -424,7 +333,7 @@ class WordNet::Lexicon
 		return unless $DEBUG
 		$deferr.puts msg
 	end
-	
+
 
 end # class WordNet::Lexicon
 

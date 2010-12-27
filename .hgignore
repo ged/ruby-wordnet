@@ -2,3 +2,5 @@ docs/manual/output
 docs/api
 ruby-wordnet/
 pkg/
+^data/wordnet\-defaultdb/wordnet30\.sqlite$
+^commit\-msg\.txt$
