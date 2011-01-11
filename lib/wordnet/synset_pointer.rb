@@ -2,7 +2,7 @@
 #encoding: utf-8
 
 
-require 'wordnet'
+require 'wordnet' unless defined?( WordNet )
 require 'wordnet/constants'
 require 'wordnet/synset'
 require 'wordnet/model'

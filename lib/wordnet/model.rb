@@ -2,7 +2,7 @@
 
 require 'sequel/model'
 
-require 'wordnet'
+require 'wordnet' unless defined?( WordNet )
 require 'wordnet/mixins'
 
 # WordNet word model class mixin -- adds WordNet-specific functionality to

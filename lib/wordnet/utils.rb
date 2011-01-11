@@ -3,7 +3,7 @@
 require 'logger'
 require 'erb'
 
-require 'wordnet'
+require 'wordnet' unless defined?( WordNet )
 
 
 module WordNet

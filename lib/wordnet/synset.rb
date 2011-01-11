@@ -1,5 +1,6 @@
 #!/usr/bin/ruby
 
+require 'wordnet' unless defined?( WordNet )
 require 'wordnet/constants'
 require 'wordnet/mixins'
 require 'wordnet/word'
