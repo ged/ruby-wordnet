@@ -1,6 +1,8 @@
 # Ruby-WordNet
 
-## General Information
+* http://deveiate.org/projects/Ruby-WordNet
+
+## Description
 
 This library is a Ruby interface to WordNet®. WordNet® is an online lexical
 reference system whose design is inspired by current psycholinguistic theories
@@ -8,60 +10,15 @@ of human lexical memory. English nouns, verbs, adjectives and adverbs are
 organized into synonym sets, each representing one underlying lexical
 concept. Different relations link the synonym sets.
 
-You can find out more about WordNet® at <http://wordnet.princeton.edu/>.
+It uses WordNet-SQL, which is a conversion of the lexicon flatfiles into a relational database format. You can either install the 'wordnet-defaultdb' gem, which packges up the SQLite3 version of WordNet-SQL, or install your own and point the lexicon at it by passing a Sequel URL to the constructor.
 
-This code was loosely based on the Lingua::Wordnet Perl module by Dan Brian, and
-uses a similar strategy of converting the WordNet data files into a BerkeleyDB
-database. The 'convertdb.rb' script in this directory can be used to build these
-databases from the WordNet dictionaries.
-
-This module is intended to offer basically the same functionality as
-Lingua::Wordnet, and you should be able to use either (or both) to access and
-modify the lexical database interchangeably. This module attempts to remain
-fairly close in API to Lingua::Wordnet, so if you're familiar with it already,
-you should be able to port things from one to the other with relatively little
-trouble. This module, however, uses BerkeleyDB's transaction subsystem to allow
-safe concurrent access to the databases.
-
-Many thanks to Dan Brian, who did most of the hard work. His efforts made my job
-mostly a matter of playing around.
+TO-DO: More details and better writing later.
 
 
-## Caveats
+## Requirements
 
-The database-writing portions of this code have not been extensively tested, and
-there are almost certainly bugs which will cause data to be lost or
-miswritten. You should make backups of changes you make periodically.
-
-I would greatly appreciate feedback on any aspect of this software. Suggestions,
-feature requests, questions, design critiques, and bug reports are most
-welcome. Relevant patches are particularly helpful. I may be reached at
-<ged@FaerieMUD.org>.
-
-
-## Installation
-
-If you use RubyGems, you can install via:
-
-  $ sudo gem install wordnet
-
-You can also install as a site library via the Rakefile:
-
-  $ wget http://deveiate.org/code/wordnet-x.y.z.tar.gz
-  $ tar xzvf wordnet-x.y.z.tar.gz
-  $ cd wordnet-x.y.z
-  $ sudo rake install
-
-
-## More Information
-
-There is a project page for Ruby-WordNet which can be found at:
-<http://deveiate.org/projects/Ruby-WordNet/>.
-
-You may also check out the latest development source for this module (which may or
-may not be different than the release) using Mercurial like so:
-
-  hg clone http://repo.deveiate.org/Ruby-WordNet
+* Ruby 1.8.7 or 1.9.2
+* Sequel >= 3.19.0
 
 
 ## Authors
@@ -69,20 +26,32 @@ may not be different than the release) using Mercurial like so:
 * Michael Granger <ged@FaerieMUD.org>
 
 
-## Legal
+## License
 
-Ruby-WordNet is Open Source Software which is Copyright © 2002-2010 by The
-FaerieMUD Consortium.
+Copyright (c) 2010-2011, The FaerieMUD Consortium
+All rights reserved.
 
-It is licensed under the modified BSD license. See the LICENSE file for details.
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
 
-WordNet® is a registered trademark of Princeton University. 
+* Redistributions of source code must retain the above copyright notice,
+  this list of conditions and the following disclaimer.
 
-Lingua::Wordnet is code licensed under the following terms:
+* Redistributions in binary form must reproduce the above copyright notice,
+  this list of conditions and the following disclaimer in the documentation
+  and/or other materials provided with the distribution.
 
->  Lingua::Wordnet
->  Copyright 1999,2000,2001 by Dan Brian.
->
->  This program is free software; you can redistribute it and/or modify
->  it under the same terms as Perl itself.
+* Neither the name of the author/s, nor the names of the project's
+  contributors may be used to endorse or promote products derived from this
+  software without specific prior written permission.
 
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.

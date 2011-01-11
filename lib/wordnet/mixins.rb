@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 
-require 'wordnet'
+require 'wordnet' unless defined?( WordNet )
 
 module WordNet
 

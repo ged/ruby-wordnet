@@ -4,7 +4,7 @@ require 'pathname'
 require 'singleton'
 require 'sequel'
 
-require 'wordnet'
+require 'wordnet' unless defined?( WordNet )
 require 'wordnet/mixins'
 
 
