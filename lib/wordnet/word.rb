@@ -2,23 +2,23 @@
 
 require 'wordnet'
 require 'wordnet/mixins'
+require 'wordnet/model'
 
-require 'sequel/model'
-
-# WordNet word model class mixin -- adds WordNet-specific functionality to
-# the Sequel::Model subclass created by the Lexicon.
-module WordNet::Word
+# WordNet word model class
+class WordNet::Word < WordNet::Model
 	include WordNet::Constants
-	extend WordNet::ModelMixin
 
-	table_name :words
+	set_dataset :words
+	set_primary_key :wordid
 
-	def self::included( mod )
-		super
-		mod.module_eval do
-			one_to_many :synsets
-		end
-	end
+	one_to_many :senses,
+		:key => :wordid,
+		:primary_key => :wordid
 
-end # module WordNet::Word
+	many_to_many :synsets,
+		:join_table => :senses,
+		:left_key => :wordid,
+		:right_key => :synsetid
+
+end # class WordNet::Word
 

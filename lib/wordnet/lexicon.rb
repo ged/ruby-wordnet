@@ -1,6 +1,7 @@
 #!/usr/bin/ruby
 
 require 'pathname'
+require 'singleton'
 require 'sequel'
 
 require 'wordnet'
@@ -10,7 +11,8 @@ require 'wordnet/mixins'
 # WordNet lexicon class - abstracts access to the WordNet lexical
 # database, and provides factory methods for looking up words and synsets.
 class WordNet::Lexicon
-	include WordNet::Constants,
+	include Singleton,
+	        WordNet::Constants,
 	        WordNet::Loggable
 
 
@@ -22,9 +24,8 @@ class WordNet::Lexicon
 	### the given +database+.
 	def initialize( uri=DEFAULTDB_URI )
 		@uri = uri
-		@db  = nil
-
-		@model_classes = {}
+		@db = Sequel.connect( self.uri, :logger => [WordNet.logger] )
+		WordNet::Model.db = @db
 	end
 
 
@@ -35,48 +36,15 @@ class WordNet::Lexicon
 	# The database URI the lexicon will use to look up WordNet data
 	attr_reader :uri
 
-	# The Hash of Class objects that correspond to the tables in the WordNet database
-	attr_reader :model_classes
-
-
-	### Return the Sequel::Database object the lexicon uses, establishing
-	### the connection if it hasn't already done so.
-	def db
-		@db ||= Sequel.connect( self.uri )
-	end
-
-
-	### Create a model class of the specified +type+ for this lexicon's database
-	### and return it.
-	### @param [#to_sym] type  the type of class to create/return
-	def model_class( type )
-		self.log.debug "Fetching the model class for %p" % [ type ]
-		type = type.to_sym
-
-		unless self.model_classes.key?( type )
-			mixin_name = WordNet.constants.find {|const| const.downcase.to_sym == type } or
-				raise ArgumentError, "unknown model type %p" % [ type ]
-			mixin = WordNet.const_get( mixin_name )
-			self.log.debug "  got model mixin: %p; its table is: %p" %
-				[ mixin, mixin.table_name ]
-
-			dataset = self.db[ mixin.table_name ]
-			self.log.debug "  table dataset is: %p" % [ dataset ]
-			newclass = Class.new( Sequel::Model(dataset) )
-			newclass.send( :include, mixin )
-
-			self.model_classes[ type ] = newclass
-		end
-
-		return self.model_classes[ type ]
-	end
+	# The Sequel::Database object that model tables read from
+	attr_reader :db
 
 
 	### Find a word in the WordNet database and return it.
 	### @param [String, #to_s] word  the word to look up
 	### @return [WordNet::Word, nil] the word object if it was found, nil if it wasn't.
 	def find_word( word )
-		return self.model_class( :word ).filter( :lemma => word ).first
+		return WordNet::Word.filter( :lemma => word ).first
 	end
 
 end # class WordNet::Lexicon

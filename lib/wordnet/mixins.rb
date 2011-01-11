@@ -58,51 +58,5 @@ module WordNet
 	end # module Loggable
 
 
-	# A mixin module that provides utilities for the other model mixins.
-	module ModelMixin
-
-		### Extension callback -- add data structures to the extending +mod+.
-		### @param [Module] mod  the mixin module to be extended
-		def self::extended( mod )
-			super
-			mod.instance_variable_set( :@table_name, mod.name.downcase.to_sym )
-		end
-
-
-		### A declarative/reader for the table that the mixin applies to. This
-		### also tells the lexicon which table it's supposed to be creating a model
-		### class for.
-		### @see WordNet::Lexicon.model_class
-		### @param [Symbol] newname  the name of the table the mixin applies to
-		def table_name( newname=nil )
-			@table_name = newname if newname
-			return @table_name
-		end
-
-
-		# Class methods to add to the anonymous model classes which include the
-		# module that extends ModuleMixin
-		module ModelClassMethods
-
-			### Provide a name for the anonymous classes that makes them easier
-			### to debug.
-			def name
-				return "%s(%s)" % [
-					self.included_modules.first.name,
-					self.dataset.db.uri
-				]
-			end
-
-		end # module ModelClassMethods
-
-		### Inclusion hook -- add class methods to model classes that include the
-		### module that extends ModuleMixin
-		def included( mod )
-			super
-			mod.extend( ModelClassMethods )
-		end
-
-	end # module ModelMixin
-
 end # module WordNet
 
