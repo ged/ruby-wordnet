@@ -96,7 +96,7 @@ begin
 	WordNet.logger.level = Logger::DEBUG
 
     puts "Instantiating the lexicon as $lex"
-    $lex = WordNet::Lexicon.new
+    $lex = WordNet::Lexicon.instance
 rescue => e
 	$stderr.puts "Ack! WordNet failed to load: #{e.message}\n\t" +
 		e.backtrace.join( "\n\t" )

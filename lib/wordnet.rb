@@ -1,5 +1,5 @@
 #!/usr/bin/env ruby
-#coding: utf-8
+#encoding: utf-8
 
 require 'logger'
 
@@ -80,11 +80,16 @@ module WordNet
 		return vstring
 	end
 
+	# Nasty hack to work around the database-connection requirement of 
+	# Sequel::Model
+	Sequel::Model.db = Sequel.sqlite
 
-	# Now load the model mixins
+
+	# Now load the model classes
+	require 'wordnet/model'
 	require 'wordnet/word'
 	require 'wordnet/synset'
-
+	require 'wordnet/synset_pointer'
 
 end # module WordNet
 

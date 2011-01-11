@@ -36,7 +36,7 @@ describe WordNet::Synset do
 	TEST_SYNSET_OFFSET = 6172789
 
 	TEST_SYNSET_POS = :noun
-	
+
 	TEST_SYNSET_DATA = "09||linguistics%0||@ 05999797%n 0000|#p 06142861%n 0000|+ " +
 		"02843218%a 0101|+ 10264437%n 0101|-c 00111415%a 0000|-c 00111856%a 0000|-c 00120252%a " +
 		"0000|-c 00120411%a 0000|-c 00201802%a 0000|-c 00699651%a 0000|-c 00699876%a 0000|-c " +
@@ -107,8 +107,8 @@ describe WordNet::Synset do
 		:domains,
 		:members,
 	]
-	
-	
+
+
 	it "provides defaults for instances created with just a lexicon, offset, and part of speech" do
 		syn = WordNet::Synset.new( :lexicon, TEST_SYNSET_OFFSET, TEST_SYNSET_POS )
 		syn.filenum.should be_nil()
@@ -117,14 +117,14 @@ describe WordNet::Synset do
 		syn.frameslist.should == ''
 		syn.gloss.should == ''
 	end
-	
+
 	it "has (generated) methods for each type of WordNet relation" do
 		RELATION_METHODS.each do |relation|
 			WordNet::Synset.instance_method( relation ).should be_an_instance_of( UnboundMethod )
 		end
 	end
 
-	
+
 	describe "instance created from synset data" do
 
 		before( :each ) do
@@ -132,38 +132,38 @@ describe WordNet::Synset do
 			@synset = WordNet::Synset.new( @lexicon,
 			 	TEST_SYNSET_OFFSET, TEST_SYNSET_POS, 'linguistics', TEST_SYNSET_DATA )
 		end
-	
+
 
 		it "knows what part_of_speech it is" do
 			@synset.part_of_speech.should == TEST_SYNSET_POS
 		end
-	
+
 		it "knows what offset it is" do
 			@synset.offset.should == TEST_SYNSET_OFFSET
 		end
-	
+
 		it "knows what filenum it is" do
 			@synset.filenum.should == '09'
 		end
-	
+
 		it "knows what its wordlist is" do
 			@synset.wordlist.should == 'linguistics%0'
 		end
-	
+
 		POINTER_PATTERN = /(\S{2} \d+%[nvars] \d{4})/
 		LIST_OF_POINTERS = /#{POINTER_PATTERN}(\|#{POINTER_PATTERN})*/
 		it "knows what its pointerlist is" do
 			@synset.pointerlist.should =~ LIST_OF_POINTERS
 		end
-	
+
 		it "knows what frameslist it is" do
 			@synset.frameslist.should == ''
 		end
-	
+
 		it "knows what its gloss is" do
 			@synset.gloss.should =~ /study of language/i
 		end
-	
+
 
 		### :TODO: Test traversal, content, storing, higher-order functions
 		describe "traversal" do
@@ -171,14 +171,14 @@ describe WordNet::Synset do
 			it "can traverse its relationships and return the resulting synsets" do
 				hypernym1 = mock( "hypernym of linguistics" )
 				hypernym2 = mock( "super-hypernym of linguistics" )
-			
+
 				@lexicon.should_receive( :lookup_synsets_by_key ).with( /\d+%[nvars]/ ).
 					and_return( hypernym1 )
 				hypernym1.should_receive( :hypernyms ).and_return([ hypernym2 ])
 				hypernym2.should_receive( :hypernyms ).and_return([])
 
 				synsets = @synset.traverse( :hypernyms )
-			
+
 				synsets.should have(3).members
 				synsets.should include( @synset, hypernym1, hypernym2 )
 			end
@@ -187,14 +187,14 @@ describe WordNet::Synset do
 			it "can exclude its origin term from a traversal set" do
 				hypernym1 = mock( "hypernym of linguistics" )
 				hypernym2 = mock( "super-hypernym of linguistics" )
-			
+
 				@lexicon.should_receive( :lookup_synsets_by_key ).with( /\d+%[nvars]/ ).
 					and_return( hypernym1 )
 				hypernym1.should_receive( :hypernyms ).and_return([ hypernym2 ])
 				hypernym2.should_receive( :hypernyms ).and_return([])
 
 				synsets = @synset.traverse( :hypernyms, false )
-			
+
 				synsets.should have(2).members
 				synsets.should include( hypernym1, hypernym2 )
 			end
