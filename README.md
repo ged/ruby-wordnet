@@ -10,7 +10,10 @@ of human lexical memory. English nouns, verbs, adjectives and adverbs are
 organized into synonym sets, each representing one underlying lexical
 concept. Different relations link the synonym sets.
 
-It uses WordNet-SQL, which is a conversion of the lexicon flatfiles into a relational database format. You can either install the 'wordnet-defaultdb' gem, which packges up the SQLite3 version of WordNet-SQL, or install your own and point the lexicon at it by passing a Sequel URL to the constructor.
+It uses WordNet-SQL, which is a conversion of the lexicon flatfiles into a
+relational database format. You can either install the 'wordnet-defaultdb' gem,
+which packges up the SQLite3 version of WordNet-SQL, or install your own and
+point the lexicon at it by passing a Sequel URL to the constructor.
 
 TO-DO: More details and better writing later.
 
