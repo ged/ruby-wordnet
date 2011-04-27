@@ -1,8 +1,6 @@
 #!/usr/bin/ruby
 
 require 'pathname'
-require 'singleton'
-require 'sequel'
 
 require 'wordnet' unless defined?( WordNet )
 require 'wordnet/mixins'
@@ -11,8 +9,7 @@ require 'wordnet/mixins'
 # WordNet lexicon class - abstracts access to the WordNet lexical
 # database, and provides factory methods for looking up words and synsets.
 class WordNet::Lexicon
-	include Singleton,
-	        WordNet::Constants,
+	include WordNet::Constants,
 	        WordNet::Loggable
 
 
@@ -25,6 +22,9 @@ class WordNet::Lexicon
 	def initialize( uri=DEFAULTDB_URI )
 		@uri = uri
 		@db = Sequel.connect( self.uri, :logger => [WordNet.logger] )
+
+		require 'wordnet/model'
+
 		WordNet::Model.db = @db
 	end
 
