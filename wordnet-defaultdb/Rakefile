@@ -1,0 +1,140 @@
+#!/usr/bin/env rake
+
+
+begin
+	require 'hoe'
+rescue LoadError
+	abort "This Rakefile requires 'hoe' (gem install hoe)"
+end
+
+require 'pathname'
+require 'rake/clean'
+
+$trace = Rake.application.options.trace
+
+WNSQL_VERSION  = '1.0.1'
+
+WNSQL_BASE_URI = 'http://downloads.sourceforge.net/project/wnsql/'
+WNSQL_ZIPFILE  = "wordnet30-sqlite-#{WNSQL_VERSION}.zip"
+WNSQL_URI      = "#{WNSQL_BASE_URI}/wnsql-#{WNSQL_VERSION}/#{WNSQL_ZIPFILE}"
+
+BASEDIR        = Pathname( __FILE__ ).dirname.relative_path_from( Pathname.pwd )
+DATADIR        = BASEDIR + 'data'
+DBDIR          = DATADIR + 'wordnet-defaultdb'
+WNSQL_DB_FILE  = DBDIR + 'wordnet30.sqlite'
+WNSQL_LICENSE  = BASEDIR + 'LICENSE-WORDNET.txt'
+
+Hoe.plugin :mercurial
+Hoe.plugin :signing
+
+Hoe.plugins.delete :rubyforge
+
+hoespec = Hoe.spec 'wordnet-defaultdb' do
+	self.readme_file = 'README.md'
+	self.history_file = 'History.md'
+
+	self.developer 'Michael Granger', 'ged@FaerieMUD.org'
+
+	self.dependency 'wordnet', '~> 0.99'
+	self.dependency 'rubyzip', '~> 0.9.4', :developer
+
+	self.spec_extras[:licenses] = ["BSD"]
+	self.require_ruby_version( '>=1.8.7' )
+end
+
+ENV['VERSION'] ||= hoespec.spec.version.to_s
+
+task :default => :gem
+
+
+### Make the ChangeLog update if the repo has changed since it was last built
+file '.hg/branch'
+file 'ChangeLog' => '.hg/branch' do |task|
+	$stderr.puts "Updating the changelog..."
+	content = make_changelog()
+	File.open( task.name, 'w', 0644 ) do |fh|
+		fh.print( content )
+	end
+end
+
+# Rebuild the ChangeLog immediately before release
+task :prerelease => 'ChangeLog'
+
+
+#
+# Tasks for downloading the data file/s
+#
+
+### Download the file at +sourceuri+ via HTTP and write it to +targetfile+.
+def download( sourceuri, targetfile=nil )
+	oldsync = $stdout.sync
+	$stdout.sync = true
+	require 'open-uri'
+
+	targetpath = Pathname.new( targetfile )
+
+	$stderr.puts "Downloading %s to %s" % [sourceuri, targetfile]
+	$stderr.puts "  connecting..." if $trace
+	ifh = open( sourceuri ) do |ifh|
+		$stderr.puts "  connected..." if $trace
+		targetpath.open( File::WRONLY|File::TRUNC|File::CREAT, 0644 ) do |ofh|
+			$stderr.puts "Downloading..."
+			buf = ''
+
+			while ifh.read( 16384, buf )
+				until buf.empty?
+					bytes = ofh.write( buf )
+					buf.slice!( 0, bytes )
+				end
+			end
+
+			$stderr.puts "Done."
+		end
+
+	end
+
+	return targetpath
+ensure
+	$stdout.sync = oldsync
+end
+
+
+### Extract the contents of the specified +zipfile+ into the given +targetdir+.
+def unzip( zipfile, targetdir, *files )
+	require 'zip/zip'
+	targetdir = Pathname( targetdir )
+	raise "No such directory: #{targetdir}" unless targetdir.directory?
+
+	Zip::ZipFile.foreach( zipfile ) do |entry|
+		# $stderr.puts "  entry is: %p, looking for: %p" % [ entry.name, files ]
+		next unless files.empty? || files.include?( entry.name )
+		target_path = targetdir + entry.name
+		$stderr.puts "  extracting: %s" % [ target_path ]
+		entry.extract( target_path ) { true }
+		files.delete( entry.name )
+	end
+
+	raise "Couldn't unzip: %p: not found in %s" % [ files, zipfile ] unless files.empty?
+end
+
+
+# Download the database zipfile
+file WNSQL_ZIPFILE.to_s do |task|
+	download WNSQL_URI, task.name
+end
+CLOBBER.include( WNSQL_ZIPFILE.to_s )
+
+# Extract the database from the downloaded zipfile
+file WNSQL_DB_FILE.to_s => [WNSQL_ZIPFILE.to_s] do |task|
+	mkdir_p( WNSQL_DB_FILE.dirname, :verbose => $trace )
+	unzip task.prerequisites.first, WNSQL_DB_FILE.dirname.to_s, WNSQL_DB_FILE.basename.to_s
+end
+CLOBBER.include( WNSQL_DB_FILE.to_s, DATADIR.to_s )
+
+# Extract the license file from the downloaded zipfile
+file WNSQL_LICENSE.to_s => [WNSQL_ZIPFILE.to_s] do |task|
+	mkdir_p( WNSQL_LICENSE.dirname, :verbose => $trace )
+	unzip task.prerequisites.first, WNSQL_LICENSE.dirname.to_s, WNSQL_LICENSE.basename.to_s
+end
+CLOBBER.include( WNSQL_LICENSE.to_s )
+
