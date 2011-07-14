@@ -9,10 +9,8 @@ require 'wordnet/model'
 
 # WordNet synonym-set pointer class -- the "pointer" type that encapsulates
 # relationships between one synset and another.
-class WordNet::SynsetPointer < WordNet::Model
+class WordNet::SynsetPointer < WordNet::Model( :synset_pointers )
 	include WordNet::Constants
-
-	set_dataset :synset_pointers
 
 
 	#########################################################

@@ -1,38 +1,57 @@
 #!/usr/bin/ruby
 
-require 'sequel/model'
+require 'sequel'
 
 require 'wordnet' unless defined?( WordNet )
 require 'wordnet/mixins'
 
-# WordNet word model class mixin -- adds WordNet-specific functionality to
-# the Sequel::Model subclass created by the Lexicon.
-class WordNet::Model < Sequel::Model
-	include WordNet::Constants
+module WordNet
 
-	# The list of model subclasses
-	@subclasses = []
-	class << self; attr_reader :subclasses; end
+	# The base WordNet database-backed domain class. It's a subclass of Sequel::Model, so
+	# you'll first need to be familiar with Sequel (http://sequel.rubyforge.org/) and 
+	# especially its Sequel::Model ORM. 
+	#
+	# See the Sequel::Plugins::InlineMigrations module and the documentation for the
+	# 'validation_helpers', 'schema', and 'subclasses' Sequel plugins.
+	# 
+	class Model < Sequel::Model
+		include WordNet::Loggable
+
+		plugin :validation_helpers
+		plugin :schema
+		plugin :subclasses
 
 
-	### Inheritance callback -- add the inheriting class to the list of known
-	### subclasses.
-	def self::inherited( subclass )
-		self.subclasses << subclass
-		super
-	end
-
-
-	### Override Sequel::Model#db= to propagate the change to all subclasses.
-	def self::db=( newdb )
-		if self == WordNet::Model
+		### Reset the database connection that all model objects will use.
+		### @param [Sequel::Database] newdb  the new database object.
+		def self::db=( newdb )
 			super
-			self.subclasses.each {|subclass| subclass.db = newdb }
-		else
-			super
-			set_dataset( self.dataset.opts[:from].first )
+			self.descendents.each do |subclass|
+				WordNet.log.info "Resetting database connection for: %p to: %p" % [ subclass, newdb ]
+				subclass.db = newdb
+			end
 		end
+
+	end # class Model
+
+
+	### Overridden version of Sequel.Model() that creates subclasses of WordNet::Model instead
+	### of Sequel::Model.
+	### @see Sequel.Model()
+	def self::Model( source )
+		unless Sequel::Model::ANONYMOUS_MODEL_CLASSES.key?( source )
+			anonclass = nil
+		 	if source.is_a?( Sequel::Database )
+				anonclass = Class.new( WordNet::Model )
+				anonclass.db = source
+			else
+				anonclass = Class.new( WordNet::Model ).set_dataset( source )
+			end
+
+			Sequel::Model::ANONYMOUS_MODEL_CLASSES[ source ] = anonclass
+		end
+
+		return Sequel::Model::ANONYMOUS_MODEL_CLASSES[ source ]
 	end
 
-end # class WordNet::Model
-
+end # module WordNet

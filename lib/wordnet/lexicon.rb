@@ -12,20 +12,38 @@ class WordNet::Lexicon
 	include WordNet::Constants,
 	        WordNet::Loggable
 
+	# Add the logger device to the default options after it's been loaded
+	WordNet::DEFAULT_DB_OPTIONS.merge( :logger => [WordNet.logger] )
+
 
 	#############################################################
 	### I N S T A N C E	  M E T H O D S
 	#############################################################
 
-	### Create a new WordNet::Lexicon object that will read its data from
-	### the given +database+.
-	def initialize( uri=DEFAULTDB_URI )
-		@uri = uri
-		@db = Sequel.connect( self.uri, :logger => [WordNet.logger] )
+	### Create a new WordNet::Lexicon object that will use the database connection specified by
+	### the given +dbconfig+.
+	def initialize( *args )
+		if args.empty?
+			uri = DEFAULT_DB_URI
+		else
+			uri = args.shift if args.first.is_a?( String )
+		end
+
+		options = WordNet::DEFAULT_DB_OPTIONS.merge( args.shift || {} )
+
+		if uri
+			@db = Sequel.connect( uri, options )
+		else
+			@db = Sequel.connect( options )
+		end
 
 		require 'wordnet/model'
-
 		WordNet::Model.db = @db
+
+		require 'wordnet/sense'
+		require 'wordnet/synset'
+		require 'wordnet/synset_pointer'
+		require 'wordnet/word'
 	end
 
 

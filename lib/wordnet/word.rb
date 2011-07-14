@@ -5,10 +5,9 @@ require 'wordnet/mixins'
 require 'wordnet/model'
 
 # WordNet word model class
-class WordNet::Word < WordNet::Model
+class WordNet::Word < WordNet::Model( :words )
 	include WordNet::Constants
 
-	set_dataset :words
 	set_primary_key :wordid
 
 	one_to_many :senses,

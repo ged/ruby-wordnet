@@ -8,10 +8,9 @@ require 'wordnet/model'
 
 
 # WordNet synonym-set object class
-class WordNet::Synset < WordNet::Model
+class WordNet::Synset < WordNet::Model( :synsets )
 	include WordNet::Constants
 
-	set_dataset :synsets
 	set_primary_key :synsetid
 
 	# Synset -> [ Sense ]
