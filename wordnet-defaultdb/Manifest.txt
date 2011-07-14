@@ -1,0 +1,7 @@
+History.md
+LICENSE-WORDNET.txt
+Manifest.txt
+README.md
+Rakefile
+data/wordnet-defaultdb/wordnet30.sqlite
+lib/wordnet-defaultdb.rb
