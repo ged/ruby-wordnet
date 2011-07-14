@@ -2,6 +2,7 @@
 #encoding: utf-8
 
 require 'logger'
+require 'sequel'
 
 # This is a Ruby interface to the WordNet® lexical database. It uses the WordNet-SQL 
 # project's databases instead of reading from the canonical flatfiles for speed and 
@@ -25,13 +26,13 @@ module WordNet
 
 
 	require 'wordnet/constants'
-	require 'wordnet/lexicon'
+	include WordNet::Constants
 	require 'wordnet/utils'
 
-	include WordNet::Constants
+	#
+	# Logging
+	#
 
-
-	### Logging
 	@default_logger = Logger.new( $stderr )
 	@default_logger.level = $DEBUG ? Logger::DEBUG : Logger::WARN
 
@@ -39,7 +40,6 @@ module WordNet
 	@default_logger.formatter = @default_log_formatter
 
 	@logger = @default_logger
-
 
 	class << self
 		# @return [Logger::Formatter] the log formatter that will be used when the logging 
@@ -80,16 +80,8 @@ module WordNet
 		return vstring
 	end
 
-	# Nasty hack to work around the database-connection requirement of 
-	# Sequel::Model
-	Sequel::Model.db = Sequel.sqlite
 
-
-	# Now load the model classes
-	require 'wordnet/model'
-	require 'wordnet/word'
-	require 'wordnet/synset'
-	require 'wordnet/synset_pointer'
+	require 'wordnet/lexicon'
 
 end # module WordNet
 

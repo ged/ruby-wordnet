@@ -1,7 +1,7 @@
 #!/usr/bin/ruby
 
 require 'pathname'
-require 'rbconfig'
+require 'rubygems'
 require 'wordnet' unless defined?( WordNet )
 
 # This is a module containing constants used in the WordNet interface for
@@ -11,14 +11,20 @@ require 'wordnet' unless defined?( WordNet )
 module WordNet::Constants
 
 	# The path to the wordnet data directory
-	DEFAULTDB_DATADIR = if File.exist?( Config.datadir('wordnet-defaultdb') )
-			Pathname( Config.datadir('wordnet-defaultdb') )
+	DEFAULTDB_DATADIR = begin
+		gem_datadir = Gem.datadir('wordnet-defaultdb')
+		if gem_datadir && File.exist?( gem_datadir )
+			Pathname( gem_datadir )
 		else
 			Pathname( __FILE__ ).dirname.parent.parent + 'data/wordnet-defaultdb'
 		end
+	end
 
 	# The default database URI
-	DEFAULTDB_URI = 'sqlite://%s/wordnet30.sqlite' % [ DEFAULTDB_DATADIR ]
+	DEFAULT_DB_URI = 'sqlite://%s/wordnet30.sqlite' % [ DEFAULTDB_DATADIR ]
+
+	# The default database options
+	DEFAULT_DB_OPTIONS = {}
 
 	# Synset syntactic-category names -> indicators
 	SYNTACTIC_CATEGORIES = {

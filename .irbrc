@@ -93,10 +93,11 @@ begin
 	$stderr.puts "Loading WordNet..."
 	require 'logger'
 	require 'wordnet'
+
 	WordNet.logger.level = Logger::DEBUG
 
     puts "Instantiating the lexicon as $lex"
-    $lex = WordNet::Lexicon.instance
+    $lex = WordNet::Lexicon.new
 rescue => e
 	$stderr.puts "Ack! WordNet failed to load: #{e.message}\n\t" +
 		e.backtrace.join( "\n\t" )

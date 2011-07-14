@@ -14,9 +14,7 @@ require 'rspec'
 require 'sequel'
 
 require 'spec/lib/helpers'
-
 require 'wordnet/lexicon'
-require 'wordnet/word'
 
 
 
@@ -38,29 +36,17 @@ describe WordNet::Lexicon do
 		'joust'			=> WordNet::Verb,
 	}
 
-	TEST_DBDIR = Pathname( __FILE__ ).dirname.parent.parent + 'data/wordnet-defaultdb/'
-	TEST_DB = TEST_DBDIR + 'wordnet30.sqlite'
 
+	it "accepts uri, options for the database connection" do
+		uri = 'postgres://localhost/test'
+		options = { :username => 'test' }
 
-	it "connects to the database on demand" do
-		Sequel.should_receive( :connect ).with( WordNet::Constants::DEFAULTDB_URI )
-		WordNet::Lexicon.new.db
-	end
+		db = double( "database object" )
+		Sequel.should_receive( :connect ).with( uri, options ).
+			and_return( db )
 
-
-	context "an instance" do
-
-		before( :each ) do
-			@lexicon = WordNet::Lexicon.new
-		end
-
-		it "can look up words" do
-			result = @lexicon.find_word( 'radish' )
-
-			result.should be_a( WordNet::Word )
-			result.to_s.should == 'radish'
-		end
-
+		WordNet::Lexicon.new( uri, options )
+		WordNet::Model.db.should equal( db )
 	end
 
 end

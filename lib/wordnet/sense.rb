@@ -5,10 +5,9 @@ require 'wordnet/mixins'
 require 'wordnet/model'
 
 # WordNet sense model class
-class WordNet::Sense < WordNet::Model
+class WordNet::Sense < WordNet::Model( :senses )
 	include WordNet::Constants
 
-	set_dataset :senses
 	set_primary_key :senseid
 
 	many_to_one :synset, :key => :synsetid
