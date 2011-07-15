@@ -16,6 +16,33 @@ class WordNet::Lexicon
 	WordNet::DEFAULT_DB_OPTIONS.merge( :logger => [WordNet.logger] )
 
 
+	### Get the Sequel URI of the default database, if it's installed.
+	def self::default_db_uri
+		WordNet.log.debug "Fetching the default db URI"
+
+		if Gem.available?( 'wordnet-defaultdb', "~> #{WordNet::VERSION}" )
+			WordNet.log.debug "  using the wordnet-defaultdb"
+			gem_datadir = Gem.datadir( 'wordnet-defaultdb' )
+			WordNet.log.debug "  wordnet-defaultdb datadir is: %p" % [ gem_datadir ]
+			return "sqlite://#{gem_datadir}/wordnet30.sqlite"
+		else
+			WordNet.log.debug "  using the development database"
+			datadir = Pathname( __FILE__ ).dirname.parent.parent +
+				'wordnet-defaultdb/data/wordnet-defaultdb'
+			WordNet.log.debug "  datadir is: %s" % [ datadir ]
+
+			if datadir.exist?
+				return "sqlite://#{datadir}/wordnet30.sqlite"
+			else
+				raise ArgumentError,
+					"no default wordnet SQL database! You can install it via the " +
+					"wordnet-defaultdb gem, or download a version yourself from " +
+					"http://sourceforge.net/projects/wnsql/"
+			end
+		end
+	end
+
+
 	#############################################################
 	### I N S T A N C E	  M E T H O D S
 	#############################################################
@@ -24,7 +51,7 @@ class WordNet::Lexicon
 	### the given +dbconfig+.
 	def initialize( *args )
 		if args.empty?
-			uri = DEFAULT_DB_URI
+			uri = WordNet::Lexicon.default_db_uri
 		else
 			uri = args.shift if args.first.is_a?( String )
 		end
@@ -32,11 +59,15 @@ class WordNet::Lexicon
 		options = WordNet::DEFAULT_DB_OPTIONS.merge( args.shift || {} )
 
 		if uri
+			self.log.debug "Connecting using uri + options style: uri = %s, options = %p" %
+				[ uri, options ]
 			@db = Sequel.connect( uri, options )
 		else
+			self.log.debug "Connecting using hash style connect: options = %p" % [ options ]
 			@db = Sequel.connect( options )
 		end
 
+		self.log.debug "  setting model db to: %s" % [ @db.uri ]
 		require 'wordnet/model'
 		WordNet::Model.db = @db
 

@@ -102,12 +102,12 @@ end
 
 
 ### Mock with Rspec
-Rspec.configure do |c|
+RSpec.configure do |c|
 	c.mock_with :rspec
 	c.include( WordNet::SpecHelpers )
 
-	c.filter_run_excluding( :ruby_1_8_only => true ) if
-		WordNet::SpecHelpers.vvec( RUBY_VERSION ) >= WordNet::SpecHelpers.vvec('1.9.1')
+	c.filter_run_excluding( :ruby_1_9_only => true ) if
+		WordNet::SpecHelpers.vvec( RUBY_VERSION ) <= WordNet::SpecHelpers.vvec('1.9.1')
 end
 
 # vim: set nosta noet ts=4 sw=4:

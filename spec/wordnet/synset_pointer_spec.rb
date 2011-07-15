@@ -6,33 +6,22 @@ BEGIN {
 
 	libdir = basedir + 'lib'
 
-	$LOAD_PATH.unshift( libdir ) unless $LOAD_PATH.include?( libdir )
+	$LOAD_PATH.unshift( basedir.to_s ) unless $LOAD_PATH.include?( basedir.to_s )
+	$LOAD_PATH.unshift( libdir.to_s ) unless $LOAD_PATH.include?( libdir.to_s )
 }
 
-begin
-	require 'fileutils'
-	require 'tmpdir'
-	require 'bdb'
-	require 'spec/runner'
-	require 'spec/lib/helpers'
+require 'rspec'
 
-	require 'wordnet/lexicon'
-	require 'wordnet/synset'
-rescue LoadError
-	unless Object.const_defined?( :Gem )
-		require 'rubygems'
-		retry
-	end
-	raise
-end
+require 'spec/lib/helpers'
+require 'wordnet/synset_pointer'
 
 
 #####################################################################
 ###	C O N T E X T S
 #####################################################################
 
-describe WordNet::Synset do
+describe WordNet::SynsetPointer do
+
 
 end
-
 

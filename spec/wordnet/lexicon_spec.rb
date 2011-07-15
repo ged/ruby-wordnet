@@ -16,6 +16,16 @@ require 'sequel'
 require 'spec/lib/helpers'
 require 'wordnet/lexicon'
 
+# Use Sequel's own spec helpers
+if Gem::Specification.respond_to?( :find_by_name )
+	sequel_spec = Gem::Specification.find_by_name( 'sequel' )
+	gem_basedir = sequel_spec.full_gem_path
+	$LOAD_PATH.unshift( gem_basedir ) unless $LOAD_PATH.include?( gem_basedir )
+else
+	gem_basedir = Pathname( Gem.required_location('sequel', 'sequel.rb') ).dirname.parent.to_s
+	$LOAD_PATH.unshift( gem_basedir ) unless $LOAD_PATH.include?( gem_basedir )
+end
+require 'spec/model/spec_helper'
 
 
 #####################################################################
@@ -24,30 +34,36 @@ require 'wordnet/lexicon'
 
 describe WordNet::Lexicon do
 
-	TEST_WORDS = {
-		'activity'		=> WordNet::Noun,
-		'sword'			=> WordNet::Noun,
-		'density'		=> WordNet::Noun,
-		'burly'			=> WordNet::Adjective,
-		'wispy'			=> WordNet::Adjective,
-		'traditional'	=> WordNet::Adjective,
-		'sit'			=> WordNet::Verb,
-		'take'			=> WordNet::Verb,
-		'joust'			=> WordNet::Verb,
-	}
-
-
-	it "accepts uri, options for the database connection" do
-		uri = 'postgres://localhost/test'
-		options = { :username => 'test' }
-
-		db = double( "database object" )
-		Sequel.should_receive( :connect ).with( uri, options ).
-			and_return( db )
-
-		WordNet::Lexicon.new( uri, options )
-		WordNet::Model.db.should equal( db )
+	before( :all ) do
+		setup_logging( :debug )
 	end
+
+	before( :each ) do
+		MODEL_DB.reset
+	end
+
+	after( :all ) do
+		reset_logging()
+	end
+
+
+	it "uses the wordnet-defaultdb database gem (if available) when created with no arguments" do
+		Gem.should_receive( :available? ).with( 'wordnet-defaultdb', "~> #{WordNet::VERSION}" ).
+			and_return( true )
+		Gem.should_receive( :datadir ).with( 'wordnet-defaultdb' ).
+			and_return( '/tmp/foo' )
+
+		lex = WordNet::Lexicon.new
+		lex.db.should be_a( Sequel::Database )
+		lex.db.uri.should == 'sqlite://tmp/foo/wordnet30.sqlite'
+	end
+
+	it "accepts uri, options for the database connection", :ruby_1_9_only => true do
+		WordNet::Lexicon.new( 'postgres://localhost/test', :username => 'test' )
+		WordNet::Model.db.uri.should == 'postgres://test@localhost/test'
+	end
+
+	
 
 end
 
