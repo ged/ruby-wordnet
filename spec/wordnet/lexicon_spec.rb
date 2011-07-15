@@ -14,7 +14,7 @@ require 'rspec'
 require 'sequel'
 
 require 'spec/lib/helpers'
-require 'wordnet/lexicon'
+require 'wordnet'
 
 # Use Sequel's own spec helpers
 if Gem::Specification.respond_to?( :find_by_name )
@@ -35,7 +35,7 @@ require 'spec/model/spec_helper'
 describe WordNet::Lexicon do
 
 	before( :all ) do
-		setup_logging( :debug )
+		setup_logging( :fatal )
 	end
 
 	before( :each ) do
@@ -48,8 +48,6 @@ describe WordNet::Lexicon do
 
 
 	it "uses the wordnet-defaultdb database gem (if available) when created with no arguments" do
-		Gem.should_receive( :available? ).with( 'wordnet-defaultdb', "~> #{WordNet::VERSION}" ).
-			and_return( true )
 		Gem.should_receive( :datadir ).with( 'wordnet-defaultdb' ).
 			and_return( '/tmp/foo' )
 
@@ -63,7 +61,20 @@ describe WordNet::Lexicon do
 		WordNet::Model.db.uri.should == 'postgres://test@localhost/test'
 	end
 
-	
+
+	context "with the default database", :requires_database => true do
+
+		before( :all ) do
+			@lexicon = WordNet::Lexicon.new
+		end
+
+		it "can look up a word via its index operator" do
+			rval = @lexicon[ :carrot ]
+			rval.should be_a( WordNet::Word )
+			rval.lemma.should == 'carrot'
+		end
+
+	end
 
 end
 

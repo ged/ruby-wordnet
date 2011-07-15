@@ -108,6 +108,13 @@ RSpec.configure do |c|
 
 	c.filter_run_excluding( :ruby_1_9_only => true ) if
 		WordNet::SpecHelpers.vvec( RUBY_VERSION ) <= WordNet::SpecHelpers.vvec('1.9.1')
+
+	begin
+		uri = WordNet::Lexicon.default_db_uri
+		WordNet.log.info "Database tests will use: #{uri}"
+	rescue WordNet::LexiconError
+		c.filter_run_excluding( :requires_database => true )
+	end
 end
 
 # vim: set nosta noet ts=4 sw=4:

@@ -2,6 +2,10 @@
 
 require 'sequel'
 
+# Rude hack to stop Sequel::Model from complaining if it's subclasses before
+# the first database connection is established. Ugh.
+Sequel::Model.db = Sequel.sqlite if Sequel::DATABASES.empty?
+
 require 'wordnet' unless defined?( WordNet )
 require 'wordnet/mixins'
 
