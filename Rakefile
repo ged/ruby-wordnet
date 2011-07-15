@@ -10,6 +10,7 @@ Hoe.plugins.delete :rubyforge
 hoespec = Hoe.spec( 'wordnet' ) do
 	self.name = 'wordnet'
 	self.readme_file = 'README.md'
+	self.history_file = 'History.md'
 
 	self.developer 'Michael Granger', 'ged@FaerieMUD.org'
 

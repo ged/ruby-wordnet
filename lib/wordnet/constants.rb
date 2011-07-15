@@ -10,19 +10,6 @@ require 'wordnet' unless defined?( WordNet )
 # WordNet namespace itself.
 module WordNet::Constants
 
-	# The path to the wordnet data directory
-	DEFAULTDB_DATADIR = begin
-		gem_datadir = Gem.datadir('wordnet-defaultdb')
-		if gem_datadir && File.exist?( gem_datadir )
-			Pathname( gem_datadir )
-		else
-			Pathname( __FILE__ ).dirname.parent.parent + 'data/wordnet-defaultdb'
-		end
-	end
-
-	# The default database URI
-	DEFAULT_DB_URI = 'sqlite://%s/wordnet30.sqlite' % [ DEFAULTDB_DATADIR ]
-
 	# The default database options
 	DEFAULT_DB_OPTIONS = {}
 

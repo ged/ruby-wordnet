@@ -20,7 +20,6 @@ require 'wordnet/lexicon'
 #####################################################################
 
 describe WordNet do
-
 	include WordNet::SpecHelpers
 
 	before( :all ) do
