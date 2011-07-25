@@ -112,6 +112,7 @@ def unzip( zipfile, targetdir, *files )
 		$stderr.puts "  extracting: %s" % [ target_path ]
 		entry.extract( target_path ) { true }
 		files.delete( entry.name )
+		break if files.empty?
 	end
 
 	raise "Couldn't unzip: %p: not found in %s" % [ files, zipfile ] unless files.empty?

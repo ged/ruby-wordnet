@@ -11,9 +11,9 @@ require "wordnet"
 lex = WordNet::Lexicon.new
 
 # Look up the clothing synset as the origin
-clothing = lex.lookup_synsets( "clothing", WordNet::Noun, 1 )
+clothing = lex['clothing'].synsets.first
+collar = lex['collar'].synsets.first
 
-part_word = ARGV.shift || "collar"
 part = lex.lookup_synsets( part_word, WordNet::Noun, 1 ) or
 	abort( "Couldn't find synset for #{part_word}" )
 
