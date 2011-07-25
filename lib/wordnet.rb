@@ -83,5 +83,29 @@ module WordNet
 
 	require 'wordnet/lexicon'
 
+
+	#
+	# Backward-compatibility stuff
+	#
+
+	# :section: Backward-compatibility
+
+	# Backward-compatibility constant
+	Noun      = :n
+
+	# Backward-compatibility constant
+	Verb      = :v
+
+	# Backward-compatibility constant
+	Adjective = :a
+
+	# Backward-compatibility constant
+	Adverb    = :r
+
+	# Backward-compatibility constant
+	Other     = :s
+
+
+
 end # module WordNet
 

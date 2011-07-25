@@ -20,7 +20,7 @@ require 'wordnet/word'
 ###	C O N T E X T S
 #####################################################################
 
-describe WordNet::Word do
+describe WordNet::Word, :requires_database => true do
 	include WordNet::SpecHelpers
 
 	before( :all ) do

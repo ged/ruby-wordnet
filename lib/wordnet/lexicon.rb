@@ -74,8 +74,10 @@ class WordNet::Lexicon
 
 		require 'wordnet/sense'
 		require 'wordnet/synset'
-		require 'wordnet/synset_pointer'
+		require 'wordnet/semanticlink'
+		require 'wordnet/lexicallink'
 		require 'wordnet/word'
+		require 'wordnet/morph'
 	end
 
 
@@ -94,7 +96,27 @@ class WordNet::Lexicon
 	### @param [String, #to_s] word  the word to look up
 	### @return [WordNet::Word, nil] the word object if it was found, nil if it wasn't.
 	def []( word )
-		return WordNet::Word.filter( :lemma => word.to_s ).first
+		if word.is_a?( Integer )
+			return WordNet::Word[ word ]
+		else
+			return WordNet::Word.filter( :lemma => word.to_s ).first
+		end
+	end
+
+
+	# :section: Backwards-compatibility methods
+
+	### Look up synsets (Wordnet::Synset objects) matching +text+ as a
+	### +part_of_speech+, where +part_of_speech+ is one of the keys of
+	### WordNet::Synset.postypes.
+	### 
+	### Without +sense+, #lookup_synsets will return all matches that are a
+	### +part_of_speech+. If +sense+ is specified, only the synset object that
+	### matches that particular +part_of_speech+ and +sense+ is returned.
+	### 
+	### 
+	def lookup_synsets( word, part_of_speech, sense=nil )
+		
 	end
 
 end # class WordNet::Lexicon

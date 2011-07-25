@@ -1,11 +1,23 @@
 #!/usr/bin/env rake
 
-require 'hoe'
+require 'pathname'
+
+begin
+	require 'hoe'
+rescue LoadError => err
+	$stderr.puts "Couldn't load hoe: %p: %s" % [ err.class, err.message ] if
+		Rake.application.options.trace
+	abort "This Rakefile requires hoe (gem install hoe)"
+end
 
 Hoe.plugin :mercurial
 Hoe.plugin :signing
 
 Hoe.plugins.delete :rubyforge
+
+BASEDIR = Pathname( __FILE__ ).dirname
+LIBDIR = BASEDIR + 'lib'
+DATADIR = BASEDIR + 'data'
 
 hoespec = Hoe.spec( 'wordnet' ) do
 	self.name = 'wordnet'
@@ -14,8 +26,8 @@ hoespec = Hoe.spec( 'wordnet' ) do
 
 	self.developer 'Michael Granger', 'ged@FaerieMUD.org'
 
-	self.dependency 'sequel', '~> 3.18.0'
-	self.dependency 'sqlite3-ruby', '~> 1.3.2'
+	self.dependency 'sequel', '~> 3.18'
+	self.dependency 'sqlite3', '~> 1.3.2'
 	self.dependency 'rspec', '~> 2.2.0', :developer
 
 	self.spec_extras[:licenses] = ["BSD"]

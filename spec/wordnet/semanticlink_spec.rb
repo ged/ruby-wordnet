@@ -2,8 +2,8 @@
 
 BEGIN {
 	require 'pathname'
-	basedir = Pathname.new( __FILE__ ).dirname.parent.parent
 
+	basedir = Pathname.new( __FILE__ ).dirname.parent
 	libdir = basedir + 'lib'
 
 	$LOAD_PATH.unshift( basedir.to_s ) unless $LOAD_PATH.include?( basedir.to_s )
@@ -11,17 +11,32 @@ BEGIN {
 }
 
 require 'rspec'
-
 require 'spec/lib/helpers'
-require 'wordnet/synset_pointer'
+require 'wordnet/semanticlink'
 
 
 #####################################################################
 ###	C O N T E X T S
 #####################################################################
 
-describe WordNet::SynsetPointer do
+describe WordNet::SemanticLink, :requires_database => true do
+	include WordNet::SpecHelpers
+
+	before( :all ) do
+		setup_logging( :fatal )
+		@lexicon = WordNet::Lexicon.new
+	end
+
+	before( :each ) do
+		@word   = @lexicon[ :parody ]
+		@synset = @word.synsets.first
+	end
+
+	after( :all ) do
+		reset_logging()
+	end
 
 
 end
+
 

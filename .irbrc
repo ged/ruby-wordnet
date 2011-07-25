@@ -94,7 +94,7 @@ begin
 	require 'logger'
 	require 'wordnet'
 
-	WordNet.logger.level = Logger::DEBUG
+	WordNet.logger.level = $DEBUG ? Logger::DEBUG : Logger::INFO
 
     puts "Instantiating the lexicon as $lex"
     $lex = WordNet::Lexicon.new
