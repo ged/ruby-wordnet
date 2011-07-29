@@ -11,12 +11,8 @@ require "wordnet"
 lex = WordNet::Lexicon.new
 
 # Look up the clothing synset as the origin
-clothing = lex['clothing'].synsets.first
-collar = lex['collar'].synsets.first
-
-part = lex.lookup_synsets( part_word, WordNet::Noun, 1 ) or
-	abort( "Couldn't find synset for #{part_word}" )
-
+clothing = lex['clothing'].synsets.find {|ss| ss.definition =~ /a covering/i }
+collar = lex['collar'].synsets.find {|ss| ss.definition =~ /band that fits around the neck/i }
 
 puts "Looking for instances of:",
 	"  #{part}",
