@@ -116,7 +116,9 @@ class WordNet::Lexicon
 	### 
 	### 
 	def lookup_synsets( word, part_of_speech, sense=nil )
-		
+		synsets = self[ word ].synsets.find_all {|ss| ss.pos == part_of_speech }
+		return synsets[ sense ] if sense
+		return synsets
 	end
 
 end # class WordNet::Lexicon
