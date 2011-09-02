@@ -12,14 +12,15 @@ BEGIN {
 
 require 'rspec'
 require 'spec/lib/helpers'
-require 'wordnet/synset'
+require 'wordnet'
+require 'wordnet/word'
 
 
 #####################################################################
 ###	C O N T E X T S
 #####################################################################
 
-describe WordNet::Synset, :requires_database => true do
+describe WordNet::Word, :requires_database => true do
 	include WordNet::SpecHelpers
 
 	before( :all ) do
@@ -28,7 +29,7 @@ describe WordNet::Synset, :requires_database => true do
 	end
 
 	before( :each ) do
-		@synset = WordNet::Synset[ 103365991 ]
+		@word = @lexicon[ :run ]
 	end
 
 	after( :all ) do
@@ -36,20 +37,19 @@ describe WordNet::Synset, :requires_database => true do
 	end
 
 
-	it "knows what lexical domain it's from" do
-		@synset.lexical_domain.should == 'noun.artifact'
+	it "knows what senses it has" do
+		senses = @word.senses
+		senses.should be_an( Array )
+		senses.should have( 57 ).members
+		senses.first.should be_a( WordNet::Sense )
 	end
 
-	it "knows what its synonyms are" do
-		syns = @synset.synonyms
-		syns.should be_an( Array )
-		syns.should have( 4 ).members
-		syns.should include(
-			@lexicon[ :floor ],
-			@lexicon[ :level ],
-			@lexicon[ :storey ],
-			@lexicon[ :story ]
-		)
+	it "knows what synsets it has" do
+		senses = @word.senses
+		synsets = @word.synsets
+
+		synsets.should have( senses.length ).members
+		synsets.first.senses.should include( senses.first )
 	end
 
 end

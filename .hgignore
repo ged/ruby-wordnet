@@ -1,0 +1,14 @@
+docs/manual/output
+docs/api
+ruby-wordnet/
+pkg/
+^data/wordnet\-defaultdb/wordnet30\.sqlite$
+^commit\-msg\.txt$
+^wordnet-defaultdb/pkg/
+^wordnet-defaultdb/data/wordnet\-defaultdb/wordnet30\.sqlite$
+^wordnet-defaultdb/commit\-msg\.txt$
+^wordnet-defaultdb/LICENSE-WORDNET.txt$
+^wordnet-defaultdb/wordnet30-sqlite-1.0.1.zip$
+^ChangeLog$
+^doc/
+\.(pdf|svg)$

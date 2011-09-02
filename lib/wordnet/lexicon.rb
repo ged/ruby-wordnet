@@ -1,430 +1,125 @@
 #!/usr/bin/ruby
-#
-# WordNet Lexicon object class
-# 
-# == Synopsis
-# 
-#	lexicon = WordNet::Lexicon.new( dictpath )
-# 
-# == Description
-# 
-# Instances of this class abstract access to the various databases of the
-# WordNet lexicon. It can be used to look up and search for WordNet::Synsets.
-# 
-# == Author
-# 
-# Michael Granger <ged@FaerieMUD.org>
-# 
-# Copyright (c) 2002, 2003, 2005 The FaerieMUD Consortium. All rights reserved.
-# 
-# This module is free software. You may use, modify, and/or redistribute this
-# software under the terms of the Perl Artistic License. (See
-# http://language.perl.com/misc/Artistic.html)
-# 
-# Much of this code was inspired by/ported from the Lingua::Wordnet Perl module
-# by Dan Brian.
-# 
-# == Version
-#
-# $Id$
-# 
 
-require 'rbconfig'
 require 'pathname'
-require 'bdb'
-require 'sync'
 
-require 'wordnet/constants'
-require 'wordnet/synset'
+require 'wordnet' unless defined?( WordNet )
+require 'wordnet/mixins'
 
-### Lexicon exception - something has gone wrong in the internals of the
-### lexicon.
-class WordNet::LexiconError < StandardError ; end
 
-### Lookup error - the object being looked up either doesn't exist or is
-### malformed
-class WordNet::LookupError < StandardError ; end
-
-### WordNet lexicon class - abstracts access to the WordNet lexical
-### databases, and provides factory methods for looking up and creating new
-### WordNet::Synset objects.
+# WordNet lexicon class - abstracts access to the WordNet lexical
+# database, and provides factory methods for looking up words and synsets.
 class WordNet::Lexicon
-	include WordNet::Constants
-	include CrossCase if defined?( CrossCase )
+	include WordNet::Constants,
+	        WordNet::Loggable
 
-	# Subversion Id
-	SvnId = %q$Id$
-
-	# Subversion revision
-	SvnRev = %q$Rev$
+	# Add the logger device to the default options after it's been loaded
+	WordNet::DEFAULT_DB_OPTIONS.merge!( :logger => [WordNet.logger] )
 
 
-	#############################################################
-	### B E R K E L E Y D B	  C O N F I G U R A T I O N
-	#############################################################
+	### Get the Sequel URI of the default database, if it's installed.
+	def self::default_db_uri
+		WordNet.log.debug "Fetching the default db URI"
 
-	# The path to the WordNet BerkeleyDB Env. It lives in the directory that
-	# this module is in.
-	DEFAULT_DB_ENV = File::join( Config::CONFIG['datadir'], "ruby-wordnet" )
+		if gem_datadir = Gem.datadir( 'wordnet-defaultdb' )
+			WordNet.log.debug "  using the wordnet-defaultdb datadir: %p" % [ gem_datadir ]
+			return "sqlite://#{gem_datadir}/wordnet30.sqlite"
+		else
+			WordNet.log.debug "  no defaultdb gem; looking for the development database"
+			datadir = Pathname( __FILE__ ).dirname.parent.parent +
+				'wordnet-defaultdb/data/wordnet-defaultdb'
+			WordNet.log.debug "  datadir is: %s" % [ datadir ]
 
-	# Options for the creation of the Env object
-	ENV_OPTIONS = {
-		:set_timeout	=> 50,
-		:set_lk_detect	=> 1,
-		:set_verbose	=> false,
-		:set_lk_max     => 3000,
-	}
-
-	# Flags for the creation of the Env object (read-write and read-only)
-	ENV_FLAGS_RW = BDB::CREATE|BDB::INIT_TRANSACTION|BDB::RECOVER|BDB::INIT_MPOOL
-	ENV_FLAGS_RO = BDB::INIT_MPOOL
+			if datadir.exist?
+				return "sqlite://#{datadir}/wordnet30.sqlite"
+			else
+				raise WordNet::LexiconError,
+					"no default wordnet SQL database! You can install it via the " +
+					"wordnet-defaultdb gem, or download a version yourself from " +
+					"http://sourceforge.net/projects/wnsql/"
+			end
+		end
+	end
 
 
 	#############################################################
 	### I N S T A N C E	  M E T H O D S
 	#############################################################
 
-	### Create a new WordNet::Lexicon object that will read its data from
-	### the given +dbenv+ (a BerkeleyDB env directory). The database will be
-	### opened with the specified +mode+, which can either be a numeric 
-	### octal mode (e.g., 0444) or one of (:readonly, :readwrite).
-	def initialize( dbenv=DEFAULT_DB_ENV, mode=:readonly )
-		@mode = normalize_mode( mode )
-		debug_msg "Mode is: %04o" % [ @mode ]
-
-		envflags = 0
-		dbflags  = 0
-
-		unless self.readonly?
-			debug_msg "Using read/write flags"
-			envflags = ENV_FLAGS_RW
-			dbflags = BDB::CREATE
+	### Create a new WordNet::Lexicon object that will use the database connection specified by
+	### the given +dbconfig+.
+	def initialize( *args )
+		if args.empty?
+			uri = WordNet::Lexicon.default_db_uri
 		else
-			debug_msg "Using readonly flags"
-			envflags = ENV_FLAGS_RO
-			dbflags = 0
+			uri = args.shift if args.first.is_a?( String )
 		end
 
-		debug_msg "Env flags are: %0s, dbflags are %0s" %
-			[ envflags.to_s(2), dbflags.to_s(2) ]
+		options = WordNet::DEFAULT_DB_OPTIONS.merge( args.shift || {} )
 
-		begin
-			@env = BDB::Env.new( dbenv, envflags, ENV_OPTIONS )
-			@index_db = @env.open_db( BDB::BTREE, "index", nil, dbflags, @mode )
-			@data_db = @env.open_db( BDB::BTREE, "data", nil, dbflags, @mode )
-			@morph_db = @env.open_db( BDB::BTREE, "morph", nil, dbflags, @mode )
-		rescue StandardError => err
-			msg = "Error while opening Ruby-WordNet data files: #{dbenv}: %s" % 
-				[ err.message ]
-			raise err, msg, err.backtrace
+		if uri
+			self.log.debug "Connecting using uri + options style: uri = %s, options = %p" %
+				[ uri, options ]
+			@db = Sequel.connect( uri, options )
+		else
+			self.log.debug "Connecting using hash style connect: options = %p" % [ options ]
+			@db = Sequel.connect( options )
 		end
+
+		@uri = @db.uri
+		self.log.debug "  setting model db to: %s" % [ @uri ]
+
+		require 'wordnet/model'
+		@db.sql_log_level = :debug
+		WordNet::Model.db = @db
+
+		require 'wordnet/sense'
+		require 'wordnet/synset'
+		require 'wordnet/semanticlink'
+		require 'wordnet/lexicallink'
+		require 'wordnet/word'
+		require 'wordnet/morph'
 	end
-
 
 
 	######
 	public
 	######
 
-	# The BDB::Env object which contains the wordnet lexicon's databases.
-	attr_reader :env
+	# The database URI the lexicon will use to look up WordNet data
+	attr_reader :uri
 
-	# The handle to the index table
-	attr_reader :index_db
-
-	# The handle to the synset data table
-	attr_reader :data_db
-
-	# The handle to the morph table
-	attr_reader :morph_db
+	# The Sequel::Database object that model tables read from
+	attr_reader :db
 
 
-	### Returns +true+ if the lexicon was opened in read-only mode.
-	def readonly?
-		( @mode & 0200 ).nonzero? ? false : true
-	end
-	
-	
-	### Returns +true+ if the lexicon was opened in read-write mode.
-	def readwrite?
-		! self.readonly?
-	end
-	
-
-	### Close the lexicon's database environment
-	def close
-		@env.close if @env
-	end
-
-
-	### Checkpoint the database. (BerkeleyDB-specific)
-	def checkpoint( bytes=0, minutes=0 )
-		@env.checkpoint
-	end
-
-
-	### Remove any archival logfiles for the lexicon's database
-	### environment. (BerkeleyDB-specific).
-	def clean_logs
-		return unless self.readwrite?
-		self.archlogs.each do |logfile|
-			File::chmod( 0777, logfile )
-			File::delete( logfile )
+	### Find a word in the WordNet database and return it.
+	### @param [String, #to_s] word  the word to look up
+	### @return [WordNet::Word, nil] the word object if it was found, nil if it wasn't.
+	def []( word )
+		if word.is_a?( Integer )
+			return WordNet::Word[ word ]
+		else
+			return WordNet::Word.filter( :lemma => word.to_s ).first
 		end
 	end
 
 
-	### Returns an integer of the familiarity/polysemy count for +word+ as a
-	### +part_of_speech+. Note that polysemy can be identified for a given
-	### word by counting the synsets returned by #lookup_synsets.
-	def familiarity( word, part_of_speech, polyCount=nil )
-		wordkey = self.make_word_key( word, part_of_speech )
-		return nil unless @index_db.key?( wordkey )
-		@index_db[ wordkey ].split( WordNet::SUB_DELIM_RE ).length
-	end
-
+	# :section: Backwards-compatibility methods
 
 	### Look up synsets (Wordnet::Synset objects) matching +text+ as a
-	### +part_of_speech+, where +part_of_speech+ is one of +WordNet::Noun+,
-	### +WordNet::Verb+, +WordNet::Adjective+, or +WordNet::Adverb+. Without
-	### +sense+, #lookup_synsets will return all matches that are a
+	### +part_of_speech+, where +part_of_speech+ is one of the keys of
+	### WordNet::Synset.postypes.
+	### 
+	### Without +sense+, #lookup_synsets will return all matches that are a
 	### +part_of_speech+. If +sense+ is specified, only the synset object that
 	### matches that particular +part_of_speech+ and +sense+ is returned.
+	### 
+	### 
 	def lookup_synsets( word, part_of_speech, sense=nil )
-		wordkey = self.make_word_key( word, part_of_speech )
-		pos = self.make_pos( part_of_speech )
-		synsets = []
-
-		# Look up the index entry, trying first the word as given, and if
-		# that fails, trying morphological conversion.
-		entry = @index_db[ wordkey ]
-
-		if entry.nil? && (word = self.morph( word, part_of_speech ))
-			wordkey = self.make_word_key( word, part_of_speech )
-			entry = @index_db[ wordkey ]
-		end
-
-		# If the lookup failed both ways, just abort
-		return nil unless entry
-
-		# Make synset keys from the entry, narrowing it to just the sense
-		# requested if one was specified.
-		synkeys = entry.split( SUB_DELIM_RE ).collect {|off| "#{off}%#{pos}" }
-		if sense
-			return lookup_synsets_by_key( synkeys[sense - 1] )
-		else
-			return [ lookup_synsets_by_key(*synkeys) ].flatten
-		end
+		synsets = self[ word ].synsets.find_all {|ss| ss.pos == part_of_speech }
+		return synsets[ sense ] if sense
+		return synsets
 	end
-
-
-	### Returns the WordNet::Synset objects corresponding to the +keys+
-	### specified. The +keys+ are made up of the target synset's "offset"
-	### and syntactic category catenated together with a '%' character.
-	def lookup_synsets_by_key( *keys )
-		synsets = []
-
-		keys.each {|key|
-			raise WordNet::LookupError, "Failed lookup of synset '#{key}':"\
-				"No such synset" unless @data_db.key?( key )
-
-			data = @data_db[ key ]
-			offset, part_of_speech = key.split( /%/, 2 )
-			synsets << WordNet::Synset.new( self, offset, part_of_speech, nil, data )
-		}
-
-		return *synsets
-	end
-	alias_method :lookup_synsetsByOffset, :lookup_synsets_by_key
-
-
-	### Returns a form of +word+ as a part of speech +part_of_speech+, as
-	### found in the WordNet morph files. The #lookup_synsets method perfoms
-	### morphological conversion automatically, so a call to #morph is not
-	### required.
-	def morph( word, part_of_speech )
-		return @morph_db[ self.make_word_key(word, part_of_speech) ]
-	end
-
-
-	### Returns the result of looking up +word+ in the inverse of the WordNet
-	### morph files. _(This is undocumented in Lingua::Wordnet)_
-	def reverse_morph( word )
-		@morph_db.invert[ word ]
-	end
-
-
-	### Returns an array of compound words matching +text+.
-	def grep( text )
-		return [] if text.empty?
-		
-		words = []
-		
-		# Grab a cursor into the database and fetch while the key matches
-		# the target text
-		cursor = @index_db.cursor
-		rec = cursor.set_range( text )
-		while /^#{text}/ =~ rec[0]
-			words.push rec[0]
-			rec = cursor.next
-		end
-		cursor.close
-
-		return *words
-	end
-
-
-	### Factory method: Creates and returns a new WordNet::Synset object in
-	### this lexicon for the specified +word+ and +part_of_speech+.
-	def create_synset( word, part_of_speech )
-		return WordNet::Synset.new( self, '', part_of_speech, word )
-	end
-	alias_method :new_synset, :create_synset
-
-
-	### Store the specified +synset+ (a WordNet::Synset object) in the
-	### lexicon. Returns the key of the stored synset.
-	def store_synset( synset )
-		strippedOffset = nil
-		pos = nil
-
-		# Start a transaction
-		@env.begin( BDB::TXN_COMMIT, @data_db ) do |txn,datadb|
-
-			# If this is a new synset, generate an offset for it
-			if synset.offset == 1
-				synset.offset =
-					(datadb['offsetcount'] = datadb['offsetcount'].to_i + 1)
-			end
-			
-			# Write the data entry
-			datadb[ synset.key ] = synset.serialize
-				
-			# Write the index entries
-			txn.begin( BDB::TXN_COMMIT, @index_db ) do |txn,indexdb|
-
-				# Make word/part-of-speech pairs from the words in the synset
-				synset.words.collect {|word| word + "%" + pos }.each {|word|
-
-					# If the index already has this word, but not this
-					# synset, add it
-					if indexdb.key?( word )
-						indexdb[ word ] << SUB_DELIM << synset.offset unless
-							indexdb[ word ].include?( synset.offset )
-					else
-						indexdb[ word ] = synset.offset
-					end
-				}
-			end # transaction on @index_db
-		end # transaction on @dataDB
-
-		return synset.offset
-	end
-
-
-	### Remove the specified +synset+ (a WordNet::Synset object) in the
-	### lexicon. Returns the offset of the stored synset.
-	def remove_synset( synset )
-		# If it's not in the database (ie., doesn't have a real offset),
-		# just return.
-		return nil if synset.offset == 1
-
-		# Start a transaction on the data table
-		@env.begin( BDB::TXN_COMMIT, @data_db ) do |txn,datadb|
-
-			# First remove the index entries for this synset by iterating
-			# over each of its words
-			txn.begin( BDB::TXN_COMMIT, @index_db ) do |txn,indexdb|
-				synset.words.collect {|word| word + "%" + pos }.each {|word|
-
-					# If the index contains an entry for this word, either
-					# splice out the offset for the synset being deleted if
-					# there are more than one, or just delete the whole
-					# entry if it's the only one.
-					if indexdb.key?( word )
-						offsets = indexdb[ word ].
-							split( SUB_DELIM_RE ).
-							reject {|offset| offset == synset.offset}
-
-						unless offsets.empty?
-							index_db[ word ] = newoffsets.join( SUB_DELIM )
-						else
-							index_db.delete( word )
-						end
-					end
-				}
-			end
-
-			# :TODO: Delete synset from pointers of related synsets
-
-			# Delete the synset from the main db
-			datadb.delete( synset.offset )
-		end
-
-		return true
-	end
-
-
-	#########
-	protected
-	#########
-
-	### Normalize various ways of specifying a part of speech into the
-	### WordNet part of speech indicator from the +original+ representation,
-	### which may be the name (e.g., "noun"); +nil+, in which case it
-	### defaults to the indicator for a noun; or the indicator character
-	### itself, in which case it is returned unmodified.
-	def make_pos( original )
-		return WordNet::Noun if original.nil?
-		osym = original.to_s.intern
-		return WordNet::SYNTACTIC_CATEGORIES[ osym ] if
-			WordNet::SYNTACTIC_CATEGORIES.key?( osym )
-		return original if SYNTACTIC_SYMBOLS.key?( original )
-		return nil
-	end
-
-
-	### Make a lexicon key out of the given +word+ and part of speech
-	### (+pos+).
-	def make_word_key( word, pos )
-		pos = self.make_pos( pos )
-		word = word.gsub( /\s+/, '_' )
-		return "#{word}%#{pos}"
-	end
-
-
-	### Return a list of archival logfiles that can be removed
-	### safely. (BerkeleyDB-specific).
-	def archlogs
-		return @env.log_archive( BDB::ARCH_ABS )
-	end
-
-
-	#######
-	private
-	#######
-	
-	### Turn the given +origmode+ into an octal file mode such as that 
-	### given to File.open.
-	def normalize_mode( origmode )
-		case origmode
-		when :readonly
-			0444 & ~File.umask
-		when :readwrite, :writable
-			0666 & ~File.umask
-		when Fixnum
-			origmode
-		else
-			raise ArgumentError, "unrecognized mode %p" % [origmode]
-		end
-	end
-
-	### Output the given +msg+ to STDERR if $DEBUG is turned on.
-	def debug_msg( *msg )
-		return unless $DEBUG
-		$deferr.puts msg
-	end
-	
 
 end # class WordNet::Lexicon
 

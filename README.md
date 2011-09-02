@@ -1,4 +1,37 @@
-Copyright (c) 2002-2010, Michael Granger
+# Ruby-WordNet
+
+* http://deveiate.org/projects/Ruby-WordNet
+
+## Description
+
+This library is a Ruby interface to WordNet®. WordNet® is an online lexical
+reference system whose design is inspired by current psycholinguistic theories
+of human lexical memory. English nouns, verbs, adjectives and adverbs are
+organized into synonym sets, each representing one underlying lexical
+concept. Different relations link the synonym sets.
+
+It uses WordNet-SQL, which is a conversion of the lexicon flatfiles into a
+relational database format. You can either install the 'wordnet-defaultdb' gem,
+which packges up the SQLite3 version of WordNet-SQL, or install your own and
+point the lexicon at it by passing a Sequel URL to the constructor.
+
+TO-DO: More details and better writing later.
+
+
+## Requirements
+
+* Ruby 1.8.7 or 1.9.2
+* Sequel >= 3.19.0
+
+
+## Authors
+
+* Michael Granger <ged@FaerieMUD.org>
+
+
+## License
+
+Copyright (c) 2010-2011, The FaerieMUD Consortium
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
