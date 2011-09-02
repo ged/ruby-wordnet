@@ -1,89 +1,111 @@
-#
-# WordNet - A Ruby interface to the WordNet lexical database
-#
-# == Synopsis
-# 
-#   require "WordNet"
-# 
-#   # Create a new lexicon object
-#   lex = WordNet::Lexicon::new
-# 
-#   # Look up the synsets for "language" and "computer program"
-#   languageSynset = lex.lookup_synsets( "language", WordNet::Noun, 3 )
-#   programSynset = lex.lookup_synsets( "program", WordNet::Noun, 3 )
-# 
-#   # Create a new synset for programming languages, set its gloss, link it to its
-#   # hypernym and holonym, and save everything to the database.
-#   progLangSynset = lex.create_synset( "programming language", WordNet::Noun )
-#   progLangSynset.gloss = "a system of human-readable symbols and words "\
-#		"for encoding instructions for a computer"
-#   progLangSynset.hypernyms += languageSynset
-#   languageSynset.hyponyms += progLangSynset
-#   progLangSynset.holonyms += programSynset
-#	programSynset.stuff_meronyms += progLangSynset
-#   [ progLangSynset, programSynset, languageSynset ].each do |synset|
-# 	  synset.store
-#   end
-# 
-#   # Create a new synset for Ruby, link it, and save it
-#   rubySynset = lex.create_synset( "Ruby", Wordnet::Noun )
-#   rubySynset.gloss = "an interpreted scripting language for quick and easy object-oriented programming"
-#   rubySynset.hypernyms += languageSyn ; languageSynset.hyponyms += rubySyn
-#   rubySynset.write ; languageSynset.write
-# 
-# == Description
-#
-# This is a Ruby interface to the WordNet lexical database. It's mostly a port
-# of Dan Brian's Lingua::Wordnet Perl module, modified a bit to be more
-# Ruby-ish.
-#
-# == Author
-#
-# The Lingua::Wordnet module by Dan Brian, on which this code is based, falls under
-# the following license:
-#
-#   Copyright 1999,2000,2001 by Dan Brian.
-#
-#   This program is free software; you can redistribute it and/or modify
-#   it under the same terms as Perl itself.
-#
-# Written by Michael Granger <ged@FaerieMUD.org>
-#
-# Copyright (c) 2002,2003,2005 The FaerieMUD Consortium. All rights reserved.
-#
-# This module is free software. You may use, modify, and/or redistribute this
-# software under the terms of the Perl Artistic License. (See
-# http://language.perl.com/misc/Artistic.html)
-#
-# == Version
-#
-#  $Id$
-#
+#!/usr/bin/env ruby
+#encoding: utf-8
 
-# Try to provide underbarred alternatives for camelCased methods. Requires the
-# 'CrossCase' module.
-begin
-	require 'crosscase'
-rescue LoadError
-end
+require 'logger'
+require 'sequel'
 
-### The main namespace for WordNet classes
+# This is a Ruby interface to the WordNet® lexical database. It uses the WordNet-SQL 
+# project's databases instead of reading from the canonical flatfiles for speed and 
+# easy modification.
 module WordNet
 
-	# Revision tag
-	SvnRev = %q$Rev$
-
-	# Id tag
-	SvnId = %q$Id$
-
 	# Release version
-	VERSION = '0.0.5'
+	VERSION = '0.99.0'
+
+	# VCS revision
+	REVISION = %q$Revision: $
+
+
+	### Lexicon exception - something has gone wrong in the internals of the
+	### lexicon.
+	class LexiconError < StandardError ; end
+
+	### Lookup error - the object being looked up either doesn't exist or is
+	### malformed
+	class LookupError < StandardError ; end
+
 
 	require 'wordnet/constants'
-	require 'wordnet/lexicon'
-	require 'wordnet/synset'
-
 	include WordNet::Constants
+	require 'wordnet/utils'
+
+	#
+	# Logging
+	#
+
+	@default_logger = Logger.new( $stderr )
+	@default_logger.level = $DEBUG ? Logger::DEBUG : Logger::WARN
+
+	@default_log_formatter = WordNet::LogFormatter.new( @default_logger )
+	@default_logger.formatter = @default_log_formatter
+
+	@logger = @default_logger
+
+	class << self
+		# @return [Logger::Formatter] the log formatter that will be used when the logging 
+		#    subsystem is reset
+		attr_accessor :default_log_formatter
+
+		# @return [Logger] the logger that will be used when the logging subsystem is reset
+		attr_accessor :default_logger
+
+		# @return [Logger] the logger that's currently in effect
+		attr_accessor :logger
+		alias_method :log, :logger
+		alias_method :log=, :logger=
+	end
+
+
+	### Reset the global logger object to the default
+	### @return [void]
+	def self::reset_logger
+		self.logger = self.default_logger
+		self.logger.level = Logger::WARN
+		self.logger.formatter = self.default_log_formatter
+	end
+
+
+	### Returns +true+ if the global logger has not been set to something other than
+	### the default one.
+	def self::using_default_logger?
+		return self.logger == self.default_logger
+	end
+
+
+	### Get the WordNet version.
+	### @return [String] the library's version
+	def self::version_string( include_buildnum=false )
+		vstring = "%s %s" % [ self.name, VERSION ]
+		vstring << " (build %s)" % [ REVISION[/: ([[:xdigit:]]+)/, 1] || '0' ] if include_buildnum
+		return vstring
+	end
+
+
+	require 'wordnet/lexicon'
+
+
+	#
+	# Backward-compatibility stuff
+	#
+
+	# :section: Backward-compatibility
+
+	# Backward-compatibility constant
+	Noun      = :n
+
+	# Backward-compatibility constant
+	Verb      = :v
+
+	# Backward-compatibility constant
+	Adjective = :a
+
+	# Backward-compatibility constant
+	Adverb    = :r
+
+	# Backward-compatibility constant
+	Other     = :s
+
+
 
 end # module WordNet
 

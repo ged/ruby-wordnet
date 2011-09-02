@@ -13,9 +13,6 @@ BEGIN {
 require 'rspec'
 require 'sequel'
 
-require 'spec/lib/helpers'
-require 'wordnet'
-
 # Use Sequel's own spec helpers
 if Gem::Specification.respond_to?( :find_by_name )
 	sequel_spec = Gem::Specification.find_by_name( 'sequel' )
@@ -27,12 +24,16 @@ else
 end
 require 'spec/model/spec_helper'
 
+require 'spec/lib/helpers'
+require 'wordnet'
+require 'wordnet/model'
+
 
 #####################################################################
 ###	C O N T E X T S
 #####################################################################
 
-describe WordNet::Lexicon do
+describe WordNet::Model do
 
 	before( :all ) do
 		setup_logging( :fatal )
@@ -46,35 +47,13 @@ describe WordNet::Lexicon do
 		reset_logging()
 	end
 
-
-	it "uses the wordnet-defaultdb database gem (if available) when created with no arguments" do
-		Gem.should_receive( :datadir ).with( 'wordnet-defaultdb' ).
-			and_return( '/tmp/foo' )
-
-		lex = WordNet::Lexicon.new
-		lex.db.should be_a( Sequel::Database )
-		lex.db.uri.should == 'sqlite://tmp/foo/wordnet30.sqlite'
+	it "propagates database handle changes to all of its subclasses" do
+		subclass = WordNet::Model( :tests )
+		newdb = MockDatabase.new
+		WordNet::Model.db = newdb
+		subclass.db.should equal( newdb )
 	end
 
-	it "accepts uri, options for the database connection", :ruby_1_9_only => true do
-		WordNet::Lexicon.new( 'postgres://localhost/test', :username => 'test' )
-		WordNet::Model.db.uri.should == 'postgres://test@localhost/test'
-	end
-
-
-	context "with the default database", :requires_database => true do
-
-		before( :all ) do
-			@lexicon = WordNet::Lexicon.new
-		end
-
-		it "can look up a word via its index operator" do
-			rval = @lexicon[ :carrot ]
-			rval.should be_a( WordNet::Word )
-			rval.lemma.should == 'carrot'
-		end
-
-	end
 
 end
 
