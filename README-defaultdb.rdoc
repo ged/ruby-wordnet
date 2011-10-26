@@ -1,7 +1,12 @@
-# Ruby-WordNet Data Gem
+= Ruby-WordNet Data Gem
 
 This is the default SQLite database for the Ruby WordNet® 
-library. To use this, first do:
+library.
+
+
+== Description
+
+To use this, first do:
 
   gem install wordnet
 
@@ -13,7 +18,7 @@ then
 The database is just a repackaged SQLite database from the "wnsql" 
 project:
 
-  http://wnsql.sourceforge.net/
+    http://wnsql.sourceforge.net/
 
 WordNet™® is a registered tradename.
 

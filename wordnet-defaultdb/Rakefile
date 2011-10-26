@@ -36,6 +36,7 @@ hoespec = Hoe.spec 'wordnet-defaultdb' do
 	self.developer 'Michael Granger', 'ged@FaerieMUD.org'
 
 	self.dependency 'wordnet', '~> 0.99'
+	self.dependency 'sqlite3', '~> 1.3.4'
 	self.dependency 'rubyzip', '~> 0.9.4', :developer
 
 	self.spec_extras[:licenses] = ["BSD"]
