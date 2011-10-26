@@ -1,0 +1,4 @@
+== 1.0.1 [2011-07-14] Michael Granger <ged@FaerieMUD.org>
+
+Initial release, based on WordNetSQL 1.0.1.
+

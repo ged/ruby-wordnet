@@ -21,14 +21,15 @@ DATADIR = BASEDIR + 'data'
 
 hoespec = Hoe.spec( 'wordnet' ) do
 	self.name = 'wordnet'
-	self.readme_file = 'README.md'
-	self.history_file = 'History.md'
+	self.readme_file = 'README.rdoc'
+	self.history_file = 'History.rdoc'
+	self.extra_rdoc_files = FileList[ '*.rdoc' ]
 
 	self.developer 'Michael Granger', 'ged@FaerieMUD.org'
 
-	self.dependency 'sequel', '~> 3.18'
+	self.dependency 'sequel',  '~> 3.18'
 	self.dependency 'sqlite3', '~> 1.3.2'
-	self.dependency 'rspec', '~> 2.2.0', :developer
+	self.dependency 'rspec',   '~> 2.2.0', :developer
 
 	self.spec_extras[:licenses] = ["BSD"]
 	self.spec_extras[:post_install_message] = %{
@@ -42,12 +43,14 @@ hoespec = Hoe.spec( 'wordnet' ) do
 
 	}.gsub( /^\t/, '' )
 
-	self.require_ruby_version( '>=1.8.7' )
+	self.require_ruby_version( '>=1.9.2' )
 
 	self.hg_sign_tags = true if self.respond_to?( :hg_sign_tags )
 end
 
 ENV['VERSION'] ||= hoespec.spec.version.to_s
+
+task 'hg:precheckin' => [ :check_history, :spec ]
 
 ### Make the ChangeLog update if the repo has changed since it was last built
 file '.hg/branch'

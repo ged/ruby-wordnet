@@ -5,7 +5,9 @@
 #
 #   http://sourceforge.net/projects/wnsql/
 # 
-# @author Michael Granger <ged@FaerieMUD.org>
+# == Author/s
+# 
+# * Michael Granger <ged@FaerieMUD.org>
 # 
 module WordNet
 	module DefaultDB
