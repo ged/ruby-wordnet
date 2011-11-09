@@ -1,7 +1,7 @@
 #!/usr/bin/ruby
 
 require 'wordnet' unless defined?( WordNet )
-require 'wordnet/mixins'
+require 'wordnet/synset' unless defined?( WordNet::Synset )
 require 'wordnet/model'
 
 # WordNet lexical link (pointer) model class
@@ -27,7 +27,7 @@ class WordNet::LexicalLink < WordNet::Model( :lexlinks )
 
 	### Return the type of link this is as a Symbol.
 	def type
-		return WordNet::Synset.linktypes[ self.linkid ][ :type ]
+		return WordNet::Synset.linktype_table[ self.linkid ][ :type ]
 	end
 
 end # class WordNet::SemanticLink

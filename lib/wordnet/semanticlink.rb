@@ -1,12 +1,13 @@
 #!/usr/bin/ruby
 
 require 'wordnet' unless defined?( WordNet )
-require 'wordnet/mixins'
+require 'wordnet/constants'
 require 'wordnet/model'
 
 # WordNet semantic link (pointer) model class
 class WordNet::SemanticLink < WordNet::Model( :semlinks )
 	include WordNet::Constants
+
 
 	set_primary_key [:synset1id, :synset2id, :linkid]
 
@@ -38,13 +39,13 @@ class WordNet::SemanticLink < WordNet::Model( :semlinks )
 
 	### Return the type of link as a Symbol.
 	def type
-		return WordNet::Synset.linktypes[ self.linkid ][ :type ]
+		return WordNet::Synset.linktype_table[ self.linkid ][ :type ]
 	end
 
 
 	### Return the name of the link type as a String.
 	def typename
-		return WordNet::Synset.linktypes[ self.linkid ][ :typename ]
+		return WordNet::Synset.linktype_table[ self.linkid ][ :typename ]
 	end
 
 end # class WordNet::SemanticLink

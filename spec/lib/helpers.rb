@@ -108,6 +108,12 @@ RSpec.configure do |c|
 
 	c.filter_run_excluding( :ruby_1_9_only => true ) if
 		WordNet::SpecHelpers.vvec( RUBY_VERSION ) <= WordNet::SpecHelpers.vvec('1.9.1')
+	unless Gem::Specification.find_all_by_name( 'pg' ).empty?
+		c.filter_run_excluding( :requires_pg => true )
+		$stderr.puts "Enabled requires_pg tests"
+	else
+		$stderr.puts ">>> No requires_pg tests!!"
+	end
 
 	begin
 		uri = WordNet::Lexicon.default_db_uri

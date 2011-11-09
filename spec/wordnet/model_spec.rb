@@ -49,7 +49,7 @@ describe WordNet::Model do
 
 	it "propagates database handle changes to all of its subclasses" do
 		subclass = WordNet::Model( :tests )
-		newdb = MockDatabase.new
+		newdb = Sequel.mock
 		WordNet::Model.db = newdb
 		subclass.db.should equal( newdb )
 	end

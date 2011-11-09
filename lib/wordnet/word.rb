@@ -85,5 +85,35 @@ class WordNet::Word < WordNet::Model( :words )
 		return self.lemma
 	end
 
+
+	### Return a dataset for all of the Word's Synsets that are nouns.
+	def nouns
+		return synsets_dataset.nouns
+	end
+
+
+	### Return a dataset for all of the Word's Synsets that are verbs.
+	def verbs
+		return synsets_dataset.verbs
+	end
+
+
+	### Return a dataset for all of the Word's Synsets that are adjectives.
+	def adjectives
+		return synsets_dataset.adjectives
+	end
+
+
+	### Return a dataset for all of the Word's Synsets that are adverbs.
+	def adverbs
+		return synsets_dataset.adverbs
+	end
+
+
+	### Return a dataset for all of the Word's Synsets that are adjective satellites.
+	def adjective_satellites
+		return synsets_dataset.adjective_satellites
+	end
+
 end # class WordNet::Word
 

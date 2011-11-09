@@ -27,9 +27,9 @@ hoespec = Hoe.spec( 'wordnet' ) do
 
 	self.developer 'Michael Granger', 'ged@FaerieMUD.org'
 
-	self.dependency 'sequel',  '~> 3.18'
-	self.dependency 'sqlite3', '~> 1.3.2'
-	self.dependency 'rspec',   '~> 2.2.0', :developer
+	self.dependency 'sequel',  '~> 3.29'
+	self.dependency 'sqlite3', '~> 1.3', :developer
+	self.dependency 'rspec',   '~> 2.7', :developer
 
 	self.spec_extras[:licenses] = ["BSD"]
 	self.spec_extras[:post_install_message] = %{

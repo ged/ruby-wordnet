@@ -21,7 +21,7 @@ TO-DO: More details and better writing later.
 == Requirements
 
 * Ruby >= 1.9.2
-* Sequel >= 3.19.0
+* Sequel >= 3.29.0
 
 
 == Authors
