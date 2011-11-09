@@ -16,17 +16,6 @@ require 'sequel'
 require 'spec/lib/helpers'
 require 'wordnet'
 
-# Use Sequel's own spec helpers
-if Gem::Specification.respond_to?( :find_by_name )
-	sequel_spec = Gem::Specification.find_by_name( 'sequel' )
-	gem_basedir = sequel_spec.full_gem_path
-	$LOAD_PATH.unshift( gem_basedir ) unless $LOAD_PATH.include?( gem_basedir )
-else
-	gem_basedir = Pathname( Gem.required_location('sequel', 'sequel.rb') ).dirname.parent.to_s
-	$LOAD_PATH.unshift( gem_basedir ) unless $LOAD_PATH.include?( gem_basedir )
-end
-require 'spec/model/spec_helper'
-
 
 #####################################################################
 ###	C O N T E X T S
@@ -38,27 +27,61 @@ describe WordNet::Lexicon do
 		setup_logging( :fatal )
 	end
 
-	before( :each ) do
-		MODEL_DB.reset
-	end
-
 	after( :all ) do
 		reset_logging()
 	end
 
+	context "the default_db_uri method" do
 
-	it "uses the wordnet-defaultdb database gem (if available) when created with no arguments" do
-		Gem.should_receive( :datadir ).with( 'wordnet-defaultdb' ).
-			and_return( '/tmp/foo' )
+		before( :all ) do
+			@devdb = Pathname( 'wordnet-defaultdb/data/wordnet-defaultdb/wordnet30.sqlite' ).
+				expand_path
+		end
 
-		lex = WordNet::Lexicon.new
-		lex.db.should be_a( Sequel::Database )
-		lex.db.uri.should == 'sqlite://tmp/foo/wordnet30.sqlite'
+		it "uses the wordnet-defaultdb database gem (if available)" do
+			Gem.should_receive( :datadir ).with( 'wordnet-defaultdb' ).at_least( :once ).
+				and_return( '/tmp/foo' )
+			FileTest.should_receive( :exist? ).with( '/tmp/foo/wordnet30.sqlite' ).
+				and_return( true )
+
+			WordNet::Lexicon.default_db_uri.should == "sqlite:/tmp/foo/wordnet30.sqlite"
+		end
+
+		it "uses the development version of the wordnet-defaultdb database gem if it's " +
+		   "not installed" do
+			Gem.should_receive( :datadir ).with( 'wordnet-defaultdb' ).
+				and_return( nil )
+			FileTest.should_receive( :exist? ).with( @devdb.to_s ).
+				and_return( true )
+
+			WordNet::Lexicon.default_db_uri.should == "sqlite:#{@devdb}"
+		end
+
+		it "raises an exception if there is no default database" do
+			Gem.should_receive( :datadir ).with( 'wordnet-defaultdb' ).
+				and_return( nil )
+			FileTest.should_receive( :exist? ).with( @devdb.to_s ).
+				and_return( false )
+
+			expect {
+				WordNet::Lexicon.default_db_uri
+			}.to raise_error( WordNet::LexiconError, /no default wordnetsql/i )
+		end
+
 	end
 
-	it "accepts uri, options for the database connection", :ruby_1_9_only => true do
-		WordNet::Lexicon.new( 'postgres://localhost/test', :username => 'test' )
-		WordNet::Model.db.uri.should == 'postgres://test@localhost/test'
+	it "uses the wordnet-defaultdb database gem (if available) when created with no arguments" do
+		Gem.should_receive( :datadir ).with( 'wordnet-defaultdb' ).at_least( :once ).
+			and_return( '/tmp/foo' )
+		FileTest.should_receive( :exist? ).with( '/tmp/foo/wordnet30.sqlite' ).
+			and_return( true )
+
+		WordNet::Lexicon.default_db_uri.should == "sqlite:/tmp/foo/wordnet30.sqlite"
+	end
+
+	it "accepts uri, options for the database connection", :requires_pg => true do
+		WordNet::Lexicon.new( 'postgres://localhost/wordnet30', :username => 'test' )
+		WordNet::Model.db.uri.should == 'postgres://test@localhost/wordnet30'
 	end
 
 
@@ -68,10 +91,38 @@ describe WordNet::Lexicon do
 			@lexicon = WordNet::Lexicon.new
 		end
 
-		it "can look up a word via its index operator" do
-			rval = @lexicon[ :carrot ]
-			rval.should be_a( WordNet::Word )
-			rval.lemma.should == 'carrot'
+		context "via its index operator" do
+
+			it "can look up a Synset by ID" do
+				rval = @lexicon[ 101219722 ]
+				rval.should be_a( WordNet::Synset )
+				rval.words.map( &:to_s ).should include( 'carrot' )
+			end
+
+			it "can look up a Word by ID" do
+				rval = @lexicon[ 21338 ]
+				rval.should be_a( WordNet::Word )
+				rval.lemma.should == 'carrot'
+			end
+
+			it "can look up the synset for a word and a sense" do
+				ss = @lexicon[ :boot, 3 ]
+				ss.should be_a( WordNet::Synset )
+				ss.definition.should == 'footwear that covers the whole foot and lower leg'
+			end
+
+			it "can look up a synset for a word and a substring of its definition" do
+				ss = @lexicon[ :boot, 'kick' ]
+				ss.should be_a( WordNet::Synset )
+				ss.definition.should =~ /kick/i
+			end
+
+			it "can look up a synset for a word and a pattern match against its definition" do
+				ss = @lexicon[ :boot, /gun/i ]
+				ss.should be_a( WordNet::Synset )
+				ss.definition.should == "the backward jerk of a gun when it is fired"
+			end
+
 		end
 
 	end

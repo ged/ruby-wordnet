@@ -1,9 +1,8 @@
 #!/usr/bin/ruby
 
 require 'wordnet' unless defined?( WordNet )
+require 'wordnet/model'
 require 'wordnet/constants'
-require 'wordnet/mixins'
-require 'wordnet/synset'
 
 
 # SUMO terms

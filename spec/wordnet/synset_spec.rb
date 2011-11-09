@@ -40,16 +40,15 @@ describe WordNet::Synset, :requires_database => true do
 		@synset.lexical_domain.should == 'noun.artifact'
 	end
 
-	it "knows what its synonyms are" do
-		syns = @synset.synonyms
-		syns.should be_an( Array )
-		syns.should have( 4 ).members
-		syns.should include(
-			@lexicon[ :floor ],
-			@lexicon[ :level ],
-			@lexicon[ :storey ],
-			@lexicon[ :story ]
-		)
+	it "can make a Sequel dataset for any of its semantic link relationships" do
+		ds = @synset.semanticlink_dataset( :member_meronyms )
+		ds.should be_a( Sequel::Dataset )
+		ds.first_source_table.should == :synsets
+	end
+
+	it "can make an Enumerator for any of its semantic link relationships" do
+		enum = @synset.semanticlink_enum( :member_meronyms )
+		enum.should be_a( Enumerator )
 	end
 
 end

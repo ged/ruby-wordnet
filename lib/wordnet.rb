@@ -15,6 +15,11 @@ module WordNet
 	# VCS revision
 	REVISION = %q$Revision: $
 
+	# Abort if not >=1.9.2
+	vvec = lambda {|version| version.split('.').collect {|v| v.to_i }.pack('N*') }
+	abort "This version of WordNet requires Ruby 1.9.2 or greater." unless
+		vvec[RUBY_VERSION] >= vvec['1.9.2']
+
 
 	### Lexicon exception - something has gone wrong in the internals of the
 	### lexicon.
@@ -83,6 +88,14 @@ module WordNet
 
 	require 'wordnet/lexicon'
 
+	require 'wordnet/model'
+	require 'wordnet/sense'
+	require 'wordnet/synset'
+	require 'wordnet/semanticlink'
+	require 'wordnet/lexicallink'
+	require 'wordnet/word'
+	require 'wordnet/morph'
+	require 'wordnet/sumoterm'
 
 	#
 	# Backward-compatibility stuff

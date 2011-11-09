@@ -1,7 +1,5 @@
 #!/usr/bin/ruby
 
-require 'pathname'
-require 'rubygems'
 require 'wordnet' unless defined?( WordNet )
 
 # This is a module containing constants used in the WordNet interface for
