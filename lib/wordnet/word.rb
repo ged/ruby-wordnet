@@ -8,8 +8,6 @@ require 'wordnet/model'
 class WordNet::Word < WordNet::Model( :words )
 	include WordNet::Constants
 
-	set_primary_key :wordid
-
 	#                 Table "public.words"
 	#  Column |         Type          |     Modifiers      
 	# --------+-----------------------+--------------------
@@ -58,6 +56,8 @@ class WordNet::Word < WordNet::Model( :words )
 	#     TABLE "vnrolemaps" CONSTRAINT "fk_vnrolemaps_wordid" 
 	# 		FOREIGN KEY (wordid) REFERENCES words(wordid)
 
+
+	set_primary_key :wordid
 
 	##
 	# The WordNet::Sense objects that relate the word with its Synsets

@@ -29,7 +29,8 @@ describe WordNet::Word, :requires_database => true do
 	end
 
 	before( :each ) do
-		@word = @lexicon[ :run ]
+		# 'run'
+		@word = @lexicon[ 113377 ]
 	end
 
 	after( :all ) do
