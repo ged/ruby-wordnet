@@ -65,11 +65,13 @@ class WordNet::Lexicon
 	### Create a new WordNet::Lexicon object that will use the database connection specified by
 	### the given +dbconfig+.
 	def initialize( *args )
-		if args.empty?
-			uri = WordNet::Lexicon.default_db_uri
-		else
-			uri = args.shift if args.first.is_a?( String )
-		end
+		uri = if args.empty?
+				WordNet::Lexicon.default_db_uri
+			elsif args.first.is_a?( String )
+				args.shift
+			else
+				nil
+			end
 
 		options = WordNet::DEFAULT_DB_OPTIONS.merge( args.shift || {} )
 

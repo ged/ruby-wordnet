@@ -28,6 +28,9 @@ describe WordNet::Synset, :requires_database => true do
 	end
 
 	before( :each ) do
+		# floor, level, storey, story (noun): [noun.artifact] a structure
+		#     consisting of a room or set of rooms at a single position along a
+		#     vertical scale (hypernym: 1, hyponym: 5, part meronym: 1)
 		@synset = WordNet::Synset[ 103365991 ]
 	end
 
