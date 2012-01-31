@@ -1,4 +1,5 @@
-== v0.99.0 [2011-01-11] Michael Granger <ged@FaerieMUD.org>
+== v1.0.0 [2012-01-30] Michael Granger <ged@FaerieMUD.org>
 
-Converted to Hoe.
+Converted to use Sequel and wnsql.
+
 
