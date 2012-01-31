@@ -5,8 +5,8 @@ README.rdoc
 Rakefile
 TODO
 WordNet30-license.txt
-examples/addLacedBoots.rb
-examples/clothesWithCollars.rb
+examples/add-laced-boots.rb
+examples/clothes-with-collars.rb
 examples/clothesWithTongues.rb
 examples/distance.rb
 examples/domainTree.rb
