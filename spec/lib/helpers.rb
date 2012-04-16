@@ -106,15 +106,17 @@ RSpec.configure do |c|
 	c.mock_with :rspec
 	c.include( WordNet::SpecHelpers )
 
+	c.treat_symbols_as_metadata_keys_with_true_values = true
+
 	if Gem::Specification.find_all_by_name( 'pg' ).empty?
-		c.filter_run_excluding( :requires_pg => true )
+		c.filter_run_excluding( :requires_pg )
 	end
 
 	begin
 		uri = WordNet::Lexicon.default_db_uri
 		WordNet.log.info "Database tests will use: #{uri}"
 	rescue WordNet::LexiconError
-		c.filter_run_excluding( :requires_database => true )
+		c.filter_run_excluding( :requires_database )
 	end
 end
 
