@@ -110,7 +110,7 @@ describe WordNet::Lexicon do
 
 	end
 
-	context "with a PostgreSQL database", :requires_pg => true do
+	context "with a PostgreSQL database", :requires_pg do
 
 		before( :all ) do
 			@lexicon = WordNet::Lexicon.new( 'postgres://localhost/wordnet30' )
