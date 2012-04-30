@@ -4,11 +4,11 @@
 # the 'wordnet' gem. It's mostly just a wrapper around the Sqlite database from:
 #
 #   http://sourceforge.net/projects/wnsql/
-# 
+#
 # == Author/s
-# 
+#
 # * Michael Granger <ged@FaerieMUD.org>
-# 
+#
 module WordNet
 	module DefaultDB
 

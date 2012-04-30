@@ -4,8 +4,8 @@
 require 'logger'
 require 'sequel'
 
-# This is a Ruby interface to the WordNet® lexical database. It uses the WordNet-SQL 
-# project's databases instead of reading from the canonical flatfiles for speed and 
+# This is a Ruby interface to the WordNet® lexical database. It uses the WordNet-SQL
+# project's databases instead of reading from the canonical flatfiles for speed and
 # easy modification.
 module WordNet
 
@@ -47,7 +47,7 @@ module WordNet
 	@logger = @default_logger
 
 	class << self
-		# @return [Logger::Formatter] the log formatter that will be used when the logging 
+		# @return [Logger::Formatter] the log formatter that will be used when the logging
 		#    subsystem is reset
 		attr_accessor :default_log_formatter
 
