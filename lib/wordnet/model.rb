@@ -11,12 +11,12 @@ require 'wordnet/mixins'
 module WordNet
 
 	# The base WordNet database-backed domain class. It's a subclass of Sequel::Model, so
-	# you'll first need to be familiar with Sequel (http://sequel.rubyforge.org/) and 
-	# especially its Sequel::Model ORM. 
+	# you'll first need to be familiar with Sequel (http://sequel.rubyforge.org/) and
+	# especially its Sequel::Model ORM.
 	#
 	# See the Sequel::Plugins::InlineMigrations module and the documentation for the
 	# 'validation_helpers', 'schema', and 'subclasses' Sequel plugins.
-	# 
+	#
 	class Model < Sequel::Model
 		include WordNet::Loggable
 
@@ -61,7 +61,7 @@ module WordNet
 		unless Sequel::Model::ANONYMOUS_MODEL_CLASSES.key?( source )
 			anonclass = nil
 			WordNet::Model.without_sql_logging do
-			 	if source.is_a?( Sequel::Database )
+				if source.is_a?( Sequel::Database )
 					anonclass = Class.new( WordNet::Model )
 					anonclass.db = source
 				else

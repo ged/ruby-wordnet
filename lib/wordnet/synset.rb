@@ -6,37 +6,37 @@ require 'wordnet/model'
 
 
 # WordNet synonym-set object class
-# 
+#
 # Instances of this class encapsulate the data for a synonym set ('synset') in a
 # WordNet lexical database. A synonym set is a set of words that are
 # interchangeable in some context.
-# 
+#
 #   ss = WordNet::Synset[ 106286395 ]
-#   # => #<WordNet::Synset @values={:synsetid=>106286395, :pos=>"n", 
-#       :lexdomainid=>10, 
+#   # => #<WordNet::Synset @values={:synsetid=>106286395, :pos=>"n",
+#       :lexdomainid=>10,
 #       :definition=>"a unit of language that native speakers can identify"}>
 #
 #   ss.words.map( &:lemma )
 #   # => ["word"]
 #
 #   ss.hypernyms
-#   # => [#<WordNet::Synset @values={:synsetid=>106284225, :pos=>"n", 
-#       :lexdomainid=>10, 
+#   # => [#<WordNet::Synset @values={:synsetid=>106284225, :pos=>"n",
+#       :lexdomainid=>10,
 #       :definition=>"one of the natural units into which [...]"}>]
 #
 #   ss.hyponyms
-#   # => [#<WordNet::Synset @values={:synsetid=>106287620, :pos=>"n", 
-#       :lexdomainid=>10, 
-#       :definition=>"a word or phrase spelled by rearranging [...]"}>, 
-#     #<WordNet::Synset @values={:synsetid=>106287859, :pos=>"n", 
-#       :lexdomainid=>10, 
-#       :definition=>"a word (such as a pronoun) used to avoid [...]"}>, 
-#     #<WordNet::Synset @values={:synsetid=>106288024, :pos=>"n", 
-#       :lexdomainid=>10, 
+#   # => [#<WordNet::Synset @values={:synsetid=>106287620, :pos=>"n",
+#       :lexdomainid=>10,
+#       :definition=>"a word or phrase spelled by rearranging [...]"}>,
+#     #<WordNet::Synset @values={:synsetid=>106287859, :pos=>"n",
+#       :lexdomainid=>10,
+#       :definition=>"a word (such as a pronoun) used to avoid [...]"}>,
+#     #<WordNet::Synset @values={:synsetid=>106288024, :pos=>"n",
+#       :lexdomainid=>10,
 #       :definition=>"a word that expresses a meaning opposed [...]"}>,
 #     ...
 #    ]
-# 
+#
 class WordNet::Synset < WordNet::Model( :synsets )
 	include WordNet::Constants
 
@@ -79,7 +79,7 @@ class WordNet::Synset < WordNet::Model( :synsets )
 
 	##
 	# :singleton-method:
-	# The WordNet::SemanticLinks indicating a relationship with other 
+	# The WordNet::SemanticLinks indicating a relationship with other
 	# WordNet::Synsets
 	one_to_many :semlinks,
 		:class       => :"WordNet::SemanticLink",
@@ -123,7 +123,7 @@ class WordNet::Synset < WordNet::Model( :synsets )
 	# :section: Dataset Methods
 	# This is a set of methods that return a Sequel::Dataset for Synsets pre-filtered
 	# by a certain criteria. They can be used to do stuff like:
-	# 
+	#
 	#   lexicon[ :language ].synsets_dataset.nouns
 	#
 
@@ -397,7 +397,7 @@ class WordNet::Synset < WordNet::Model( :synsets )
 	### With a block, yield a WordNet::Synset related to the receiver via a link of
 	### the specified +type+, recursing depth first into each of its links if the link
 	### type is recursive. To exit from the traversal at any depth, throw :stop_traversal.
-	### 
+	###
 	### If no block is given, return an Enumerator that will do the same thing instead.
 	###
 	###   # Print all the parts of a boot

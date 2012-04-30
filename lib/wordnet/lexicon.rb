@@ -106,14 +106,14 @@ class WordNet::Lexicon
 	### Find a Word or Synset in the WordNet database and return it. In the case of multiple
 	### matching Synsets, only the first will be returned. If you want them all, you can use
 	### #lookup_synsets instead.
-	### 
+	###
 	### The +word+ can be one of:
 	### [Integer]
 	###   Looks up the corresponding Word or Synset by ID. This assumes that all Synset IDs are
 	###   all 9 digits or greater, which is true as of WordNet 3.1. Any additional +args+ are
 	###   ignored.
 	### [Symbol, String]
-	###   Look up a Word by its gloss using #lookup_synsets, passing any additional +args+, 
+	###   Look up a Word by its gloss using #lookup_synsets, passing any additional +args+,
 	###   and return the first one that is found.
 	def []( word, *args )
 		if word.is_a?( Integer )
@@ -131,11 +131,11 @@ class WordNet::Lexicon
 
 	### Look up synsets (Wordnet::Synset objects) associated with +word+, optionally filtered
 	### by additional +args+.
-	### 
+	###
 	### The *args* can contain:
 	###
 	### [Integer, Range]
-	###   The sense/s of the Word (1-indexed) to use when searching for Synsets. If not specified, 
+	###   The sense/s of the Word (1-indexed) to use when searching for Synsets. If not specified,
 	###   all senses of the +word+ are used.
 	### [Regexp]
 	###   The Word's Synsets are filtered by definition using an RLIKE filter. Note that not all
@@ -146,7 +146,7 @@ class WordNet::Lexicon
 	###   criteria.
 	###   If the doesn't match a lexical domain or part of speech, it's used to filter by
 	###   definition using a LIKE query.
-	### 
+	###
 	def lookup_synsets( word, *args )
 		dataset = WordNet::Synset.filter( :words => WordNet::Word.filter(lemma: word.to_s) )
 		self.log.debug "Looking up synsets for %p" % [ word.to_s ]

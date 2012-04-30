@@ -27,7 +27,7 @@ module WordNet
 				@force_debug = force_debug
 			end
 
-			### Delegate calls the global logger with the class name as the 'progname' 
+			### Delegate calls the global logger with the class name as the 'progname'
 			### argument.
 			def method_missing( sym, msg=nil, &block )
 				return super unless LEVEL.key?( sym )

@@ -32,7 +32,7 @@ class LexiconTests < WordNet::TestCase
 		assert_match( /journey/, words )
 
 		assert_equal 4, @lexicon.familiarity( "boy", WordNet::Noun )
-		assert_equal "blue", @lexicon.morph( "bluest", WordNet::Adjective ) 
+		assert_equal "blue", @lexicon.morph( "bluest", WordNet::Adjective )
 		assert_match( /baseball/, "#{synset}" )
 	end
 end

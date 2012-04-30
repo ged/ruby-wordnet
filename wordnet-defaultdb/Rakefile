@@ -14,7 +14,9 @@ $trace = Rake.application.options.trace
 
 WNSQL_VERSION  = '1.0.1'
 
-WNSQL_BASE_URI = 'http://downloads.sourceforge.net/project/wnsql/'
+# http://downloads.sourceforge.net/project/wnsql/wnsql-1.0.1/wordnet30-sqlite-1.0.1.zip?r=http%3A%2F%2Fsourceforge.net%2Fprojects%2Fwnsql%2Ffiles%2Fwnsql-1.0.1%2F&ts=1335825137&use_mirror=cdnetworks-us-1
+
+WNSQL_BASE_URI = 'http://downloads.sourceforge.net/project/wnsql'
 WNSQL_ZIPFILE  = "wordnet30-sqlite-#{WNSQL_VERSION}.zip"
 WNSQL_URI      = "#{WNSQL_BASE_URI}/wnsql-#{WNSQL_VERSION}/#{WNSQL_ZIPFILE}"
 
@@ -36,7 +38,7 @@ hoespec = Hoe.spec 'wordnet-defaultdb' do
 
 	self.developer 'Michael Granger', 'ged@FaerieMUD.org'
 
-	self.dependency 'wordnet', '~> 1.0'
+	self.dependency 'wordnet', '~> 0.99'
 	self.dependency 'sqlite3', '~> 1.3'
 	self.dependency 'rubyzip', '~> 0.9', :developer
 
