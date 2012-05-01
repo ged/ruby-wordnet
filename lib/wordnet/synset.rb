@@ -194,7 +194,7 @@ class WordNet::Synset < WordNet::Model( :synsets )
 				:id       => row[:linkid],
 				:typename => row[:link],
 				:type     => row[:link].gsub( /\s+/, '_' ).to_sym,
-				:recurses => row[:recurses].nonzero? ? true : false,
+				:recurses => row[:recurses] && row[:recurses] != 0,
 			}
 			hash
 		end
