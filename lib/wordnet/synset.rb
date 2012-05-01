@@ -301,6 +301,15 @@ class WordNet::Synset < WordNet::Model( :synsets )
 	end
 
 
+	### Return any sample sentences.
+    def samples
+        return self.db[:samples].
+			filter( synsetid: self.synsetid ).
+			order( :sampleid ).
+			map( :sample ).all
+    end
+
+
 	#
 	# :section: Semantic Links
 	#

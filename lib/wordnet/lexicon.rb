@@ -50,10 +50,7 @@ class WordNet::Lexicon
 		if dbfile.exist?
 			return "sqlite:#{dbfile}"
 		else
-			raise WordNet::LexiconError,
-				"No default WordNetSQL database! You can install it via the " +
-				"wordnet-defaultdb gem, or download a version yourself from " +
-				"http://sourceforge.net/projects/wnsql/"
+			return nil
 		end
 	end
 
@@ -66,7 +63,12 @@ class WordNet::Lexicon
 	### the given +dbconfig+.
 	def initialize( *args )
 		uri = if args.empty?
-				WordNet::Lexicon.default_db_uri
+				WordNet::Lexicon.default_db_uri or
+					raise WordNet::LexiconError,
+						"No default WordNetSQL database! You can install it via the " +
+						"wordnet-defaultdb gem, or download a version yourself from " +
+						"http://sourceforge.net/projects/wnsql/"
+
 			elsif args.first.is_a?( String )
 				args.shift
 			else
