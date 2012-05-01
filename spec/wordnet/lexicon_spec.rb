@@ -25,6 +25,8 @@ describe WordNet::Lexicon do
 
 	before( :all ) do
 		setup_logging( :fatal )
+		@devdb = Pathname( 'wordnet-defaultdb/data/wordnet-defaultdb/wordnet30.sqlite' ).
+			expand_path
 	end
 
 	after( :all ) do
@@ -32,11 +34,6 @@ describe WordNet::Lexicon do
 	end
 
 	context "the default_db_uri method" do
-
-		before( :all ) do
-			@devdb = Pathname( 'wordnet-defaultdb/data/wordnet-defaultdb/wordnet30.sqlite' ).
-				expand_path
-		end
 
 		it "uses the wordnet-defaultdb database gem (if available)" do
 			Gem.should_receive( :datadir ).with( 'wordnet-defaultdb' ).at_least( :once ).
@@ -57,26 +54,27 @@ describe WordNet::Lexicon do
 			WordNet::Lexicon.default_db_uri.should == "sqlite:#{@devdb}"
 		end
 
-		it "raises an exception if there is no default database" do
+		it "returns nil if there is no default database" do
 			Gem.should_receive( :datadir ).with( 'wordnet-defaultdb' ).
 				and_return( nil )
 			FileTest.should_receive( :exist? ).with( @devdb.to_s ).
 				and_return( false )
 
-			expect {
-				WordNet::Lexicon.default_db_uri
-			}.to raise_error( WordNet::LexiconError, /no default wordnetsql/i )
+			WordNet::Lexicon.default_db_uri.should be_nil()
 		end
 
 	end
 
-	it "uses the wordnet-defaultdb database gem (if available) when created with no arguments" do
-		Gem.should_receive( :datadir ).with( 'wordnet-defaultdb' ).at_least( :once ).
-			and_return( '/tmp/foo' )
-		FileTest.should_receive( :exist? ).with( '/tmp/foo/wordnet30.sqlite' ).
-			and_return( true )
 
-		WordNet::Lexicon.default_db_uri.should == "sqlite:/tmp/foo/wordnet30.sqlite"
+	it "raises an exception if created with no arguments and no defaultdb is available" do
+		Gem.should_receive( :datadir ).with( 'wordnet-defaultdb' ).at_least( :once ).
+			and_return( nil )
+		FileTest.should_receive( :exist? ).with( @devdb.to_s ).
+			and_return( false )
+
+		expect {
+			WordNet::Lexicon.new
+		}.to raise_error( WordNet::LexiconError, /no default wordnetsql/i )
 	end
 
 
