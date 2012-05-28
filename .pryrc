@@ -11,10 +11,10 @@ BEGIN {
 
 begin
 	$stderr.puts "Loading WordNet..."
-	require 'logger'
+	require 'loggability'
 	require 'wordnet'
 
-	WordNet.logger.level = $DEBUG ? Logger::DEBUG : Logger::WARN
+	Loggability.level = :debug if $DEBUG
 
     puts "Instantiating the lexicon as $lex"
     $lex = WordNet::Lexicon.new

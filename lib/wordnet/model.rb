@@ -1,12 +1,12 @@
 #!/usr/bin/ruby
 
+require 'loggability'
 require 'sequel'
 
 # Use a mock database until the real one is provided by the user
 Sequel::Model.db = Sequel.mock if Sequel::DATABASES.empty?
 
 require 'wordnet' unless defined?( WordNet )
-require 'wordnet/mixins'
 
 module WordNet
 
@@ -18,8 +18,12 @@ module WordNet
 	# 'validation_helpers', 'schema', and 'subclasses' Sequel plugins.
 	#
 	class Model < Sequel::Model
-		include WordNet::Loggable
+		extend Loggability
 
+		# Loggability API -- log to the WordNet module's logger
+		log_to :wordnet
+
+		# Sequel plugins
 		plugin :validation_helpers
 		plugin :schema
 		plugin :subclasses
@@ -46,7 +50,7 @@ module WordNet
 			end
 
 			self.descendents.each do |subclass|
-				WordNet.log.info "Resetting database connection for: %p to: %p" % [ subclass, newdb ]
+				self.log.info "Resetting database connection for: %p to: %p" % [ subclass, newdb ]
 				subclass.db = newdb
 			end
 		end

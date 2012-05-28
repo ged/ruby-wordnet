@@ -30,14 +30,6 @@ describe WordNet do
 		reset_logging()
 	end
 
-	it "should know if its default logger is replaced" do
-		WordNet.reset_logger
-		WordNet.should be_using_default_logger
-		WordNet.logger = Logger.new( $stderr )
-		WordNet.should_not be_using_default_logger
-	end
-
-
 	it "returns a version string if asked" do
 		WordNet.version_string.should =~ /\w+ [\d.]+/
 	end

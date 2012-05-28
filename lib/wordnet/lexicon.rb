@@ -1,11 +1,11 @@
 #!/usr/bin/ruby
 
 require 'pathname'
+require 'loggability'
 require 'rubygems'
 
 require 'wordnet' unless defined?( WordNet )
 require 'wordnet/constants'
-require 'wordnet/mixins'
 require 'wordnet/synset'
 require 'wordnet/word'
 
@@ -13,8 +13,11 @@ require 'wordnet/word'
 # WordNet lexicon class - abstracts access to the WordNet lexical
 # database, and provides factory methods for looking up words and synsets.
 class WordNet::Lexicon
-	include WordNet::Constants,
-	        WordNet::Loggable
+	extend Loggability
+	include WordNet::Constants
+
+	# Loggability API -- log to the WordNet module's logger
+	log_to :wordnet
 
 	# class LogTracer
 	# 	def method_missing( sym, msg, &block )
@@ -27,25 +30,25 @@ class WordNet::Lexicon
 
 
 	# Add the logger device to the default options after it's been loaded
-	WordNet::DEFAULT_DB_OPTIONS.merge!( :logger => [WordNet.logger] )
+	WordNet::DEFAULT_DB_OPTIONS.merge!( :logger => [Loggability[WordNet]] )
 	# WordNet::DEFAULT_DB_OPTIONS.merge!( :logger => [LogTracer.new] )
 
 
 	### Get the Sequel URI of the default database, if it's installed.
 	def self::default_db_uri
-		WordNet.log.debug "Fetching the default db URI"
+		self.log.debug "Fetching the default db URI"
 
 		datadir = nil
 		if Gem.datadir( 'wordnet-defaultdb' )
 			datadir = Pathname( Gem.datadir('wordnet-defaultdb') )
 		else
-			WordNet.log.warn "  no defaultdb gem; looking for the development database"
+			self.log.warn "  no defaultdb gem; looking for the development database"
 			datadir = Pathname( __FILE__ ).dirname.parent.parent +
 				'wordnet-defaultdb/data/wordnet-defaultdb'
 		end
 
 		dbfile = datadir + 'wordnet30.sqlite'
-		WordNet.log.debug "  dbfile is: %s" % [ dbfile ]
+		self.log.debug "  dbfile is: %s" % [ dbfile ]
 
 		if dbfile.exist?
 			return "sqlite:#{dbfile}"

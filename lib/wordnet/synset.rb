@@ -228,7 +228,7 @@ class WordNet::Synset < WordNet::Model( :synsets )
 	### Generate methods that will return Synsets related by the given semantic pointer
 	### +type+.
 	def self::semantic_link( type )
-		WordNet.log.debug "Generating a %p method" % [ type ]
+		self.log.debug "Generating a %p method" % [ type ]
 
 		ds_method_body = Proc.new do
 			self.semanticlink_dataset( type )

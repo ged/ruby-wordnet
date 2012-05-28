@@ -1,7 +1,6 @@
 #!/usr/bin/ruby
 
 require 'wordnet' unless defined?( WordNet )
-require 'wordnet/mixins'
 require 'wordnet/model'
 
 # WordNet word model class
