@@ -12,40 +12,12 @@ BEGIN {
 }
 
 require 'rspec'
+require 'loggability/spechelpers'
 require 'wordnet'
 
 
 ### RSpec helper functions.
 module WordNet::SpecHelpers
-
-	# A logger that logs to an array.
-	class ArrayLogger
-		### Create a new ArrayLogger that will append content to +array+.
-		def initialize( array )
-			@array = array
-		end
-
-		### Write the specified +message+ to the array.
-		def write( message )
-			@array << message
-		end
-
-		### No-op -- this is here just so Logger doesn't complain
-		def close; end
-
-	end # class ArrayLogger
-
-
-	unless defined?( LEVEL )
-		LEVEL = {
-			:debug => Logger::DEBUG,
-			:info  => Logger::INFO,
-			:warn  => Logger::WARN,
-			:error => Logger::ERROR,
-			:fatal => Logger::FATAL,
-		  }
-	end
-
 
 	###############
 	module_function
@@ -54,35 +26,6 @@ module WordNet::SpecHelpers
 	### Make an easily-comparable version vector out of +ver+ and return it.
 	def vvec( ver )
 		return ver.split('.').collect {|char| char.to_i }.pack('N*')
-	end
-
-
-	### Reset the logging subsystem to its default state.
-	def reset_logging
-		WordNet.reset_logger
-	end
-
-
-	### Alter the output of the default log formatter to be pretty in SpecMate output
-	def setup_logging( level=Logger::FATAL )
-
-		# Turn symbol-style level config into Logger's expected Fixnum level
-		if LEVEL.key?( level )
-			level = LEVEL[ level ]
-		end
-
-		logger = Logger.new( $stderr )
-		WordNet.logger = logger
-		WordNet.logger.level = level
-
-		# Only do this when executing from a spec in TextMate
-		if ENV['HTML_LOGGING'] || (ENV['TM_FILENAME'] && ENV['TM_FILENAME'] =~ /_spec\.rb/)
-			Thread.current['logger-output'] = []
-			logdevice = ArrayLogger.new( Thread.current['logger-output'] )
-			WordNet.logger = Logger.new( logdevice )
-			# WordNet.logger.level = level
-			WordNet.logger.formatter = WordNet::HtmlLogFormatter.new( logger )
-		end
 	end
 
 
@@ -105,6 +48,7 @@ end
 RSpec.configure do |c|
 	c.mock_with :rspec
 	c.include( WordNet::SpecHelpers )
+	c.include( Loggability::SpecHelpers )
 
 	c.treat_symbols_as_metadata_keys_with_true_values = true
 

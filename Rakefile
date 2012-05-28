@@ -27,13 +27,14 @@ hoespec = Hoe.spec( 'wordnet' ) do
 
 	self.developer 'Michael Granger', 'ged@FaerieMUD.org'
 
-	self.dependency 'sequel',  '~> 3.29'
-	self.dependency 'sqlite3', '~> 1.3', :developer
-	self.dependency 'rspec',   '~> 2.7', :developer
+	self.dependency 'sequel',      '~> 3.35'
+	self.dependency 'loggability', '~> 0.3'
+	self.dependency 'sqlite3',     '~> 1.3', :developer
+	self.dependency 'rspec',       '~> 2.7', :developer
 
 	self.spec_extras[:licenses] = ["BSD"]
 	self.spec_extras[:post_install_message] = %{
-	If you don't already have a WordNet database installed somewhere, 
+	If you don't already have a WordNet database installed somewhere,
 	you'll need to either download and install one from:
 
 	   http://wnsql.sourceforge.net/

@@ -24,7 +24,7 @@ class WordNet::Sense < WordNet::Model( :senses )
 	def self::lexical_link( type, typekey=nil )
 		typekey ||= type.to_s.chomp( 's' ).to_sym
 
-		WordNet.log.debug "Generating a %p method for %p links" % [ type, typekey ]
+		self.log.debug "Generating a %p method for %p links" % [ type, typekey ]
 
 		method_body = Proc.new do
 			linkinfo = WordNet::Synset.linktype_names[ typekey ] or
@@ -32,7 +32,7 @@ class WordNet::Sense < WordNet::Model( :senses )
 			ssids = self.lexlinks_dataset.filter( :linkid => linkinfo[:id] ).select( :synset2id )
 			self.class.filter( :synsetid => ssids )
 		end
-		WordNet.log.debug "  method body is: %p" % [ method_body ]
+		self.log.debug "  method body is: %p" % [ method_body ]
 
 		define_method( type, &method_body )
 	end

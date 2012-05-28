@@ -20,7 +20,6 @@ lib/wordnet.rb
 lib/wordnet/constants.rb
 lib/wordnet/lexicallink.rb
 lib/wordnet/lexicon.rb
-lib/wordnet/mixins.rb
 lib/wordnet/model.rb
 lib/wordnet/morph.rb
 lib/wordnet/semanticlink.rb
