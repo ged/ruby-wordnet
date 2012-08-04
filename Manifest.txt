@@ -1,3 +1,4 @@
+ChangeLog
 History.rdoc
 LICENSE
 Manifest.txt
@@ -26,7 +27,6 @@ lib/wordnet/semanticlink.rb
 lib/wordnet/sense.rb
 lib/wordnet/sumoterm.rb
 lib/wordnet/synset.rb
-lib/wordnet/utils.rb
 lib/wordnet/word.rb
 spec/lib/helpers.rb
 spec/linguawordnet.tests.rb
