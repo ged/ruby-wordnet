@@ -164,11 +164,11 @@ module WordNet::Constants
 
 	# Record-part delimiter
 	DELIM = '||'
-	DELIM_RE = Regexp::new( Regexp::quote(DELIM) )
+	DELIM_RE = Regexp.new( Regexp::quote(DELIM) )
 
 	# Record-subpart delimiter
 	SUB_DELIM = '|'
-	SUB_DELIM_RE = Regexp::new( Regexp::quote(SUB_DELIM) )
+	SUB_DELIM_RE = Regexp.new( Regexp::quote(SUB_DELIM) )
 
 	# Lexicographer file index -- from lexnames(5WN)
 	LEXFILES = [
