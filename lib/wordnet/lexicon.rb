@@ -38,6 +38,14 @@ class WordNet::Lexicon
 	def self::default_db_uri
 		self.log.debug "Fetching the default db URI"
 
+		# Try to load the default database gem, ignoring it if it's not installed.
+		begin
+			gem 'wordnet-defaultdb'
+		rescue Gem::LoadError
+		end
+
+		# Now try the gem datadir first, and fall back to a local installation of the
+		# default db
 		datadir = nil
 		if Gem.datadir( 'wordnet-defaultdb' )
 			datadir = Pathname( Gem.datadir('wordnet-defaultdb') )

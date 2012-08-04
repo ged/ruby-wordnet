@@ -21,9 +21,8 @@ module WordNet
 	REVISION = %q$Revision: $
 
 	# Abort if not >=1.9.2
-	vvec = lambda {|version| version.split('.').collect {|v| v.to_i }.pack('N*') }
 	abort "This version of WordNet requires Ruby 1.9.2 or greater." unless
-		vvec[RUBY_VERSION] >= vvec['1.9.2']
+		RUBY_VERSION >= '1.9.2'
 
 
 	### Lexicon exception - something has gone wrong in the internals of the
