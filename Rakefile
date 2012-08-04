@@ -24,6 +24,7 @@ hoespec = Hoe.spec( 'wordnet' ) do
 	self.readme_file = 'README.rdoc'
 	self.history_file = 'History.rdoc'
 	self.extra_rdoc_files = FileList[ '*.rdoc' ]
+	self.spec_extras[:rdoc_options] = ['-f', 'fivefish', '-t', 'Ruby WordNet']
 
 	self.developer 'Michael Granger', 'ged@FaerieMUD.org'
 
@@ -47,6 +48,9 @@ hoespec = Hoe.spec( 'wordnet' ) do
 	self.require_ruby_version( '>=1.9.2' )
 
 	self.hg_sign_tags = true if self.respond_to?( :hg_sign_tags )
+	self.check_history_on_release = true if self.respond_to?( :check_history_on_release= )
+
+	self.rdoc_locations << "deveiate:/usr/local/www/public/code/#{remote_rdoc_dir}"
 end
 
 ENV['VERSION'] ||= hoespec.spec.version.to_s
