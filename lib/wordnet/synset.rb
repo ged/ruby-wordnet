@@ -153,6 +153,8 @@ class WordNet::Synset < WordNet::Model( :synsets )
 	def_dataset_method( :adjective_satellites ) { filter(pos: 's') }
 
 
+	# :section:
+
 	### Overridden to reset any lookup tables that may have been loaded from the previous
 	### database.
 	def self::db=( newdb )
@@ -225,6 +227,13 @@ class WordNet::Synset < WordNet::Model( :synsets )
 	end
 
 
+	##
+	# :singleton-method: semantic_link_methods
+	# An Array of semantic link methods
+	class << self; attr_reader :semantic_link_methods ; end
+	@semantic_link_methods = []
+
+
 	### Generate methods that will return Synsets related by the given semantic pointer
 	### +type+.
 	def self::semantic_link( type )
@@ -239,6 +248,8 @@ class WordNet::Synset < WordNet::Model( :synsets )
 			self.semanticlink_dataset( type ).all
 		end
 		define_method( type, &ss_method_body )
+
+		self.semantic_link_methods << type.to_sym
 	end
 
 
