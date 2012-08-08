@@ -209,5 +209,13 @@ class WordNet::Lexicon
 		return dataset.all
 	end
 
+
+	### Return a human-readable string representation of the Lexicon, suitable for
+	### debugging.
+	def inspect
+		return "#<%p:%0#x %s>" % [ self.class, self.object_id * 2, self.db.url ]
+	end
+
+
 end # class WordNet::Lexicon
 
