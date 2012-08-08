@@ -460,5 +460,19 @@ class WordNet::Synset < WordNet::Model( :synsets )
 		return depth
 	end
 
+
+	### Return a human-readable representation of the objects, suitable for debugging.
+	def inspect
+		return "#<%p:%0#x {%d} '%s' (%s): [%s] %s>" % [
+			self.class,
+			self.object_id * 2,
+			self.synsetid,
+			self.words.map(&:to_s).join(', '),
+			self.part_of_speech,
+			self.lexical_domain,
+			self.definition,
+		]
+	end
+
 end # class WordNet::Synset
 
