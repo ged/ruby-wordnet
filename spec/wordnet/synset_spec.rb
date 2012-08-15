@@ -78,7 +78,50 @@ describe WordNet::Synset, :requires_database => true do
 			enum.should be_a( Enumerator )
 		end
 
+		it "can recursively traverse its semantic links" do
+			res = @synset.traverse( :hypernyms ).to_a
+			res.should have( 6 ).members
+			res.should == [
+				WordNet::Synset[ 104341686 ],
+				WordNet::Synset[ 100021939 ],
+				WordNet::Synset[ 100003553 ],
+				WordNet::Synset[ 100002684 ],
+				WordNet::Synset[ 100001930 ],
+				WordNet::Synset[ 100001740 ],
+			]
+		end
+
+		it "can return an Enumerator for recursively traversing its semantic links" do
+			enum = @synset.traverse( :hypernyms )
+
+			enum.next.should == WordNet::Synset[ 104341686 ]
+			enum.next.should == WordNet::Synset[ 100021939 ]
+			enum.next.should == WordNet::Synset[ 100003553 ]
+			enum.next.should == WordNet::Synset[ 100002684 ]
+			enum.next.should == WordNet::Synset[ 100001930 ]
+			enum.next.should == WordNet::Synset[ 100001740 ]
+			expect {
+				enum.next
+			}.to raise_error( StopIteration )
+		end
+
+
+		end
+
+	context "for 'knight (noun)' [110238375]" do
+
+		before( :each ) do
+			@synset = @lexicon[ :knight, "noble" ]
+		end
+
+		it "can find the hypernym that it and another synset share in common through the intersection operator" do
+			res = @synset | @lexicon[ :squire ]
+			res.should == @lexicon[:person]
+		end
+
 	end
+
+
 
 end
 
