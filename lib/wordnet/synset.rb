@@ -414,6 +414,32 @@ class WordNet::Synset < WordNet::Model( :synsets )
 	semantic_link :verb_groups
 
 
+	#
+	# :section: Traversal Methods
+	#
+
+	### Union: Return the least general synset that the receiver and
+	### +othersyn+ have in common as a hypernym, or nil if it doesn't share
+	### any.
+	def |( othersyn )
+
+		# Find all of this syn's hypernyms
+		hypersyns = self.traverse( :hypernyms ).to_a
+		commonsyn = nil
+
+		# Now traverse the other synset's hypernyms looking for one of our
+		# own hypernyms.
+		othersyn.traverse( :hypernyms ) do |syn|
+			if hypersyns.include?( syn )
+				commonsyn = syn
+				throw :stop_traversal
+			end
+		end
+
+		return commonsyn
+	end
+
+
 	### With a block, yield a WordNet::Synset related to the receiver via a link of
 	### the specified +type+, recursing depth first into each of its links if the link
 	### type is recursive. To exit from the traversal at any depth, throw :stop_traversal.
@@ -429,16 +455,16 @@ class WordNet::Synset < WordNet::Model( :synsets )
 			traversals = [ self.semanticlink_enum(type) ]
 			syn        = nil
 			typekey    = SEMANTIC_TYPEKEYS[ type ]
-			recurses   = self.linktypes[ typekey ][:recurses]
+			recurses   = self.class.linktypes[ typekey ][:recurses]
 
 			self.log.debug "Traversing %s semlinks%s" % [ type, recurses ? " (recursive)" : ''  ]
 
 			catch( :stop_traversal ) do
 				until traversals.empty?
 					begin
-						self.log.debug "  %d traversal/s left"
+						self.log.debug "  %d traversal/s left" % [ traversals.length ]
 						syn = traversals.last.next
-						yielder.yield( syn, traversals.length )
+						yielder.yield( syn )
 						traversals << syn.semanticlink_enum( type ) if recurses
 					rescue StopIteration
 						traversals.pop
