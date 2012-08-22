@@ -313,12 +313,12 @@ class WordNet::Synset < WordNet::Model( :synsets )
 
 
 	### Return any sample sentences.
-    def samples
-        return self.db[:samples].
+	def samples
+		return self.db[:samples].
 			filter( synsetid: self.synsetid ).
 			order( :sampleid ).
-			map( :sample ).all
-    end
+			map( :sample )
+	end
 
 
 	#
