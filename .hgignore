@@ -12,3 +12,4 @@ pkg/
 ^ChangeLog$
 ^doc/
 \.(pdf|svg)$
+coverage/

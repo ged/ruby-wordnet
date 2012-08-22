@@ -32,6 +32,7 @@ hoespec = Hoe.spec( 'wordnet' ) do
 	self.dependency 'loggability', '~> 0.5'
 	self.dependency 'sqlite3',     '~> 1.3', :developer
 	self.dependency 'rspec',       '~> 2.7', :developer
+	self.dependency 'simplecov',   '~> 0.6', :developer
 
 	self.spec_extras[:licenses] = ["BSD"]
 	self.spec_extras[:post_install_message] = %{
@@ -74,3 +75,9 @@ end
 # Rebuild the ChangeLog immediately before release
 task :prerelease => 'ChangeLog'
 
+# Simplecov
+desc "Build a coverage report"
+task :coverage do
+	ENV["COVERAGE"] = 'yes'
+	Rake::Task[:spec].invoke
+end
