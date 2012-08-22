@@ -175,7 +175,7 @@ class WordNet::Lexicon
 
 			when Range
 				self.log.debug "  limiting to range of senses: %p" % [ arg ]
-				dataset = dataset.limit( arg.end - arg.begin, arg.begin - 1 )
+				dataset = dataset.limit( arg.entries.length, arg.begin - 1 )
 
 			when Regexp
 				self.log.debug "  filter: definition =~ %p" % [ arg ]
@@ -213,7 +213,11 @@ class WordNet::Lexicon
 	### Return a human-readable string representation of the Lexicon, suitable for
 	### debugging.
 	def inspect
-		return "#<%p:%0#x %s>" % [ self.class, self.object_id * 2, self.db.url ]
+		return "#<%p:%0#x %s>" % [
+			self.class,
+			self.object_id * 2,
+			self.db.url || self.db.adapter_scheme
+		]
 	end
 
 

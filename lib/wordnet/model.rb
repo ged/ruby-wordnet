@@ -46,7 +46,7 @@ module WordNet
 			end
 
 			self.descendents.each do |subclass|
-				self.log.info "Resetting database connection for: %p to: %p" % [ subclass, newdb ]
+				self.log.debug "Resetting database connection for: %p to: %p" % [ subclass, newdb ]
 				subclass.db = newdb
 			end
 		end

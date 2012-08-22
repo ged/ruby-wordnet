@@ -2,6 +2,7 @@
 
 BEGIN {
 	require 'pathname'
+	$stderr.puts "__FILE__ is: #{__FILE__}"
 	basedir = Pathname.new( __FILE__ ).dirname.expand_path
 	libdir = basedir + "lib"
 

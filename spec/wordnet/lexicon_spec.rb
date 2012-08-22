@@ -33,6 +33,7 @@ describe WordNet::Lexicon do
 		reset_logging()
 	end
 
+
 	context "the default_db_uri method" do
 
 		it "uses the wordnet-defaultdb database gem (if available)" do
@@ -80,28 +81,42 @@ describe WordNet::Lexicon do
 
 	context "with the default database", :requires_database => true do
 
-		before( :all ) do
-			@lexicon = WordNet::Lexicon.new
-		end
+		let( :lexicon ) { WordNet::Lexicon.new }
 
 		context "via its index operator" do
 
 			it "can look up a Synset by ID" do
-				rval = @lexicon[ 101219722 ]
+				rval = lexicon[ 101219722 ]
 				rval.should be_a( WordNet::Synset )
 				rval.words.map( &:to_s ).should include( 'carrot' )
 			end
 
 			it "can look up a Word by ID" do
-				rval = @lexicon[ 21338 ]
+				rval = lexicon[ 21338 ]
 				rval.should be_a( WordNet::Word )
 				rval.lemma.should == 'carrot'
 			end
 
 			it "can look up the synset for a word and a sense" do
-				ss = @lexicon[ :boot, 3 ]
+				ss = lexicon[ :boot, 3 ]
 				ss.should be_a( WordNet::Synset )
 				ss.definition.should == 'footwear that covers the whole foot and lower leg'
+			end
+
+			it "can look up all synsets for a particular word" do
+				sss = lexicon.lookup_synsets( :tree )
+				sss.should have( 7 ).members
+				sss.all? {|ss| ss.should be_a(WordNet::Synset) }
+			end
+
+			it "can constrain fetched synsets to a certain range of results" do
+				sss = lexicon.lookup_synsets( :tree, 1..4 )
+				sss.should have( 4 ).members
+			end
+
+			it "can constrain fetched synsets to a certain (exclusive) range of results" do
+				sss = lexicon.lookup_synsets( :tree, 1...4 )
+				sss.should have( 3 ).members
 			end
 
 		end
@@ -110,47 +125,82 @@ describe WordNet::Lexicon do
 
 	context "with a PostgreSQL database", :requires_pg do
 
-		before( :all ) do
-			@lexicon = WordNet::Lexicon.new( 'postgres://localhost/wordnet30' )
-		end
+		let( :lexicon ) { WordNet::Lexicon.new(adapter: 'postgres', host: 'localhost', database: 'wordnet30') }
 
 		context "via its index operator" do
 
 			it "can look up a Synset by ID" do
-				rval = @lexicon[ 101219722 ]
+				rval = lexicon[ 101219722 ]
 				rval.should be_a( WordNet::Synset )
 				rval.words.map( &:to_s ).should include( 'carrot' )
 			end
 
 			it "can look up a Word by ID" do
-				rval = @lexicon[ 21338 ]
+				rval = lexicon[ 21338 ]
 				rval.should be_a( WordNet::Word )
 				rval.lemma.should == 'carrot'
 			end
 
 			it "can look up the synset for a word and a sense" do
-				ss = @lexicon[ :boot, 3 ]
+				ss = lexicon[ :boot, 3 ]
 				ss.should be_a( WordNet::Synset )
 				ss.definition.should == 'footwear that covers the whole foot and lower leg'
 			end
 
 			it "can look up a synset for a word and a substring of its definition" do
-				ss = @lexicon[ :boot, 'kick' ]
+				ss = lexicon[ :boot, 'kick' ]
 				ss.should be_a( WordNet::Synset )
 				ss.definition.should =~ /kick/i
 			end
 
 			it "can look up a synset for a word and a part of speech" do
-				ss = @lexicon[ :boot, :verb ]
+				ss = lexicon[ :boot, :verb ]
 				ss.should be_a( WordNet::Synset )
 				ss.definition.should =~ /cause to load/i
 			end
 
 			it "can look up a synset for a word and an abbreviated part of speech" do
-				ss = @lexicon[ :boot, :n ]
+				ss = lexicon[ :boot, :n ]
 				ss.should be_a( WordNet::Synset )
 				ss.definition.should =~ /act of delivering/i
 			end
+
+			it "can constrain fetched synsets with a Regexp match against its definition" do
+				sss = lexicon.lookup_synsets( :tree, /plant/ )
+				sss.should have( 2 ).members
+			end
+
+			it "can constrain fetched synsets via lexical domain" do
+				sss = lexicon.lookup_synsets( :tree, 'noun.shape' )
+				sss.should have( 1 ).member
+				sss.first.should == WordNet::Synset[ 113912260 ]
+			end
+
+			it "can constrain fetched synsets via part of speech as a single-letter Symbol" do
+				sss = lexicon.lookup_synsets( :tree, :n )
+				sss.should have( 3 ).members
+				sss.should include(
+					WordNet::Synset[ 113912260 ],
+					WordNet::Synset[ 111348160 ],
+					WordNet::Synset[ 113104059 ]
+				)
+			end
+
+			it "can constrain fetched synsets via part of speech as a Symbol word" do
+				sss = lexicon.lookup_synsets( :tree, :verb )
+				sss.should have( 4 ).members
+				sss.should include(
+					WordNet::Synset[ 200319111 ],
+					WordNet::Synset[ 201145163 ],
+					WordNet::Synset[ 201616293 ],
+					WordNet::Synset[ 201934205 ]
+				)
+			end
+
+			it "includes the database adapter name in its inspect output" do
+				lexicon.inspect.should include( "postgres" )
+			end
+
 		end
 	end
 
