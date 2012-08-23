@@ -11,31 +11,53 @@ require 'wordnet/model'
 # WordNet lexical database. A synonym set is a set of words that are
 # interchangeable in some context.
 #
-#   ss = WordNet::Synset[ 106286395 ]
-#   # => #<WordNet::Synset @values={:synsetid=>106286395, :pos=>"n",
-#       :lexdomainid=>10,
-#       :definition=>"a unit of language that native speakers can identify"}>
+# We can either fetch the synset from a connected Lexicon:
 #
-#   ss.words.map( &:lemma )
-#   # => ["word"]
+#    lexicon = WordNet::Lexicon.new( 'postgres://localhost/wordnet30' )
+#    ss = lexicon[ :first, 'time' ]
+#    # => #<WordNet::Synset:0x7ffbf2643bb0 {115265518} 'commencement, first,
+#    #       get-go, offset, outset, start, starting time, beginning, kickoff,
+#    #       showtime' (noun): [noun.time] the time at which something is
+#    #       supposed to begin>
 #
-#   ss.hypernyms
-#   # => [#<WordNet::Synset @values={:synsetid=>106284225, :pos=>"n",
-#       :lexdomainid=>10,
-#       :definition=>"one of the natural units into which [...]"}>]
+# or if you've already created a Lexicon, use its connection indirectly to
+# look up a Synset by its ID:
 #
-#   ss.hyponyms
-#   # => [#<WordNet::Synset @values={:synsetid=>106287620, :pos=>"n",
-#       :lexdomainid=>10,
-#       :definition=>"a word or phrase spelled by rearranging [...]"}>,
-#     #<WordNet::Synset @values={:synsetid=>106287859, :pos=>"n",
-#       :lexdomainid=>10,
-#       :definition=>"a word (such as a pronoun) used to avoid [...]"}>,
-#     #<WordNet::Synset @values={:synsetid=>106288024, :pos=>"n",
-#       :lexdomainid=>10,
-#       :definition=>"a word that expresses a meaning opposed [...]"}>,
-#     ...
-#    ]
+#    ss = WordNet::Synset[ 115265518 ]
+#    # => #<WordNet::Synset:0x7ffbf257e928 {115265518} 'commencement, first,
+#    #       get-go, offset, outset, start, starting time, beginning, kickoff,
+#    #       showtime' (noun): [noun.time] the time at which something is
+#    #       supposed to begin>
+#
+# You can fetch a list of the lemmas (base forms) of the words included in the
+# synset:
+#
+#    ss.words.map( &:lemma )
+#    # => ["commencement", "first", "get-go", "offset", "outset", "start",
+#    #     "starting time", "beginning", "kickoff", "showtime"]
+#
+# But the primary reason for a synset is its lexical and semantic links to
+# other words and synsets. For instance, its *hypernym* is the equivalent
+# of its superclass: it's the class of things of which the receiving
+# synset is a member.
+#
+#    ss.hypernyms
+#    # => [#<WordNet::Synset:0x7ffbf25c76c8 {115180528} 'point, point in
+#    #        time' (noun): [noun.time] an instant of time>]
+#
+# The synset's *hypernyms*, on the other hand, are kind of like its
+# subclasses:
+#
+#    ss.hyponyms
+#    # => [#<WordNet::Synset:0x7ffbf25d83b0 {115142167} 'birth' (noun):
+#    #       [noun.time] the time when something begins (especially life)>,
+#    #     #<WordNet::Synset:0x7ffbf25d8298 {115268993} 'threshold' (noun):
+#    #       [noun.time] the starting point for a new state or experience>,
+#    #     #<WordNet::Synset:0x7ffbf25d8180 {115143012} 'incipiency,
+#    #       incipience' (noun): [noun.time] beginning to exist or to be
+#    #       apparent>,
+#    #     #<WordNet::Synset:0x7ffbf25d8068 {115266164} 'starting point,
+#    #       terminus a quo' (noun): [noun.time] earliest limiting point>]
 #
 class WordNet::Synset < WordNet::Model( :synsets )
 	include WordNet::Constants

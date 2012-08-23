@@ -58,6 +58,10 @@ class WordNet::Word < WordNet::Model( :words )
 
 	set_primary_key :wordid
 
+	#
+	# Associations
+	#
+
 	##
 	# The WordNet::Sense objects that relate the word with its Synsets
 	one_to_many :senses,
@@ -78,6 +82,19 @@ class WordNet::Word < WordNet::Model( :words )
 		:left_key => :wordid,
 		:right_key => :morphid
 
+
+	#
+	# Dataset methods
+	#
+
+	##
+	# Return a dataset for words matching the given +lemma+.
+	def_dataset_method( :by_lemma ) {|lemma| filter( lemma: lemma ) }
+
+
+	#
+	# Other methods
+	#
 
 	### Return the stringified word; alias for #lemma.
 	def to_s

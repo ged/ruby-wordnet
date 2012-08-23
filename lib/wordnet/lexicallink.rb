@@ -10,11 +10,15 @@ class WordNet::LexicalLink < WordNet::Model( :lexlinks )
 
 	set_primary_key [:word1id, :synset1id, :word2id, :synset2id, :linkid]
 
+	##
+	# The WordNet::Sense the link is pointing *from*.
 	many_to_one :origin,
 		:class       => :"WordNet::Sense",
 		:key         => :synset1id,
 		:primary_key => :synsetid
 
+	##
+	# The WordNet::Synset the link is pointing *to*.
 	one_to_many :target,
 		:class       => :"WordNet::Synset",
 		:key         => :synsetid,
