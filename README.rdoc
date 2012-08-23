@@ -4,25 +4,64 @@
 
 == Description
 
-This library is a Ruby interface to WordNet®. WordNet® is an online
-lexical reference system whose design is inspired by current
-psycholinguistic theories of human lexical memory. English nouns, verbs,
-adjectives and adverbs are organized into synonym sets, each
+This library is a Ruby interface to WordNet®[http://wordnet.princeton.edu/].
+WordNet® is an online lexical reference system whose design is inspired
+by current psycholinguistic theories of human lexical memory. English
+nouns, verbs, adjectives and adverbs are organized into synonym sets, each
 representing one underlying lexical concept. Different relations link
 the synonym sets.
 
-It uses WordNet-SQL, which is a conversion of the lexicon flatfiles into
-a relational database format. You can either install the 'wordnet-
-defaultdb' gem, which packages up the SQLite3 version of WordNet-SQL, or
-install your own and point the lexicon at it by passing a Sequel URL to
-the constructor.
+This library uses WordNet-SQL[http://wnsql.sourceforge.net/], which is a
+conversion of the lexicon flatfiles into a relational database format. You
+can either install the 'wordnet-defaultdb' gem, which packages up the
+SQLite3 version of WordNet-SQL, or install your own and point the lexicon
+at it by passing 
+{Sequel connection parameters}[http://sequel.rubyforge.org/rdoc/files/doc/opening_databases_rdoc.html]
+to the constructor.
 
+=== Usage
+
+There are three major parts to this library:
+
+[WordNet::Lexicon]   the interface to the dictionary, used to connect to the
+                     database and look up Words and Synsets.
+[WordNet::Word]      the English word entries in the Lexicon that are mapped
+                     to Synsets via one or more Senses.
+[WordNet::Synset]    the main artifact of WordNet: a "synonym set". These
+                     are connected to one or more Words through a Sense,
+                     and are connected to each other via SemanticLinks.
+
+The other object classes exist mostly as a way of representing relationships
+between the main three:
+
+[WordNet::Sense]         represents a link between one or more Words and
+                         one or more Synsets for one meaning of the word.
+[WordNet::SemanticLink]  represents a link between Synsets
+[WordNet::LexicalLink]   represents a link between Words in Synsets
+[WordNet::Morph]         an interface to a lookup table of irregular word
+                         forms mapped to their base form (lemma)
+
+The last class (WordNet::Model) is the abstract superclass for all the others,
+and inherits most of its functionality from Sequel::Model, the ORM layer
+of the Sequel toolkit. It's mostly just a container for the database
+connection, with some convenience methods to allow the database connection
+to be deferred until runtime instead of when the library loads.
+
+The library also comes with the beginnings of support for the SUMO-WordNet
+mapping:
+
+[WordNet::SumoTerm]      {Suggested Upper Merged Ontology}[http://www.ontologyportal.org/]
+                         terms, with associations back to related Synsets.
+
+This is only supported by a subset of the WordNetSQL databases, and there
+is a fair amount of work left to be done before it's really functional. Drop
+me a note if you're interested in working on this.
 
 
 == Requirements
 
-* Ruby >= 1.9.2
-* Sequel >= 3.29.0
+* Ruby >= 1.9.3
+* Sequel >= 3.38.0
 
 
 == Authors

@@ -10,8 +10,115 @@ require 'wordnet/synset'
 require 'wordnet/word'
 
 
-# WordNet lexicon class - abstracts access to the WordNet lexical
-# database, and provides factory methods for looking up words and synsets.
+# WordNet lexicon class - provides access to the WordNet lexical
+# database, and provides factory methods for looking up words[rdoc-ref:WordNet::Word]
+# and synsets[rdoc-ref:WordNet::Synset].
+#
+# == Creating a Lexicon
+#
+# To create a Lexicon, either point it at a database using [Sequel database connection
+# criteria]{http://sequel.rubyforge.org/rdoc/files/doc/opening_databases_rdoc.html}:
+#
+#     lex = WordNet::Lexicon.new( 'postgres://localhost/wordnet30' )
+#     # => #<WordNet::Lexicon:0x7fd192a76668 postgres://localhost/wordnet30>
+#
+#     # Another way of doing the same thing:
+#     lex = WordNet::Lexicon.new( adapter: 'postgres', database: 'wordnet30', host: 'localhost' )
+#     # => #<WordNet::Lexicon:0x7fd192d374b0 postgres>
+#
+# Alternatively, if you have the 'wordnet-defaultdb' gem (which includes an
+# embedded copy of the SQLite WordNET-SQL database) installed, just call ::new
+# without any arguments:
+#
+#     lex = WordNet::Lexicon.new
+#     # => #<WordNet::Lexicon:0x7fdbfac1a358 sqlite:[...]/gems/wordnet-defaultdb-1.0.1
+#     #     /data/wordnet-defaultdb/wordnet30.sqlite>
+#
+# == Looking Up Synsets
+#
+# Once you have a Lexicon created, the main lookup method for Synsets is
+# #[], which will return the first of any Synsets that are found:
+#
+#    synset = lex[ :language ]
+#    # => #<WordNet::Synset:0x7fdbfaa987a0 {105650820} 'language, speech' (noun):
+#    #      [noun.cognition] the mental faculty or power of vocal communication>
+#
+# If you want to look up *all* matching Synsets, use the #lookup_synsets
+# method:
+#
+#    synsets = lex.lookup_synsets( :language )
+#    # => [#<WordNet::Synset:0x7fdbfaac46c0 {105650820} 'language, speech' (noun):
+#    #       [noun.cognition] the mental faculty or power of vocal
+#    #       communication>,
+#    #     #<WordNet::Synset:0x7fdbfaac45a8 {105808557} 'language, linguistic process'
+#    #       (noun): [noun.cognition] the cognitive processes involved
+#    #       in producing and understanding linguistic communication>,
+#    #     #<WordNet::Synset:0x7fdbfaac4490 {106282651} 'language, linguistic
+#    #       communication' (noun): [noun.communication] a systematic means of
+#    #       communicating by the use of sounds or conventional symbols>,
+#    #     #<WordNet::Synset:0x7fdbfaac4378 {106304059} 'language, nomenclature,
+#    #       terminology' (noun): [noun.communication] a system of words used to
+#    #       name things in a particular discipline>,
+#    #     #<WordNet::Synset:0x7fdbfaac4260 {107051975} 'language, lyric, words'
+#    #       (noun): [noun.communication] the text of a popular song or musical-comedy
+#    #       number>,
+#    #     #<WordNet::Synset:0x7fdbfaac4120 {107109196} 'language, oral communication,
+#    #       speech, speech communication, spoken communication, spoken language,
+#    #       voice communication' (noun): [noun.communication] (language)
+#    #       communication by word of mouth>]
+#
+# Sometime, the first Synset isn't necessarily what you want; you want to look up
+# a particular one. Both #[] and #lookup_synsets also provide several
+# ways of filtering or selecting synsets.
+#
+# The first is the ability to select one based on its offset:
+#
+#    lex[ :language, 2 ]
+#    # => #<WordNet::Synset:0x7ffa78e74d78 {105808557} 'language, linguistic
+#    #       process' (noun): [noun.cognition] the cognitive processes involved in
+#    #       producing and understanding linguistic communication>
+#
+# You can also select one with a particular word in its definition:
+#
+#    lex[ :language, 'sounds' ]
+#    # => #<WordNet::Synset:0x7ffa78ee01b8 {106282651} 'linguistic communication,
+#    #       language' (noun): [noun.communication] a systematic means of
+#    #       communicating by the use of sounds or conventional symbols>
+#
+# If you're using a database that supports using regular expressions (e.g.,
+# PostgreSQL), you can use that to select one with a matching definition:
+#
+#    lex[ :language, %r:name.*discipline: ]
+#    # => #<WordNet::Synset:0x7ffa78f235a8 {106304059} 'language, nomenclature,
+#    #       terminology' (noun): [noun.communication] a system of words used
+#    #       to name things in a particular discipline>
+#
+# You can also select certain parts of speech:
+#
+#    lex[ :right, :noun ]
+#    # => #<WordNet::Synset:0x7ffa78f30b68 {100351000} 'right' (noun):
+#    #       [noun.act] a turn toward the side of the body that is on the south
+#    #       when the person is facing east>
+#    lex[ :right, :verb ]
+#    # => #<WordNet::Synset:0x7ffa78f09590 {200199659} 'correct, right, rectify'
+#    #       (verb): [verb.change] make right or correct>
+#    lex[ :right, :adjective ]
+#    # => #<WordNet::Synset:0x7ffa78ea8060 {300631391} 'correct, right'
+#    #       (adjective): [adj.all] free from error; especially conforming to
+#    #       fact or truth>
+#    lex[ :right, :adverb ]
+#    # => #<WordNet::Synset:0x7ffa78e5b2d8 {400032299} 'powerful, mightily,
+#    #       mighty, right' (adverb): [adv.all] (Southern regional intensive)
+#    #       very; to a great degree>
+#
+# or by lexical domain, which is a more-specific part of speech (see
+# <tt>WordNet::Synset.lexdomains.keys</tt> for the list of valid ones):
+#
+#    lex.lookup_synsets( :right, 'verb.social' )
+#    # => [#<WordNet::Synset:0x7ffa78d817e0 {202519991} 'redress, compensate,
+#    #       correct, right' (verb): [verb.social] make reparations or amends
+#    #       for>]
+#
 class WordNet::Lexicon
 	extend Loggability
 	include WordNet::Constants
@@ -19,19 +126,9 @@ class WordNet::Lexicon
 	# Loggability API -- log to the WordNet module's logger
 	log_to :wordnet
 
-	# class LogTracer
-	# 	def method_missing( sym, msg, &block )
-	# 		if msg =~ /does not exist/
-	# 			$stderr.puts ">>> DOES NOT EXIST TRACE"
-	# 			$stderr.puts( caller(1).grep(/wordnet/i) )
-	# 		end
-	# 	end
-	# end
-
 
 	# Add the logger device to the default options after it's been loaded
 	WordNet::DEFAULT_DB_OPTIONS.merge!( :logger => [Loggability[WordNet]] )
-	# WordNet::DEFAULT_DB_OPTIONS.merge!( :logger => [LogTracer.new] )
 
 
 	### Get the Sequel URI of the default database, if it's installed.
@@ -73,35 +170,53 @@ class WordNet::Lexicon
 	### Create a new WordNet::Lexicon object that will use the database connection specified by
 	### the given +dbconfig+.
 	def initialize( *args )
-		uri = if args.empty?
-				WordNet::Lexicon.default_db_uri or
-					raise WordNet::LexiconError,
-						"No default WordNetSQL database! You can install it via the " +
-						"wordnet-defaultdb gem, or download a version yourself from " +
-						"http://sourceforge.net/projects/wnsql/"
+		if args.empty?
+			self.initialize_with_defaultdb( args.shift )
+		elsif args.first.is_a?( String )
+			self.initialize_with_uri( *args )
+		else
+			self.initialize_with_opthash( args.shift )
+		end
 
-			elsif args.first.is_a?( String )
-				args.shift
-			else
-				nil
-			end
+		@db.sql_log_level = :debug
+		WordNet::Model.db = @db
+	end
 
-		options = WordNet::DEFAULT_DB_OPTIONS.merge( args.shift || {} )
+
+	### Connect to the WordNet DB using an optional options hash.
+	def initialize_with_defaultdb( options )
+		uri = WordNet::Lexicon.default_db_uri or raise WordNet::LexiconError,
+			"No default WordNetSQL database! You can install it via the " +
+			"wordnet-defaultdb gem, or download a version yourself from " +
+			"http://sourceforge.net/projects/wnsql/"
+		@db = self.connect( uri, options )
+	end
+
+
+	### Connect to the WordNet DB using a URI and an optional options hash.
+	def initialize_with_uri( uri, options )
+		@db = self.connect( uri, options )
+	end
+
+
+	### Connect to the WordNet DB using a connection options hash.
+	def initialize_with_opthash( options )
+		@db = self.connect( nil, options )
+	end
+
+
+	### Connect to the WordNet DB and return a Sequel::Database object.
+	def connect( uri, options )
+		options = WordNet::DEFAULT_DB_OPTIONS.merge( options || {} )
 
 		if uri
 			self.log.debug "Connecting using uri + options style: uri = %s, options = %p" %
 				[ uri, options ]
-			@db = Sequel.connect( uri, options )
+			return Sequel.connect( uri, options )
 		else
 			self.log.debug "Connecting using hash style connect: options = %p" % [ options ]
-			@db = Sequel.connect( options )
+			return Sequel.connect( options )
 		end
-
-		@uri = @db.uri
-		self.log.debug "  setting model db to: %s" % [ @uri ]
-
-		@db.sql_log_level = :debug
-		WordNet::Model.db = @db
 	end
 
 
