@@ -144,9 +144,23 @@ class WordNet::Synset < WordNet::Model( :synsets )
 	#
 	# :section: Dataset Methods
 	# This is a set of methods that return a Sequel::Dataset for Synsets pre-filtered
-	# by a certain criteria. They can be used to do stuff like:
+	# by a certain criteria. They can be used to do low-level queries against the
+	# WordNetSQL database; stuff like:
 	#
-	#   lexicon[ :language ].synsets_dataset.nouns
+	#   lexicon = WordNet::Lexicon.new # connect to the DB
+	#   WordNet::Synset.nouns.filter { :definition.like('%vocal%') }.limit( 5 ).all
+	#   # => [#<WordNet::Synset:0x7fdf04e33f88 {100545344} 'vocal music' (noun): [noun.act] music
+	#   #        that is vocalized (as contrasted with instrumental music)>,
+	#   #     #<WordNet::Synset:0x7fdf04e33e70 {100545501} 'singing, vocalizing' (noun): [noun.act]
+	#   #        the act of singing vocal music>,
+	#   #     #<WordNet::Synset:0x7fdf04e33d58 {101525720} 'oscine, oscine bird' (noun):
+	#   #        [noun.animal] passerine bird having specialized vocal apparatus>,
+	#   #     #<WordNet::Synset:0x7fdf04e33c18 {101547143} 'clamatores, suborder clamatores'
+	#   #        (noun): [noun.animal] used in some classification systems; a suborder or
+	#   #        superfamily nearly coextensive with suborder Tyranni; Passeriformes having
+	#   #        relatively simple vocal organs and little power of song; clamatorial birds>,
+	#   #     #<WordNet::Synset:0x7fdf04e33ab0 {102511633} 'syrinx' (noun): [noun.animal] the vocal
+	#   #        organ of a bird>]
 	#
 
 	##
@@ -438,6 +452,28 @@ class WordNet::Synset < WordNet::Model( :synsets )
 
 	#
 	# :section: Traversal Methods
+	# These are methods for doing recursive iteration over a particular lexical
+	# link. For example, if you're interested in not only the hypernyms of the
+	# receiving synset, but its hypernyms' hypernyms as well, and so on up the
+	# tree, you can make a traversal enumerator for it:
+	#
+	#   ss = $lex[:fencing]
+	#   # => #<WordNet::Synset:0x7fb582c24400 {101171644} 'fencing' (noun): [noun.act] the art or 
+	#      sport of fighting with swords (especially the use of foils or epees or sabres to score
+	#      points under a set of rules)>
+	#
+	#   e = ss.traverse( :hypernyms )
+	#   # => #<Enumerator: ...>
+	#
+	#   e.to_a
+	#   # => [#<WordNet::Synset:0x7fb582cd2848 {100041468} 'play, swordplay' (noun): [noun.act] the
+	#           act using a sword (or other weapon) vigorously and skillfully>,
+	#         #<WordNet::Synset:0x7fb582ccf738 {100037396} 'action' (noun): [noun.act] something
+	#           done (usually as opposed to something said)>,
+	#         ... ]
+	#
+	#   e.with_index.each {|ss,i| puts "%02d: %s" % [i, ss] }
+	#   # etc.
 	#
 
 	### Union: Return the least general synset that the receiver and
@@ -469,8 +505,21 @@ class WordNet::Synset < WordNet::Model( :synsets )
 	### If no block is given, return an Enumerator that will do the same thing instead.
 	###
 	###   # Print all the parts of a boot
-	###   puts lexicon[:boot].traverse( :member_meronyms ).all
+	###   puts lexicon[:boot].traverse( :member_meronyms ).to_a
 	###
+	### You can also traverse with an addiitional argument that indicates the depth of
+	### recursion by calling #with_depth on the Enumerator:
+	###
+	###   $lex[:fencing].traverse( :hypernyms ).with_depth.each {|ss,d| puts "%02d: %s" % [d,ss] }
+	###   # (outputs:)
+	###
+	###   01: play, swordplay (noun): [noun.act] the act using a sword (or other weapon) vigorously
+	###     and skillfully (hypernym: 1, hyponym: 1)
+	###   02: action (noun): [noun.act] something done (usually as opposed to something said)
+	###     (hypernym: 1, hyponym: 33)
+	###   03: act, deed, human action, human activity (noun): [noun.tops] something that people do
+	###     or cause to happen (hypernym: 1, hyponym: 40)
+	###   ...
 	###
 	def traverse( type, &block )
 		enum = Enumerator.new do |yielder|
@@ -486,13 +535,29 @@ class WordNet::Synset < WordNet::Model( :synsets )
 					begin
 						self.log.debug "  %d traversal/s left" % [ traversals.length ]
 						syn = traversals.last.next
-						yielder.yield( syn )
+
+						if enum.with_depth?
+							yielder.yield( syn, traversals.length )
+						else
+							yielder.yield( syn )
+						end
+
 						traversals << syn.semanticlink_enum( type ) if recurses
 					rescue StopIteration
 						traversals.pop
 					end
 				end
 			end
+		end
+
+		def enum.with_depth?
+			@with_depth = false if !defined?( @with_depth )
+			return @with_depth
+		end
+
+		def enum.with_depth
+			@with_depth = true
+			self
 		end
 
 		return enum.each( &block ) if block
@@ -504,10 +569,14 @@ class WordNet::Synset < WordNet::Model( :synsets )
 	### the receiver, returning the depth it was found at if it's found, or nil if it
 	### wasn't found.
 	def search( type, synset )
-		found, depth = self.traverse( type ).find {|ss,depth| synset == ss }
+		found, depth = self.traverse( type ).with_depth.find {|ss,depth| synset == ss }
 		return depth
 	end
 
+
+	#
+	# :section:
+	#
 
 	### Return a human-readable representation of the objects, suitable for debugging.
 	def inspect
