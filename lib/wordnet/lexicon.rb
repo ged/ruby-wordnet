@@ -194,7 +194,7 @@ class WordNet::Lexicon
 
 
 	### Connect to the WordNet DB using a URI and an optional options hash.
-	def initialize_with_uri( uri, options )
+	def initialize_with_uri( uri, options={} )
 		@db = self.connect( uri, options )
 	end
 
