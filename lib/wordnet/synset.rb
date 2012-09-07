@@ -59,6 +59,99 @@ require 'wordnet/model'
 #    #     #<WordNet::Synset:0x7ffbf25d8068 {115266164} 'starting point,
 #    #       terminus a quo' (noun): [noun.time] earliest limiting point>]
 #
+# == Traversal
+#
+# Synset also provides a few 'traversal' methods which provide recursive searching
+# of a Synset's semantic links:
+#
+#    # Recursively search for more-general terms for the synset, and print out
+#    # each one with indentation according to how distantly it's related.
+#    lexicon[ :fencing, 'sword' ].
+#        traverse(:hypernyms).with_depth.
+#        each {|ss, depth| puts "%s%s [%d]" % ['  ' * (depth-1), ss.words.first, ss.synsetid] }
+#    # (outputs:)
+#    play [100041468]
+#      action [100037396]
+#        act [100030358]
+#          event [100029378]
+#            psychological feature [100023100]
+#              abstract entity [100002137]
+#                entity [100001740]
+#    combat [101170962]
+#      battle [100958896]
+#        group action [101080366]
+#          event [100029378]
+#            psychological feature [100023100]
+#              abstract entity [100002137]
+#                entity [100001740]
+#          act [100030358]
+#            event [100029378]
+#              psychological feature [100023100]
+#                abstract entity [100002137]
+#                  entity [100001740]
+#
+# See the <b>Traversal Methods</b> section for more details.
+#
+# == Low-Level API
+#
+# This library is implemented using Sequel::Model, an ORM layer on top of the
+# excellent Sequel database toolkit. This means that in addition to the
+# high-level methods above, you can also make use of a database-oriented
+# API if you need to do something not provided by a high-level method.
+#
+# In order to make use of this API, you'll need to be familiar with
+# {Sequel}[http://sequel.rubyforge.org/], especially
+# {Datasets}[http://sequel.rubyforge.org/rdoc/files/doc/dataset_basics_rdoc.html] and 
+# {Model Associations}[http://sequel.rubyforge.org/rdoc/files/doc/association_basics_rdoc.html].
+# Most of Ruby-WordNet's functionality is implemented in terms of one or both
+# of these.
+#
+# === Datasets
+#
+# The main dataset is available from WordNet::Synset.dataset:
+#
+#   WordNet::Synset.dataset
+#   # => #<Sequel::SQLite::Dataset: "SELECT * FROM `synsets`">
+#
+# In addition to this, Synset also defines a few other canned datasets. To facilitate
+# searching by part of speech on the Synset class:
+#
+# * WordNet::Synset.nouns
+# * WordNet::Synset.verbs
+# * WordNet::Synset.adjectives
+# * WordNet::Synset.adverbs
+# * WordNet::Synset.adjective_satellites
+#
+# or by the semantic links for a particular Synset:
+#
+# * WordNet::Synset#also_see_dataset
+# * WordNet::Synset#attributes_dataset
+# * WordNet::Synset#causes_dataset
+# * WordNet::Synset#domain_categories_dataset
+# * WordNet::Synset#domain_member_categories_dataset
+# * WordNet::Synset#domain_member_regions_dataset
+# * WordNet::Synset#domain_member_usages_dataset
+# * WordNet::Synset#domain_regions_dataset
+# * WordNet::Synset#domain_usages_dataset
+# * WordNet::Synset#entailments_dataset
+# * WordNet::Synset#hypernyms_dataset
+# * WordNet::Synset#hyponyms_dataset
+# * WordNet::Synset#instance_hypernyms_dataset
+# * WordNet::Synset#instance_hyponyms_dataset
+# * WordNet::Synset#member_holonyms_dataset
+# * WordNet::Synset#member_meronyms_dataset
+# * WordNet::Synset#part_holonyms_dataset
+# * WordNet::Synset#part_meronyms_dataset
+# * WordNet::Synset#semlinks_dataset
+# * WordNet::Synset#semlinks_to_dataset
+# * WordNet::Synset#senses_dataset
+# * WordNet::Synset#similar_words_dataset
+# * WordNet::Synset#substance_holonyms_dataset
+# * WordNet::Synset#substance_meronyms_dataset
+# * WordNet::Synset#sumo_terms_dataset
+# * WordNet::Synset#verb_groups_dataset
+# * WordNet::Synset#words_dataset
+#
 class WordNet::Synset < WordNet::Model( :synsets )
 	include WordNet::Constants
 
