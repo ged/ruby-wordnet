@@ -24,7 +24,7 @@ require 'wordnet'
 describe WordNet::Lexicon do
 
 	before( :all ) do
-		setup_logging( :fatal )
+		setup_logging()
 		@devdb = Pathname( 'wordnet-defaultdb/data/wordnet-defaultdb/wordnet30.sqlite' ).
 			expand_path
 	end
@@ -125,7 +125,7 @@ describe WordNet::Lexicon do
 
 	context "with a PostgreSQL database", :requires_pg do
 
-		let( :lexicon ) { WordNet::Lexicon.new(adapter: 'postgres', host: 'localhost', database: 'wordnet30') }
+		let( :lexicon ) { WordNet::Lexicon.new('postgres:/wordnet30') }
 
 		context "via its index operator" do
 
