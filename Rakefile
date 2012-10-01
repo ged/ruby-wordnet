@@ -51,7 +51,7 @@ hoespec = Hoe.spec( 'wordnet' ) do
 	self.hg_sign_tags = true if self.respond_to?( :hg_sign_tags )
 	self.check_history_on_release = true if self.respond_to?( :check_history_on_release= )
 
-	self.rdoc_locations << "deveiate:/usr/local/www/public/code/#{remote_rdoc_dir}"
+	self.rdoc_locations << "deveiate:/usr/local/www/public/code/ruby-#{remote_rdoc_dir}"
 end
 
 ENV['VERSION'] ||= hoespec.spec.version.to_s

@@ -16,8 +16,8 @@ require 'wordnet/word'
 #
 # == Creating a Lexicon
 #
-# To create a Lexicon, point it at a database using [Sequel database connection
-# criteria]{http://sequel.rubyforge.org/rdoc/files/doc/opening_databases_rdoc.html}:
+# To create a Lexicon, point it at a database using {Sequel database connection
+# criteria}[http://sequel.rubyforge.org/rdoc/files/doc/opening_databases_rdoc.html]:
 #
 #     lex = WordNet::Lexicon.new( 'postgres://localhost/wordnet30' )
 #     # => #<WordNet::Lexicon:0x7fd192a76668 postgres://localhost/wordnet30>
@@ -88,7 +88,7 @@ require 'wordnet/word'
 # If you're using a database that supports using regular expressions (e.g.,
 # PostgreSQL), you can use that to select one with a matching definition:
 #
-#    lex[ :language, %r:name.*discipline: ]
+#    lex[ :language, /name.*discipline/ ]
 #    # => #<WordNet::Synset:0x7ffa78f235a8 {106304059} 'language, nomenclature,
 #    #       terminology' (noun): [noun.communication] a system of words used
 #    #       to name things in a particular discipline>
