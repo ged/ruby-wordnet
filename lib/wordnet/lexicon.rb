@@ -316,7 +316,7 @@ class WordNet::Lexicon
 				else
 					pattern = "%%%s%%" % [ arg ]
 					self.log.debug "  filter: definition LIKE %p" % [ pattern ]
-					dataset = dataset.filter { :definition.like(pattern) }
+					dataset = dataset.filter { Sequel.like(:definition, pattern) }
 				end
 			end
 		end
