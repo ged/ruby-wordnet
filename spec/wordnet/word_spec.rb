@@ -1,17 +1,8 @@
 #!/usr/bin/env ruby
 
-BEGIN {
-	require 'pathname'
-
-	basedir = Pathname.new( __FILE__ ).dirname.parent.parent
-	libdir = basedir + 'lib'
-
-	$LOAD_PATH.unshift( basedir.to_s ) unless $LOAD_PATH.include?( basedir.to_s )
-	$LOAD_PATH.unshift( libdir.to_s ) unless $LOAD_PATH.include?( libdir.to_s )
-}
+require_relative '../helpers'
 
 require 'rspec'
-require 'spec/lib/helpers'
 require 'wordnet'
 require 'wordnet/word'
 
@@ -21,16 +12,6 @@ require 'wordnet/word'
 #####################################################################
 
 describe WordNet::Word, :requires_database => true do
-	include WordNet::SpecHelpers
-
-	before( :all ) do
-		setup_logging( :fatal )
-	end
-
-	after( :all ) do
-		reset_logging()
-	end
-
 
 	let( :lexicon ) { WordNet::Lexicon.new }
 
@@ -41,24 +22,24 @@ describe WordNet::Word, :requires_database => true do
 
 		it "knows what senses it has" do
 			senses = word.senses
-			senses.should be_an( Array )
-			senses.should have( 57 ).members
-			senses.first.should be_a( WordNet::Sense )
+			expect( senses ).to be_an( Array )
+			expect( senses.count ).to eq( 57 )
+			expect( senses.first ).to be_a( WordNet::Sense )
 		end
 
 		it "knows what synsets it has" do
 			synsets = word.synsets
 
 			# Should have one synset per sense
-			synsets.should have( word.senses.length ).members
-			synsets.first.senses.should include( word.senses.first )
+			expect( synsets.size ).to eq( word.senses.size )
+			expect( synsets.first.senses ).to include( word.senses.first )
 		end
 
 		it "has a dataset for selecting noun synsets" do
-			word.nouns.should be_a( Sequel::Dataset )
-			word.nouns.should have( 16 ).members
+			expect( word.nouns ).to be_a( Sequel::Dataset )
+			expect( word.nouns.count ).to eq( 16 )
 			ss = word.nouns.all
-			ss.should include(
+			expect( ss ).to include(
 				lexicon[ :run, 'sequence' ],
 				lexicon[ :run, 'baseball' ],
 				lexicon[ :run, 'act of running' ],
@@ -67,10 +48,10 @@ describe WordNet::Word, :requires_database => true do
 		end
 
 		it "has a dataset for selecting verb synsets" do
-			word.verbs.should be_a( Sequel::Dataset )
-			word.verbs.should have( 41 ).members
+			expect( word.verbs ).to be_a( Sequel::Dataset )
+			expect( word.verbs.count ).to eq( 41 )
 			ss = word.verbs.all
-			ss.should include(
+			expect( ss ).to include(
 				lexicon[ :run, 'compete' ],
 				lexicon[ :run, 'be diffused' ],
 				lexicon[ :run, 'liquid' ],
@@ -86,10 +67,10 @@ describe WordNet::Word, :requires_database => true do
 		let( :word ) { lexicon[77458] }
 
 		it "has a dataset for selecting adjective synsets" do
-			word.adjectives.should be_a( Sequel::Dataset )
-			word.adjectives.should have( 8 ).members
+			expect( word.adjectives ).to be_a( Sequel::Dataset )
+			expect( word.adjectives.count ).to eq( 8 )
 			ss = word.adjectives.all
-			ss.should include(
+			expect( ss ).to include(
 				lexicon[ :light, 'weight' ],
 				lexicon[ :light, 'emit', :adjective ],
 				lexicon[ :light, 'color' ]
@@ -97,10 +78,10 @@ describe WordNet::Word, :requires_database => true do
 		end
 
 		it "has a dataset for selecting adjective-satellite synsets" do
-			word.adjective_satellites.should be_a( Sequel::Dataset )
-			word.adjective_satellites.should have( 17 ).members
+			expect( word.adjective_satellites ).to be_a( Sequel::Dataset )
+			expect( word.adjective_satellites.count ).to eq( 17 )
 			ss = word.adjective_satellites.all
-			ss.should include(
+			expect( ss ).to include(
 				lexicon[ :light, 'soil' ],
 				lexicon[ :light, 'calories' ],
 				lexicon[ :light, 'entertainment' ]
@@ -115,10 +96,10 @@ describe WordNet::Word, :requires_database => true do
 		let( :word ) { lexicon[77549] }
 
 		it "has a dataset for selecting adverb synsets" do
-			word.adverbs.should be_a( Sequel::Dataset )
-			word.adverbs.should have( 7 ).members
+			expect( word.adverbs ).to be_a( Sequel::Dataset )
+			expect( word.adverbs.count ).to eq( 7 )
 			ss = word.adverbs.all
-			ss.should include(
+			expect( ss ).to include(
 				lexicon[ :lightly, 'indifference' ],
 				lexicon[ :lightly, 'indulging' ],
 				lexicon[ :lightly, 'little weight' ],

@@ -25,6 +25,7 @@ hoespec = Hoe.spec( 'wordnet' ) do
 	self.history_file = 'History.rdoc'
 	self.extra_rdoc_files = FileList[ '*.rdoc' ]
 	self.spec_extras[:rdoc_options] = ['-f', 'fivefish', '-t', 'Ruby WordNet']
+	self.license 'BSD'
 
 	self.developer 'Michael Granger', 'ged@FaerieMUD.org'
 
@@ -34,7 +35,6 @@ hoespec = Hoe.spec( 'wordnet' ) do
 	self.dependency 'rspec',       '~> 2.7', :developer
 	self.dependency 'simplecov',   '~> 0.6', :developer
 
-	self.spec_extras[:licenses] = ["BSD"]
 	self.spec_extras[:post_install_message] = %{
 	If you don't already have a WordNet database installed somewhere,
 	you'll need to either download and install one from:
@@ -46,7 +46,7 @@ hoespec = Hoe.spec( 'wordnet' ) do
 
 	}.gsub( /^\t/, '' )
 
-	self.require_ruby_version( '>=1.9.2' )
+	self.require_ruby_version( '>=2.0.0' )
 
 	self.hg_sign_tags = true if self.respond_to?( :hg_sign_tags )
 	self.check_history_on_release = true if self.respond_to?( :check_history_on_release= )
