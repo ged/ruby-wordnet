@@ -1,4 +1,5 @@
-#!/usr/bin/ruby
+# -*- ruby -*-
+#encoding: utf-8
 # coding: utf-8
 
 # SimpleCov test coverage reporting; enable this using the :coverage rake task

@@ -1,3 +1,4 @@
+.simplecov
 ChangeLog
 History.rdoc
 LICENSE
@@ -6,17 +7,8 @@ README.rdoc
 Rakefile
 TODO
 WordNet30-license.txt
-examples/add-laced-boots.rb
-examples/clothes-with-collars.rb
-examples/clothesWithTongues.rb
-examples/distance.rb
-examples/domainTree.rb
 examples/gcs.rb
-examples/holonymTree.rb
-examples/hypernymTree.rb
-examples/hyponymTree.rb
-examples/memberTree.rb
-examples/meronymTree.rb
+examples/hypernym_tree.rb
 lib/wordnet.rb
 lib/wordnet/constants.rb
 lib/wordnet/lexicallink.rb
@@ -28,8 +20,7 @@ lib/wordnet/sense.rb
 lib/wordnet/sumoterm.rb
 lib/wordnet/synset.rb
 lib/wordnet/word.rb
-spec/lib/helpers.rb
-spec/linguawordnet.tests.rb
+spec/helpers.rb
 spec/wordnet/lexicon_spec.rb
 spec/wordnet/model_spec.rb
 spec/wordnet/semanticlink_spec.rb

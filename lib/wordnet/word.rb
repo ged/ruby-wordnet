@@ -1,4 +1,5 @@
-#!/usr/bin/ruby
+# -*- ruby -*-
+#encoding: utf-8
 
 require 'wordnet' unless defined?( WordNet )
 require 'wordnet/model'
@@ -17,43 +18,43 @@ class WordNet::Word < WordNet::Model( :words )
 	#     "unq_words_lemma" UNIQUE, btree (lemma)
 	# Referenced by:
 	#     TABLE "adjpositions" CONSTRAINT "fk_adjpositions_wordid"
-	# 		FOREIGN KEY (wordid) REFERENCES words(wordid)
+	#        FOREIGN KEY (wordid) REFERENCES words(wordid)
 	#     TABLE "bncconvtasks" CONSTRAINT "fk_bncconvtasks_wordid"
-	# 		FOREIGN KEY (wordid) REFERENCES words(wordid)
+	#        FOREIGN KEY (wordid) REFERENCES words(wordid)
 	#     TABLE "bncimaginfs" CONSTRAINT "fk_bncimaginfs_wordid"
-	# 		FOREIGN KEY (wordid) REFERENCES words(wordid)
+	#        FOREIGN KEY (wordid) REFERENCES words(wordid)
 	#     TABLE "bncs" CONSTRAINT "fk_bncs_wordid"
-	# 		FOREIGN KEY (wordid) REFERENCES words(wordid)
+	#        FOREIGN KEY (wordid) REFERENCES words(wordid)
 	#     TABLE "bncspwrs" CONSTRAINT "fk_bncspwrs_wordid"
-	# 		FOREIGN KEY (wordid) REFERENCES words(wordid)
+	#        FOREIGN KEY (wordid) REFERENCES words(wordid)
 	#     TABLE "casedwords" CONSTRAINT "fk_casedwords_wordid"
-	# 		FOREIGN KEY (wordid) REFERENCES words(wordid)
+	#        FOREIGN KEY (wordid) REFERENCES words(wordid)
 	#     TABLE "lexlinks" CONSTRAINT "fk_lexlinks_word1id"
-	# 		FOREIGN KEY (word1id) REFERENCES words(wordid)
+	#        FOREIGN KEY (word1id) REFERENCES words(wordid)
 	#     TABLE "lexlinks" CONSTRAINT "fk_lexlinks_word2id"
-	# 		FOREIGN KEY (word2id) REFERENCES words(wordid)
+	#        FOREIGN KEY (word2id) REFERENCES words(wordid)
 	#     TABLE "morphmaps" CONSTRAINT "fk_morphmaps_wordid"
-	# 		FOREIGN KEY (wordid) REFERENCES words(wordid)
+	#        FOREIGN KEY (wordid) REFERENCES words(wordid)
 	#     TABLE "sensemaps2021" CONSTRAINT "fk_sensemaps2021_wordid"
-	# 		FOREIGN KEY (wordid) REFERENCES words(wordid)
+	#        FOREIGN KEY (wordid) REFERENCES words(wordid)
 	#     TABLE "sensemaps2130" CONSTRAINT "fk_sensemaps2130_wordid"
-	# 		FOREIGN KEY (wordid) REFERENCES words(wordid)
+	#        FOREIGN KEY (wordid) REFERENCES words(wordid)
 	#     TABLE "senses20" CONSTRAINT "fk_senses20_wordid"
-	# 		FOREIGN KEY (wordid) REFERENCES words(wordid)
+	#        FOREIGN KEY (wordid) REFERENCES words(wordid)
 	#     TABLE "senses21" CONSTRAINT "fk_senses21_wordid"
-	# 		FOREIGN KEY (wordid) REFERENCES words(wordid)
+	#        FOREIGN KEY (wordid) REFERENCES words(wordid)
 	#     TABLE "senses" CONSTRAINT "fk_senses_wordid"
-	# 		FOREIGN KEY (wordid) REFERENCES words(wordid)
+	#        FOREIGN KEY (wordid) REFERENCES words(wordid)
 	#     TABLE "vframemaps" CONSTRAINT "fk_vframemaps_wordid"
-	# 		FOREIGN KEY (wordid) REFERENCES words(wordid)
+	#        FOREIGN KEY (wordid) REFERENCES words(wordid)
 	#     TABLE "vframesentencemaps" CONSTRAINT "fk_vframesentencemaps_wordid"
-	# 		FOREIGN KEY (wordid) REFERENCES words(wordid)
+	#        FOREIGN KEY (wordid) REFERENCES words(wordid)
 	#     TABLE "vnclassmembers" CONSTRAINT "fk_vnclassmembers_wordid"
-	# 		FOREIGN KEY (wordid) REFERENCES words(wordid)
+	#        FOREIGN KEY (wordid) REFERENCES words(wordid)
 	#     TABLE "vnframemaps" CONSTRAINT "fk_vnframemaps_wordid"
-	# 		FOREIGN KEY (wordid) REFERENCES words(wordid)
+	#        FOREIGN KEY (wordid) REFERENCES words(wordid)
 	#     TABLE "vnrolemaps" CONSTRAINT "fk_vnrolemaps_wordid"
-	# 		FOREIGN KEY (wordid) REFERENCES words(wordid)
+	#        FOREIGN KEY (wordid) REFERENCES words(wordid)
 
 
 	set_primary_key :wordid
