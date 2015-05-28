@@ -1,4 +1,5 @@
-#!/usr/bin/ruby
+# -*- ruby -*-
+#encoding: utf-8
 
 require 'pathname'
 require 'loggability'

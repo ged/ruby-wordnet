@@ -1,5 +1,4 @@
-#!/usr/bin/env ruby
-
+#!/usr/bin/env rspec
 require_relative '../helpers'
 
 require 'rspec'

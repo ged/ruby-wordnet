@@ -1,4 +1,5 @@
-#!/usr/bin/ruby
+# -*- ruby -*-
+#encoding: utf-8
 
 require 'wordnet' unless defined?( WordNet )
 require 'wordnet/constants'
@@ -45,7 +46,7 @@ require 'wordnet/model'
 #    # => [#<WordNet::Synset:0x7ffbf25c76c8 {115180528} 'point, point in
 #    #        time' (noun): [noun.time] an instant of time>]
 #
-# The synset's *hypernyms*, on the other hand, are kind of like its
+# The synset's *hyponyms*, on the other hand, are kind of like its
 # subclasses:
 #
 #    ss.hyponyms
@@ -101,7 +102,7 @@ require 'wordnet/model'
 #
 # In order to make use of this API, you'll need to be familiar with
 # {Sequel}[http://sequel.rubyforge.org/], especially
-# {Datasets}[http://sequel.rubyforge.org/rdoc/files/doc/dataset_basics_rdoc.html] and 
+# {Datasets}[http://sequel.rubyforge.org/rdoc/files/doc/dataset_basics_rdoc.html] and
 # {Model Associations}[http://sequel.rubyforge.org/rdoc/files/doc/association_basics_rdoc.html].
 # Most of Ruby-WordNet's functionality is implemented in terms of one or both
 # of these.
@@ -551,7 +552,7 @@ class WordNet::Synset < WordNet::Model( :synsets )
 	# tree, you can make a traversal enumerator for it:
 	#
 	#   ss = $lex[:fencing]
-	#   # => #<WordNet::Synset:0x7fb582c24400 {101171644} 'fencing' (noun): [noun.act] the art or 
+	#   # => #<WordNet::Synset:0x7fb582c24400 {101171644} 'fencing' (noun): [noun.act] the art or
 	#      sport of fighting with swords (especially the use of foils or epees or sabres to score
 	#      points under a set of rules)>
 	#
@@ -671,13 +672,19 @@ class WordNet::Synset < WordNet::Model( :synsets )
 	# :section:
 	#
 
+	### Return the Synset's Words as an Array of Strings.
+	def wordlist
+		return self.words.map( &:to_s )
+	end
+
+
 	### Return a human-readable representation of the objects, suitable for debugging.
 	def inspect
 		return "#<%p:%0#x {%d} '%s' (%s): [%s] %s>" % [
 			self.class,
 			self.object_id * 2,
 			self.synsetid,
-			self.words.map(&:to_s).join(', '),
+			self.wordlist.join(', '),
 			self.part_of_speech,
 			self.lexical_domain,
 			self.definition,

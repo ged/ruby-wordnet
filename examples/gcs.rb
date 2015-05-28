@@ -1,54 +1,44 @@
-#!/usr/bin/ruby -w
+#!/usr/bin/env ruby
+#encoding: utf-8
+
 #
 #	Find least general hypernymial synsets between all noun senses of two words.
 #
 
 $LOAD_PATH.unshift "lib"
-require "wordnet"
+
+require 'wordnet'
+require 'loggability'
 
 raise RuntimeError, "You must specify two words." if ARGV.length != 2
 
-# Create the lexicon
 lex = WordNet::Lexicon.new
 
-# Look up the synsets for the specified word
-word1Syns = lex.lookup_synsets( ARGV[0], WordNet::Noun )
-word2Syns = lex.lookup_synsets( ARGV[1], WordNet::Noun )
+word1_syns = lex.lookup_synsets( ARGV[0], :noun )
+word2_syns = lex.lookup_synsets( ARGV[1], :noun )
 
-def debugMsg( message )
-	return unless $DEBUG
-	$stderr.puts message
-end
+logger = Loggability[ WordNet ]
 
 # Use the analyzer to traverse hypernyms of the synset, adding a string for each
 # one with indentation for the level
-word1Syns.each {|syn|
-	debugMsg( ">>> Searching with #{syn.wordlist} as the origin." )
+word1_syns.each do |syn|
+	logger.debug ">>> Searching with #{syn.wordlist.join(', ')} as the origin."
 
-	word2Syns.each {|secondSyn|
-		debugMsg( "  Comparing #{secondSyn.wordlist} to the origin." )
+	word2_syns.each do |syn2|
+		logger.debug "  Comparing #{syn2.wordlist.join(', ')} to the origin."
 
-		# The intersection of the two syns is the most-specific hypernym they
+		# The intersection of the two synsets is the most-specific hypernym they
 		# share in common.
-		commonSyn = (syn | secondSyn)
+		common_syn = (syn | syn2)
 
-		if commonSyn
-			puts <<-"EOF".gsub( /^\t{3}/, '' )
-			----
-			  #{syn.words.join(', ')}
-			  #{syn.gloss}
-			and
-			  #{secondSyn.words.join(', ')}
-			  #{secondSyn.gloss}
-			are both instances of
-			  #{commonSyn.words.join(', ')}
-			  #{commonSyn.gloss}.
-			----
-			EOF
+		# Skip common synsets that are too abstract
+		if common_syn && common_syn.lexical_domain != 'noun.tops'
+			puts syn, syn2, '  ' + common_syn.to_s, ''
 		else
-			debugMsg( "    No synsets in common." )
+			logger.debug "    No synsets in common."
 		end
-	}
+	end
 
-	debugMsg( "  done with #{syn.wordlist}" )
-}
+	logger.debug "  done with #{syn.wordlist}"
+end
+
