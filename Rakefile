@@ -29,7 +29,7 @@ hoespec = Hoe.spec( 'wordnet' ) do
 
 	self.developer 'Michael Granger', 'ged@FaerieMUD.org'
 
-	self.dependency 'sequel',      '~> 3.38'
+	self.dependency 'sequel',      '~> 4'
 	self.dependency 'loggability', '~> 0.5'
 	self.dependency 'sqlite3',     '~> 1.3', :developer
 	self.dependency 'rspec',       '~> 2.7', :developer
