@@ -1,7 +1,0 @@
-hoe-deveiate -v0.1.1
-sequel -v3.48.0
-sqlite3 -v1.3.10
-loggability -v0.11.0
-simplecov -v0.9.1
-
-hoe -v3.13.1

@@ -10,6 +10,8 @@ rescue LoadError => err
 	abort "This Rakefile requires hoe (gem install hoe)"
 end
 
+GEMSPEC = 'wordnet.gemspec'
+
 Hoe.plugin :mercurial
 Hoe.plugin :signing
 
@@ -20,20 +22,19 @@ LIBDIR = BASEDIR + 'lib'
 DATADIR = BASEDIR + 'data'
 
 hoespec = Hoe.spec( 'wordnet' ) do
-	self.name = 'wordnet'
 	self.readme_file = 'README.rdoc'
 	self.history_file = 'History.rdoc'
 	self.extra_rdoc_files = FileList[ '*.rdoc' ]
-	self.spec_extras[:rdoc_options] = ['-f', 'fivefish', '-t', 'Ruby WordNet']
-	self.license 'BSD'
+	self.license 'BSD-3-Clause'
 
 	self.developer 'Michael Granger', 'ged@FaerieMUD.org'
 
-	self.dependency 'sequel',      '~> 3.38'
-	self.dependency 'loggability', '~> 0.5'
+	self.dependency 'sequel',      '~> 4.38'
+	self.dependency 'loggability', '~> 0.11'
+
 	self.dependency 'sqlite3',     '~> 1.3', :developer
-	self.dependency 'rspec',       '~> 2.7', :developer
-	self.dependency 'simplecov',   '~> 0.6', :developer
+	self.dependency 'rspec',       '~> 3.5', :developer
+	self.dependency 'simplecov',   '~> 0.12', :developer
 
 	self.spec_extras[:post_install_message] = %{
 	If you don't already have a WordNet database installed somewhere,
@@ -46,7 +47,7 @@ hoespec = Hoe.spec( 'wordnet' ) do
 
 	}.gsub( /^\t/, '' )
 
-	self.require_ruby_version( '>=2.0.0' )
+	self.require_ruby_version( '>=2.2.0' )
 
 	self.hg_sign_tags = true if self.respond_to?( :hg_sign_tags )
 	self.check_history_on_release = true if self.respond_to?( :check_history_on_release= )
@@ -56,28 +57,46 @@ end
 
 ENV['VERSION'] ||= hoespec.spec.version.to_s
 
-task 'hg:precheckin' => [ :check_history, :spec ]
-
-### Make the ChangeLog update if the repo has changed since it was last built
-file '.hg/branch'
-file 'ChangeLog' => '.hg/branch' do |task|
-	$stderr.puts "Updating the changelog..."
-	begin
-		content = make_changelog()
-	rescue NoMethodError
-		abort "This task requires hoe-mercurial (gem install hoe-mercurial)"
-	end
-	File.open( task.name, 'w', 0644 ) do |fh|
-		fh.print( content )
-	end
-end
+# Run the tests before checking in
+task 'hg:precheckin' => [ :check_history, :check_manifest, :gemspec, :spec ]
 
 # Rebuild the ChangeLog immediately before release
 task :prerelease => 'ChangeLog'
+CLOBBER.include( 'ChangeLog' )
 
-# Simplecov
 desc "Build a coverage report"
 task :coverage do
 	ENV["COVERAGE"] = 'yes'
 	Rake::Task[:spec].invoke
 end
+
+
+# Use the fivefish formatter for docs generated from development checkout
+if File.directory?( '.hg' )
+	require 'rdoc/task'
+
+	Rake::Task[ 'docs' ].clear
+	RDoc::Task.new( 'docs' ) do |rdoc|
+	    rdoc.main = "README.rdoc"
+	    rdoc.rdoc_files.include( "*.rdoc", "*.md", "ChangeLog", "lib/**/*.rb" )
+	    rdoc.generator = :fivefish
+		rdoc.title = 'Ruby WordNet'
+	    rdoc.rdoc_dir = 'doc'
+	end
+end
+
+task :gemspec => [ 'ChangeLog', GEMSPEC ]
+file GEMSPEC => __FILE__ do |task|
+	spec = $hoespec.spec
+	spec.files.delete( '.gemtest' )
+	spec.signing_key = nil
+	spec.version = "#{spec.version.bump}.0.pre#{Time.now.strftime("%Y%m%d%H%M%S")}"
+	spec.cert_chain = [ 'certs/ged.pem' ]
+	File.open( task.name, 'w' ) do |fh|
+		fh.write( spec.to_ruby )
+	end
+end
+CLOBBER.include( GEMSPEC )
+
+task :default => :gemspec
+
