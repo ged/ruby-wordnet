@@ -177,7 +177,6 @@ class WordNet::Synset < WordNet::Model( :synsets )
 	set_primary_key :synsetid
 
 	##
-	# :singleton-method:
 	# The WordNet::Words associated with the receiver
 	many_to_many :words,
 		:join_table  => :senses,
@@ -186,7 +185,6 @@ class WordNet::Synset < WordNet::Model( :synsets )
 
 
 	##
-	# :singleton-method:
 	# The WordNet::Senses associated with the receiver
 	one_to_many :senses,
 		:key         => :synsetid,
@@ -194,7 +192,6 @@ class WordNet::Synset < WordNet::Model( :synsets )
 
 
 	##
-	# :singleton-method:
 	# The WordNet::SemanticLinks indicating a relationship with other
 	# WordNet::Synsets
 	one_to_many :semlinks,
@@ -205,7 +202,6 @@ class WordNet::Synset < WordNet::Model( :synsets )
 
 
 	##
-	# :singleton-method:
 	# The WordNet::SemanticLinks pointing *to* this Synset
 	many_to_one :semlinks_to,
 		:class       => :"WordNet::SemanticLink",
@@ -214,7 +210,6 @@ class WordNet::Synset < WordNet::Model( :synsets )
 
 
 	##
-	# :singleton-method:
 	# Terms from the Suggested Upper Merged Ontology
 	many_to_many :sumo_terms,
 		:join_table  => :sumomaps,
