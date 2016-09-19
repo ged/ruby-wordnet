@@ -15,14 +15,14 @@ module WordNet
 
 
 	# Release version
-	VERSION = '1.0.0'
+	VERSION = '1.0.1'
 
 	# VCS revision
 	REVISION = %q$Revision: $
 
-	# Abort if not >=1.9.2
-	abort "This version of WordNet requires Ruby 1.9.3 or greater." unless
-		RUBY_VERSION >= '1.9.3'
+	# Abort if not >=2.2.0
+	abort "This version of WordNet requires Ruby 2.2.0 or greater." unless
+		RUBY_VERSION >= '2.2.0'
 
 
 	### Lexicon exception - something has gone wrong in the internals of the
