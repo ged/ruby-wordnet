@@ -60,8 +60,8 @@ me a note if you're interested in working on this.
 
 == Requirements
 
-* Ruby >= 1.9.3
-* Sequel >= 3.38.0
+* Ruby >= 2.2
+* Sequel >= 4.38
 
 
 == Authors
@@ -71,7 +71,7 @@ me a note if you're interested in working on this.
 
 == License
 
-Copyright (c) 2002-2012, The FaerieMUD Consortium
+Copyright (c) 2002-2016, The FaerieMUD Consortium
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
