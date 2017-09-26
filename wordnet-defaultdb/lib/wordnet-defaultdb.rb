@@ -3,7 +3,7 @@
 # This gem is a container for the default WordNetSQL database files required for
 # the 'wordnet' gem. It's mostly just a wrapper around the Sqlite database from:
 #
-#   http://sourceforge.net/projects/wnsql/
+#   http://sqlunet.sourceforge.net/
 #
 # == Author/s
 #
@@ -13,7 +13,7 @@ module WordNet
 	module DefaultDB
 
 		# Library version constant
-		VERSION = '0.99.0'
+		VERSION = '1.0.0'
 
 		# Version-control revision constant
 		REVISION = %q$Revision$

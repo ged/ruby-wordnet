@@ -17,8 +17,13 @@ begin
 
 	Loggability.level = :debug if $DEBUG
 
-    puts "Instantiating the lexicon as $lex"
-    $lex = WordNet::Lexicon.new
+	if Gem::Specification.find_all_by_name( 'pg' ).any?
+		puts "Instantiating the lexicon against the PostgreSQL (wordnet31) DB as $lex"
+		$lex = WordNet::Lexicon.new( 'postgres:/wordnet31' )
+	else
+		puts "Instantiating the lexicon against the default DB as $lex"
+		$lex = WordNet::Lexicon.new
+	end
 rescue Exception => e
 	$stderr.puts "Ack! WordNet failed to load: #{e.message}\n\t" +
 		e.backtrace.join( "\n\t" )

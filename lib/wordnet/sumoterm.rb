@@ -13,6 +13,7 @@ require 'wordnet/constants'
 class WordNet::SumoTerm < WordNet::Model( :sumoterms )
 	include WordNet::Constants
 
+
 	#                       Table "public.sumoterms"
 	#         Column         |          Type          |     Modifiers
 	# -----------------------+------------------------+--------------------

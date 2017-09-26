@@ -88,9 +88,14 @@ class WordNet::Word < WordNet::Model( :words )
 	# Dataset methods
 	#
 
-	##
-	# Return a dataset for words matching the given +lemma+.
-	def_dataset_method( :by_lemma ) {|lemma| filter( lemma: lemma ) }
+	dataset_module do
+
+		### Limit the dataset to words matching the given +lemma+.
+		def by_lemma( lemma )
+			return where( lemma: lemma )
+		end
+
+	end
 
 
 	#

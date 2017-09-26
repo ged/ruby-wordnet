@@ -2,18 +2,20 @@
 require_relative '../helpers'
 
 require 'rspec'
-require 'wordnet/synset'
 
 
 #####################################################################
 ###	C O N T E X T S
 #####################################################################
 
-describe WordNet::Synset, :requires_database => true do
+describe 'WordNet::Synset', :requires_database do
 
 	before( :all ) do
-		@lexicon = WordNet::Lexicon.new
+		@lexicon = WordNet::Lexicon.new( $dburi )
 	end
+
+
+	let( :described_class ) { WordNet::Synset }
 
 
 	it "knows what kinds of lexical domains are available" do
@@ -42,7 +44,7 @@ describe WordNet::Synset, :requires_database => true do
 		# floor, level, storey, story (noun): [noun.artifact] a structure
 		#     consisting of a room or set of rooms at a single position along a
 		#     vertical scale (hypernym: 1, hyponym: 5, part meronym: 1)
-		let( :synset ) { WordNet::Synset[103365991] }
+		let( :synset ) { @lexicon['story', :n] }
 
 
 		it "knows what lexical domain it's from" do
@@ -60,31 +62,17 @@ describe WordNet::Synset, :requires_database => true do
 			expect( enum ).to be_a( Enumerator )
 		end
 
-		it "can recursively traverse its semantic links" do
-			res = synset.traverse( :hypernyms ).to_a
-			expect( res.size ).to eq( 6 )
-			expect( res ).to eq([
-				WordNet::Synset[ 104341686 ],
-				WordNet::Synset[ 100021939 ],
-				WordNet::Synset[ 100003553 ],
-				WordNet::Synset[ 100002684 ],
-				WordNet::Synset[ 100001930 ],
-				WordNet::Synset[ 100001740 ],
-			])
-		end
-
 		it "can return an Enumerator for recursively traversing its semantic links" do
 			enum = synset.traverse( :hypernyms )
 
-			expect( enum.next ).to eq( WordNet::Synset[ 104341686 ] )
-			expect( enum.next ).to eq( WordNet::Synset[ 100021939 ] )
-			expect( enum.next ).to eq( WordNet::Synset[ 100003553 ] )
-			expect( enum.next ).to eq( WordNet::Synset[ 100002684 ] )
-			expect( enum.next ).to eq( WordNet::Synset[ 100001930 ] )
-			expect( enum.next ).to eq( WordNet::Synset[ 100001740 ] )
-			expect {
-				enum.next
-			}.to raise_error( StopIteration )
+			expect( enum ).to be_a( Enumerator ).and( contain_exactly(
+				@lexicon['artifact', :n],
+				@lexicon['unit', :n],
+				@lexicon['object', :n],
+				@lexicon['physical entity', :n],
+				@lexicon['entity', :n],
+				@lexicon['structure', :n],
+			) )
 		end
 	end
 

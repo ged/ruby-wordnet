@@ -1,2 +1,2 @@
 --- 
-exclude: !ruby/regexp /\.(hg|hoerc|DS_Store|rvm(rc|\.gems)|irbrc|pryrc|tm_.*)|(experiments\x2f|wordnet-defaultdb\x2f|doc\x2f|Manifest-data\.txt)|\.(svg)$/
+exclude: !ruby/regexp /\.(hg|hoerc|DS_Store|rvm(rc|\.gems)|irbrc|pryrc|tm_.*)|(experiments\x2f|wordnet-defaultdb\x2f|doc\x2f|Manifest-data\.txt|spec\x2f\.state)|\.(svg)$/

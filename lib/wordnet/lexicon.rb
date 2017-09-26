@@ -7,8 +7,7 @@ require 'rubygems'
 
 require 'wordnet' unless defined?( WordNet )
 require 'wordnet/constants'
-require 'wordnet/synset'
-require 'wordnet/word'
+require 'wordnet/model'
 
 
 # WordNet lexicon class - provides access to the WordNet lexical
@@ -20,11 +19,11 @@ require 'wordnet/word'
 # To create a Lexicon, point it at a database using {Sequel database connection
 # criteria}[http://sequel.rubyforge.org/rdoc/files/doc/opening_databases_rdoc.html]:
 #
-#     lex = WordNet::Lexicon.new( 'postgres://localhost/wordnet30' )
-#     # => #<WordNet::Lexicon:0x7fd192a76668 postgres://localhost/wordnet30>
+#     lex = WordNet::Lexicon.new( 'postgres://localhost/wordnet31' )
+#     # => #<WordNet::Lexicon:0x7fd192a76668 postgres://localhost/wordnet31>
 #
 #     # Another way of doing the same thing:
-#     lex = WordNet::Lexicon.new( adapter: 'postgres', database: 'wordnet30', host: 'localhost' )
+#     lex = WordNet::Lexicon.new( adapter: 'postgres', database: 'wordnet31', host: 'localhost' )
 #     # => #<WordNet::Lexicon:0x7fd192d374b0 postgres>
 #
 # Alternatively, if you have the 'wordnet-defaultdb' gem (which includes an
@@ -33,7 +32,7 @@ require 'wordnet/word'
 #
 #     lex = WordNet::Lexicon.new
 #     # => #<WordNet::Lexicon:0x7fdbfac1a358 sqlite:[...]/gems/wordnet-defaultdb-1.0.1
-#     #     /data/wordnet-defaultdb/wordnet30.sqlite>
+#     #     /data/wordnet-defaultdb/wordnet31.sqlite>
 #
 # == Looking Up Synsets
 #
@@ -128,10 +127,6 @@ class WordNet::Lexicon
 	log_to :wordnet
 
 
-	# Add the logger device to the default options after it's been loaded
-	WordNet::DEFAULT_DB_OPTIONS.merge!( :logger => [Loggability[WordNet]] )
-
-
 	### Get the Sequel URI of the default database, if it's installed.
 	def self::default_db_uri
 		self.log.debug "Fetching the default db URI"
@@ -153,7 +148,7 @@ class WordNet::Lexicon
 				'wordnet-defaultdb/data/wordnet-defaultdb'
 		end
 
-		dbfile = datadir + 'wordnet30.sqlite'
+		dbfile = datadir + 'wordnet31.sqlite'
 		self.log.debug "  dbfile is: %s" % [ dbfile ]
 
 		if dbfile.exist?
@@ -181,6 +176,13 @@ class WordNet::Lexicon
 
 		@db.sql_log_level = :debug
 		WordNet::Model.db = @db
+		WordNet::Model.descendents.each do |subclass|
+			self.log.debug "Switching DB for %p to %p" % [ subclass, @db ]
+			subclass.dataset = @db[ subclass.table_name ]
+		end
+
+		# Add the logger device after it's been loaded
+		@db.logger = Loggability[ self.class ]
 	end
 
 
@@ -189,7 +191,7 @@ class WordNet::Lexicon
 		uri = WordNet::Lexicon.default_db_uri or raise WordNet::LexiconError,
 			"No default WordNetSQL database! You can install it via the " +
 			"wordnet-defaultdb gem, or download a version yourself from " +
-			"http://sourceforge.net/projects/wnsql/"
+			"http://sqlunet.sourceforge.net/"
 		@db = self.connect( uri, options )
 	end
 
@@ -287,11 +289,11 @@ class WordNet::Lexicon
 
 			when Integer
 				self.log.debug "  limiting to sense %d" % [ arg ]
-				dataset = dataset.limit( 1, arg-1 )
+				dataset = dataset.order( :synsetid ).limit( 1, arg-1 )
 
 			when Range
 				self.log.debug "  limiting to range of senses: %p" % [ arg ]
-				dataset = dataset.limit( arg.entries.length, arg.begin - 1 )
+				dataset = dataset.order( :synsetid ).limit( arg.entries.length, arg.begin - 1 )
 
 			when Regexp
 				self.log.debug "  filter: definition =~ %p" % [ arg ]
