@@ -2,15 +2,17 @@
 
 require_relative '../helpers'
 
-require 'wordnet/sense'
+require 'wordnet'
 
 
-describe WordNet::Sense, :requires_database => true do
+describe 'WordNet::Sense', :requires_database do
 
 	before( :all ) do
-		@lexicon = WordNet::Lexicon.new
+		@lexicon = WordNet::Lexicon.new( $dburi )
 	end
 
+
+	let( :described_class ) { WordNet::Sense }
 
 	let( :sense ) do
 		WordNet::Word[ 79712 ].senses.first

@@ -3,5 +3,5 @@ LICENSE-WORDNET.txt
 Manifest.txt
 README.rdoc
 Rakefile
-data/wordnet-defaultdb/wordnet30.sqlite
+data/wordnet-defaultdb/wordnet31.sqlite
 lib/wordnet-defaultdb.rb

@@ -2,16 +2,18 @@
 require_relative '../helpers'
 
 require 'rspec'
-require 'wordnet/semanticlink'
+require 'wordnet'
 
 
 #####################################################################
 ###	C O N T E X T S
 #####################################################################
 
-describe WordNet::SemanticLink, :requires_database => true do
+describe 'WordNet::SemanticLink', :requires_database do
 
-	let( :lexicon ) { WordNet::Lexicon.new  }
+	let( :described_class ) { WordNet::SemanticLink }
+
+	let( :lexicon ) { WordNet::Lexicon.new($dburi) }
 	let( :word )    { lexicon[96814]        } # 'parody'
 	let( :synset )  { word.synsets.first    }
 	let( :semlink ) { synset.semlinks.first }

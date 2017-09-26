@@ -23,17 +23,18 @@ RSpec.configure do |config|
 	config.mock_with( :rspec ) do |mock|
 		mock.syntax = :expect
 	end
+	config.example_status_persistence_file_path = "spec/.state"
 
-	if Gem::Specification.find_all_by_name( 'pg' ).empty?
+	if Gem::Specification.find_all_by_name( 'pg' ).any?
+		$dburi = 'postgres:/wordnet31'
+	else
 		config.filter_run_excluding( :requires_pg )
+		unless (( $dburi = WordNet::Lexicon.default_db_uri ))
+			config.filter_run_excluding( :requires_database )
+		end
 	end
 
-	begin
-		uri = WordNet::Lexicon.default_db_uri
-		WordNet.log.info "Database tests will use: #{uri}"
-	rescue WordNet::LexiconError
-		config.filter_run_excluding( :requires_database )
-	end
+	$stderr.puts "Using database: %p" % [ $dburi ]
 
 	config.include( WordNet::SpecHelpers )
 	config.include( Loggability::SpecHelpers )

@@ -29,12 +29,12 @@ hoespec = Hoe.spec( 'wordnet' ) do
 
 	self.developer 'Michael Granger', 'ged@FaerieMUD.org'
 
-	self.dependency 'sequel',      '~> 4.38'
-	self.dependency 'loggability', '~> 0.11'
+	self.dependency 'sequel',               '~> 5.0'
+	self.dependency 'loggability',          '~> 0.11'
 
-	self.dependency 'sqlite3',     '~> 1.3', :developer
-	self.dependency 'rspec',       '~> 3.5', :developer
-	self.dependency 'simplecov',   '~> 0.12', :developer
+	self.dependency 'sqlite3',              '~> 1.3', :developer
+	self.dependency 'rspec',                '~> 3.5', :developer
+	self.dependency 'simplecov',            '~> 0.12', :developer
 
 	self.spec_extras[:post_install_message] = %{
 	If you don't already have a WordNet database installed somewhere,

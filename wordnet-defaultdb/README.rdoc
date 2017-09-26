@@ -1,9 +1,9 @@
-# wordnet_defaultdb
+= wordnet_defaultdb
 
 * http://deveiate.org/projects/Ruby-WordNet/wiki/Databases
 
 
-## Description
+== Description
 
 This gem is a container for the default WordNetSQL database files loaded by 
 the 'wordnet' gem if you don't have your own installation of the WordNet 
@@ -15,12 +15,12 @@ To use it, just install the gem and then create the WordNet::Lexicon with
 no arguments.
 
 
-## Installation
+== Installation
 
     gem install wordnet-defaultdb
 
 
-## License
+== License
 
 WordNet Release 3.0
 

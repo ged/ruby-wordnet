@@ -47,15 +47,15 @@ module WordNet
 
 
 	require 'wordnet/lexicon'
-
 	require 'wordnet/model'
-	require 'wordnet/sense'
-	require 'wordnet/synset'
-	require 'wordnet/semanticlink'
-	require 'wordnet/lexicallink'
-	require 'wordnet/word'
-	require 'wordnet/morph'
-	require 'wordnet/sumoterm'
+
+	WordNet::Model.register_model( 'wordnet/sense' )
+	WordNet::Model.register_model( 'wordnet/synset' )
+	WordNet::Model.register_model( 'wordnet/semanticlink' )
+	WordNet::Model.register_model( 'wordnet/lexicallink' )
+	WordNet::Model.register_model( 'wordnet/word' )
+	WordNet::Model.register_model( 'wordnet/morph' )
+	WordNet::Model.register_model( 'wordnet/sumoterm' )
 
 	#
 	# Backward-compatibility stuff

@@ -3,21 +3,23 @@ require_relative '../helpers'
 
 require 'rspec'
 require 'wordnet'
-require 'wordnet/word'
 
 
 #####################################################################
 ###	C O N T E X T S
 #####################################################################
 
-describe WordNet::Word, :requires_database => true do
+describe 'WordNet::Word', :requires_database do
 
-	let( :lexicon ) { WordNet::Lexicon.new }
+	let( :described_class ) { WordNet::Word }
+
+	let!( :lexicon ) { WordNet::Lexicon.new($dburi) }
 
 
 	context "the Word for 'run'" do
 
-		let( :word ) { lexicon[113377] }
+		let( :word ) { described_class.by_lemma('run').first }
+
 
 		it "knows what senses it has" do
 			senses = word.senses
@@ -26,6 +28,7 @@ describe WordNet::Word, :requires_database => true do
 			expect( senses.first ).to be_a( WordNet::Sense )
 		end
 
+
 		it "knows what synsets it has" do
 			synsets = word.synsets
 
@@ -33,6 +36,7 @@ describe WordNet::Word, :requires_database => true do
 			expect( synsets.size ).to eq( word.senses.size )
 			expect( synsets.first.senses ).to include( word.senses.first )
 		end
+
 
 		it "has a dataset for selecting noun synsets" do
 			expect( word.nouns ).to be_a( Sequel::Dataset )
@@ -45,6 +49,7 @@ describe WordNet::Word, :requires_database => true do
 				lexicon[ :run, 'testing' ]
 			)
 		end
+
 
 		it "has a dataset for selecting verb synsets" do
 			expect( word.verbs ).to be_a( Sequel::Dataset )
@@ -63,7 +68,8 @@ describe WordNet::Word, :requires_database => true do
 
 	context "the Word for 'light'" do
 
-		let( :word ) { lexicon[77458] }
+		let( :word ) { described_class.by_lemma('light').first }
+
 
 		it "has a dataset for selecting adjective synsets" do
 			expect( word.adjectives ).to be_a( Sequel::Dataset )
@@ -75,6 +81,7 @@ describe WordNet::Word, :requires_database => true do
 				lexicon[ :light, 'color' ]
 			)
 		end
+
 
 		it "has a dataset for selecting adjective-satellite synsets" do
 			expect( word.adjective_satellites ).to be_a( Sequel::Dataset )
@@ -92,7 +99,8 @@ describe WordNet::Word, :requires_database => true do
 
 	context "the Word for 'lightly'" do
 
-		let( :word ) { lexicon[77549] }
+		let( :word ) { described_class.by_lemma('lightly').first }
+
 
 		it "has a dataset for selecting adverb synsets" do
 			expect( word.adverbs ).to be_a( Sequel::Dataset )

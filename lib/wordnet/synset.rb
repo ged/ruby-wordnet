@@ -14,7 +14,7 @@ require 'wordnet/model'
 #
 # We can either fetch the synset from a connected Lexicon:
 #
-#    lexicon = WordNet::Lexicon.new( 'postgres://localhost/wordnet30' )
+#    lexicon = WordNet::Lexicon.new( 'postgres://localhost/wordnet31' )
 #    ss = lexicon[ :first, 'time' ]
 #    # => #<WordNet::Synset:0x7ffbf2643bb0 {115265518} 'commencement, first,
 #    #       get-go, offset, outset, start, starting time, beginning, kickoff,
@@ -252,30 +252,43 @@ class WordNet::Synset < WordNet::Model( :synsets )
 	#   #        organ of a bird>]
 	#
 
-	##
-	# :singleton-method: nouns
-	# Dataset method: filtered by part of speech: nouns.
-	def_dataset_method( :nouns ) { filter(pos: 'n') }
+	dataset_module do
 
-	##
-	# :singleton-method: verbs
-	# Dataset method: filtered by part of speech: verbs.
-	def_dataset_method( :verbs ) { filter(pos: 'v') }
+		### :singleton-method: nouns
+		### Limit results to nouns.
+		def nouns
+			return self.where( pos: 'n' )
+		end
 
-	##
-	# :singleton-method: adjectives
-	# Dataset method: filtered by part of speech: adjectives.
-	def_dataset_method( :adjectives ) { filter(pos: 'a') }
 
-	##
-	# :singleton-method: adverbs
-	# Dataset method: filtered by part of speech: adverbs.
-	def_dataset_method( :adverbs ) { filter(pos: 'r') }
+		### :singleton-method: verbs
+		### Limit results to verbs.
+		def verbs
+			return self.where( pos: 'v' )
+		end
 
-	##
-	# :singleton-method: adjective_satellites
-	# Dataset method: filtered by part of speech: adjective satellites.
-	def_dataset_method( :adjective_satellites ) { filter(pos: 's') }
+
+		### :singleton-method: adjectives
+		### Limit results to adjectives.
+		def adjectives
+			return self.where( pos: 'a' )
+		end
+
+
+		### :singleton-method: adverbs
+		### Limit results to adverbs.
+		def adverbs
+			return self.where( pos: 'r' )
+		end
+
+
+		### :singleton-method: adjective_satellites
+		### Limit results to adjective satellites.
+		def adjective_satellites
+			return self.where( pos: 's' )
+		end
+
+	end
 
 
 	# :section:
