@@ -5,18 +5,18 @@
 == Description
 
 This library is a Ruby interface to WordNet®[http://wordnet.princeton.edu/].
-WordNet® is an online lexical reference system whose design is inspired
-by current psycholinguistic theories of human lexical memory. English
-nouns, verbs, adjectives and adverbs are organized into synonym sets, each
-representing one underlying lexical concept. Different relations link
-the synonym sets.
+WordNet® is an online lexical reference system whose design is inspired by
+current psycholinguistic theories of human lexical memory. English nouns,
+verbs, adjectives and adverbs are organized into synonym sets, each
+representing one underlying lexical concept. Different relations link the
+synonym sets.
 
-This library uses WordNet-SQL[http://wnsql.sourceforge.net/], which is a
-conversion of the lexicon flatfiles into a relational database format. You
-can either install the 'wordnet-defaultdb' gem, which packages up the
-SQLite3 version of WordNet-SQL, or install your own and point the lexicon
-at it by passing 
-{Sequel connection parameters}[http://sequel.rubyforge.org/rdoc/files/doc/opening_databases_rdoc.html]
+This library uses SqlUNET[http://sqlunet.sourceforge.net/], which is a
+conversion of the WordNet (along with a number of other linguistic databases)
+lexicon flatfiles into a relational database format. You can either install the
+'wordnet-defaultdb' gem, which packages up the SQLite3 version of SqlUNet,
+or install your own and point the lexicon at it by passing {Sequel connection
+parameters}[http://sequel.jeremyevans.net/rdoc/files/doc/opening_databases_rdoc.html]
 to the constructor.
 
 === Usage
@@ -53,9 +53,9 @@ mapping:
 [WordNet::SumoTerm]      {Suggested Upper Merged Ontology}[http://www.ontologyportal.org/]
                          terms, with associations back to related Synsets.
 
-This is only supported by a subset of the WordNetSQL databases, and there
-is a fair amount of work left to be done before it's really functional. Drop
-me a note if you're interested in working on this.
+As mentioned above, SqlUNet has done an amazing job of linking up a number of
+other useful linguistic lexicons via WordNet synsets. I plan on adding support
+for at minimum VerbNet, FrameNet, and PropBank.
 
 
 == Requirements

@@ -8,8 +8,7 @@ require 'wordnet/constants'
 
 # Experimental support for the WordNet mapping for the {Suggested Upper Merged
 # Ontology}[http://www.ontologyportal.org/] (SUMO).
-# This is still a work in progress, and isn't supported by all of the WordNet-SQL
-# databases.
+# It's still a work in progress.
 class WordNet::SumoTerm < WordNet::Model( :sumoterms )
 	include WordNet::Constants
 
