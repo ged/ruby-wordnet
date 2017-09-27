@@ -17,7 +17,7 @@ require 'wordnet/model'
 # == Creating a Lexicon
 #
 # To create a Lexicon, point it at a database using {Sequel database connection
-# criteria}[http://sequel.rubyforge.org/rdoc/files/doc/opening_databases_rdoc.html]:
+# criteria}[http://sequel.jeremyevans.net/rdoc/files/doc/opening_databases_rdoc.html]:
 #
 #     lex = WordNet::Lexicon.new( 'postgres://localhost/wordnet31' )
 #     # => #<WordNet::Lexicon:0x7fd192a76668 postgres://localhost/wordnet31>

@@ -14,8 +14,9 @@ synonym sets.
 This library uses SqlUNET[http://sqlunet.sourceforge.net/], which is a
 conversion of the WordNet (along with a number of other linguistic databases)
 lexicon flatfiles into a relational database format. You can either install the
-'wordnet-defaultdb' gem, which packages up the SQLite3 version of SqlUNet,
-or install your own and point the lexicon at it by passing {Sequel connection
+{wordnet-defaultdb}[https://rubygems.org/gems/wordnet-defaultdb] gem, which
+packages up the SQLite3 version of SqlUNet, or install your own and point the
+lexicon at it by passing {Sequel connection
 parameters}[http://sequel.jeremyevans.net/rdoc/files/doc/opening_databases_rdoc.html]
 to the constructor.
 

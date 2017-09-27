@@ -101,9 +101,9 @@ require 'wordnet/model'
 # API if you need to do something not provided by a high-level method.
 #
 # In order to make use of this API, you'll need to be familiar with
-# {Sequel}[http://sequel.rubyforge.org/], especially
-# {Datasets}[http://sequel.rubyforge.org/rdoc/files/doc/dataset_basics_rdoc.html] and
-# {Model Associations}[http://sequel.rubyforge.org/rdoc/files/doc/association_basics_rdoc.html].
+# {Sequel}[http://sequel.jeremyevans.net/], especially
+# {Datasets}[http://sequel.jeremyevans.net/rdoc/files/doc/dataset_basics_rdoc.html] and
+# {Model Associations}[http://sequel.jeremyevans.net/rdoc/files/doc/association_basics_rdoc.html].
 # Most of Ruby-WordNet's functionality is implemented in terms of one or both
 # of these.
 #
