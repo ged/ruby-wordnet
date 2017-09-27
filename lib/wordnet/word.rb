@@ -66,22 +66,22 @@ class WordNet::Word < WordNet::Model( :words )
 	##
 	# The WordNet::Sense objects that relate the word with its Synsets
 	one_to_many :senses,
-		:key => :wordid,
-		:primary_key => :wordid
+		key: :wordid,
+		primary_key: :wordid
 
 	##
 	# The WordNet::Synsets related to the word via its senses
 	many_to_many :synsets,
-		:join_table => :senses,
-		:left_key => :wordid,
-		:right_key => :synsetid
+		join_table: :senses,
+		left_key: :wordid,
+		right_key: :synsetid
 
 	##
 	# The WordNet::Morphs related to the word
 	many_to_many :morphs,
-		:join_table => :morphmaps,
-		:left_key => :wordid,
-		:right_key => :morphid
+		join_table: :morphmaps,
+		left_key: :wordid,
+		right_key: :morphid
 
 
 	#

@@ -69,9 +69,9 @@ class WordNet::SumoTerm < WordNet::Model( :sumoterms )
 	##
 	# WordNet::Synsets that are related to this term
 	many_to_many :synsets,
-		:join_table => :sumomaps,
-		:left_key   => :sumoid,
-		:right_key  => :synsetid
+		join_table: :sumomaps,
+		left_key: :sumoid,
+		right_key: :synsetid
 
 end # class WordNet::SumoTerm
 

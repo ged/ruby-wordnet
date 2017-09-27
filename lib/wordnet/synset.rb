@@ -179,42 +179,42 @@ class WordNet::Synset < WordNet::Model( :synsets )
 	##
 	# The WordNet::Words associated with the receiver
 	many_to_many :words,
-		:join_table  => :senses,
-		:left_key    => :synsetid,
-		:right_key   => :wordid
+		join_table: :senses,
+		left_key: :synsetid,
+		right_key: :wordid
 
 
 	##
 	# The WordNet::Senses associated with the receiver
 	one_to_many :senses,
-		:key         => :synsetid,
-		:primary_key => :synsetid
+		key: :synsetid,
+		primary_key: :synsetid
 
 
 	##
 	# The WordNet::SemanticLinks indicating a relationship with other
 	# WordNet::Synsets
 	one_to_many :semlinks,
-		:class       => :"WordNet::SemanticLink",
-		:key         => :synset1id,
-		:primary_key => :synsetid,
-		:eager       => :target
+		class: 'WordNet::SemanticLink',
+		key: :synset1id,
+		primary_key: :synsetid,
+		eager: :target
 
 
 	##
 	# The WordNet::SemanticLinks pointing *to* this Synset
 	many_to_one :semlinks_to,
-		:class       => :"WordNet::SemanticLink",
-		:key         => :synsetid,
-		:primary_key => :synset2id
+		class: 'WordNet::SemanticLink',
+		key: :synsetid,
+		primary_key: :synset2id
 
 
 	##
 	# Terms from the Suggested Upper Merged Ontology
 	many_to_many :sumo_terms,
-		:join_table  => :sumomaps,
-		:left_key    => :synsetid,
-		:right_key   => :sumoid
+		join_table: :sumomaps,
+		left_key: :synsetid,
+		right_key: :sumoid
 
 
 	#################################################################
@@ -331,10 +331,10 @@ class WordNet::Synset < WordNet::Model( :synsets )
 	def self::linktype_table
 		@linktype_table ||= self.db[:linktypes].inject({}) do |hash,row|
 			hash[ row[:linkid] ] = {
-				:id       => row[:linkid],
-				:typename => row[:link],
-				:type     => row[:link].gsub( /\s+/, '_' ).to_sym,
-				:recurses => row[:recurses] && row[:recurses] != 0,
+				id: row[:linkid],
+				typename: row[:link],
+				type: row[:link].gsub( /\s+/, '_' ).to_sym,
+				recurses: row[:recurses] && row[:recurses] != 0,
 			}
 			hash
 		end
@@ -401,9 +401,9 @@ class WordNet::Synset < WordNet::Model( :synsets )
 		typekey  = SEMANTIC_TYPEKEYS[ type ]
 		linkinfo = self.class.linktypes[ typekey ] or
 			raise ArgumentError, "no such link type %p" % [ typekey ]
-		ssids    = self.semlinks_dataset.filter( :linkid => linkinfo[:id] ).select( :synset2id )
+		ssids    = self.semlinks_dataset.filter( linkid: linkinfo[:id] ).select( :synset2id )
 
-		return self.class.filter( :synsetid => ssids )
+		return self.class.filter( synsetid: ssids )
 	end
 
 

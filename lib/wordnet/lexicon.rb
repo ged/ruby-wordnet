@@ -279,7 +279,7 @@ class WordNet::Lexicon
 	###   definition using a LIKE query.
 	###
 	def lookup_synsets( word, *args )
-		dataset = WordNet::Synset.filter( :words => WordNet::Word.filter(lemma: word.to_s) )
+		dataset = WordNet::Synset.filter( words: WordNet::Word.filter(lemma: word.to_s) )
 		self.log.debug "Looking up synsets for %p" % [ word.to_s ]
 
 		# Add filters to the dataset for each argument

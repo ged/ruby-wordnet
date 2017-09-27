@@ -13,15 +13,15 @@ class WordNet::SemanticLink < WordNet::Model( :semlinks )
 	set_primary_key [:synset1id, :synset2id, :linkid]
 
 	many_to_one :origin,
-		:class       => :"WordNet::Synset",
-		:key         => :synset1id,
-		:primary_key => :synsetid
+		class: 'WordNet::Synset',
+		key: :synset1id,
+		primary_key: :synsetid
 
 	one_to_one :target,
-		:class       => :"WordNet::Synset",
-		:key         => :synsetid,
-		:primary_key => :synset2id,
-		:eager       => :words
+		class: 'WordNet::Synset',
+		key: :synsetid,
+		primary_key: :synset2id,
+		eager: :words
 
 
 	######

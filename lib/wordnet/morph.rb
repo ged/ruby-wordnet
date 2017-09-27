@@ -36,9 +36,9 @@ class WordNet::Morph < WordNet::Model( :morphs )
 	#     "fk_morphmaps_morphid" FOREIGN KEY (morphid) REFERENCES morphs(morphid)
 	#     "fk_morphmaps_wordid" FOREIGN KEY (wordid) REFERENCES words(wordid)
 	many_to_many :words,
-		:join_table => :morphmaps,
-		:right_key  => :wordid,
-		:left_key   => :morphid
+		join_table: :morphmaps,
+		right_key: :wordid,
+		left_key: :morphid
 
 
 	### Return the stringified word; alias for #lemma.
