@@ -14,16 +14,16 @@ class WordNet::LexicalLink < WordNet::Model( :lexlinks )
 	##
 	# The WordNet::Sense the link is pointing *from*.
 	many_to_one :origin,
-		:class       => :"WordNet::Sense",
-		:key         => :synset1id,
-		:primary_key => :synsetid
+		class: 'WordNet::Sense',
+		key: :synset1id,
+		primary_key: :synsetid
 
 	##
 	# The WordNet::Synset the link is pointing *to*.
 	one_to_many :target,
-		:class       => :"WordNet::Synset",
-		:key         => :synsetid,
-		:primary_key => :synset2id
+		class: 'WordNet::Synset',
+		key: :synsetid,
+		primary_key: :synset2id
 
 
 	######

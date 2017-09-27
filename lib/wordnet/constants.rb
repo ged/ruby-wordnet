@@ -14,11 +14,11 @@ module WordNet::Constants
 
 	# Synset syntactic-category names -> indicators
 	SYNTACTIC_CATEGORIES = {
-		:noun		=> "n",
-		:verb		=> "v",
-		:adjective	=> "a",
-		:adverb		=> "r",
-		:other		=> "s",
+		noun: "n",
+		verb: "v",
+		adjective: "a",
+		adverb: "r",
+		other: "s",
 	}
 	# Syntactic-category indicators -> names
 	SYNTACTIC_SYMBOLS = SYNTACTIC_CATEGORIES.invert
@@ -34,29 +34,29 @@ module WordNet::Constants
 
 	# Synset pointer typenames -> indicators
 	POINTER_TYPES = {
-		:antonym		=> '!',
-		:hypernym		=> '@',
-		:entailment		=> '*',
-		:hyponym		=> '~',
-		:meronym		=> '%',
-		:holonym		=> '#',
-		:cause			=> '>',
-		:verb_group		=> '$',
-		:similar_to		=> '&',
-		:participle		=> '<',
-		:pertainym		=> '\\',
-		:attribute		=> '=',
-		:derived_from	=> '\\',
-		:see_also		=> '^',
-		:derivation		=> '+',
-		:domain			=> ';',
-		:member			=> '-',
+		antonym: '!',
+		hypernym: '@',
+		entailment: '*',
+		hyponym: '~',
+		meronym: '%',
+		holonym: '#',
+		cause: '>',
+		verb_group: '$',
+		similar_to: '&',
+		participle: '<',
+		pertainym: '\\',
+		attribute: '=',
+		derived_from: '\\',
+		see_also: '^',
+		derivation: '+',
+		domain: ';',
+		member: '-',
 	}
 
 	# Synset pointer indicator -> typename
 	POINTER_SYMBOLS = POINTER_TYPES.invert
 
-	# Map the pointer types into their own symbols (eg., :verb_group => VerbGroup)
+	# Map the pointer types into their own symbols (eg., verb_group: VerbGroup)
 	POINTER_TYPES.each do |sym,val|
 		cname = sym.to_s.gsub( /(?:^|_)(.)/ ) { $1.upcase }
 		const_set( cname, val )
@@ -65,7 +65,7 @@ module WordNet::Constants
 	# Hypernym synset pointer types
 	HYPERNYM_TYPES = {
 		nil             => '@', # Install non-subtype methods, too
-		:instance       => '@i',
+		instance: '@i',
 	}
 
 	# Hypernym indicator -> type map
@@ -74,7 +74,7 @@ module WordNet::Constants
 	# Hyponym synset pointer types
 	HYPONYM_TYPES = {
 		nil             => '~', # Install non-subtype methods, too
-		:instance       => '~i',
+		instance: '~i',
 	}
 
 	# Hyponym indicator -> type map
@@ -82,13 +82,13 @@ module WordNet::Constants
 
 	# Meronym synset pointer types
 	MERONYM_TYPES = {
-		:member			=> '%m',
-		:stuff			=> '%s',
-		:portion		=> '%o',
-		:component		=> '%p',
-		:feature		=> '%f',
-		:phase			=> '%a',
-		:place			=> '%l',
+		member: '%m',
+		stuff: '%s',
+		portion: '%o',
+		component: '%p',
+		feature: '%f',
+		phase: '%a',
+		place: '%l',
 	}
 
 	# Meronym indicator -> type map
@@ -102,13 +102,13 @@ module WordNet::Constants
 
 	# Holonym synset pointer types
 	HOLONYM_TYPES = {
-		:member			=> '#m',
-		:stuff			=> '#s',
-		:portion		=> '#o',
-		:component		=> '#p',
-		:feature		=> '#f',
-		:phase			=> '#a',
-		:place			=> '#l',
+		member: '#m',
+		stuff: '#s',
+		portion: '#o',
+		component: '#p',
+		feature: '#f',
+		phase: '#a',
+		place: '#l',
 	}
 
 	# Holonym indicator -> type map
@@ -122,9 +122,9 @@ module WordNet::Constants
 
 	# Domain synset pointer types
 	DOMAIN_TYPES = {
-		:category		=> ';c',
-		:region			=> ';r',
-		:usage			=> ';u',
+		category: ';c',
+		region: ';r',
+		usage: ';u',
 	}
 
 	# Domain indicator -> type map
@@ -138,9 +138,9 @@ module WordNet::Constants
 
 	# Member synset pointer types
 	MEMBER_TYPES = {
-		:category		=> '-c',
-		:region			=> '-r',
-		:usage			=> '-u',
+		category: '-c',
+		region: '-r',
+		usage: '-u',
 	}
 
 	# Member indicator -> type map
@@ -154,12 +154,12 @@ module WordNet::Constants
 
 	# Map of primary types to maps of their subtypes
 	POINTER_SUBTYPES = {
-		:hyponym    => HYPONYM_TYPES,
-		:hypernym   => HYPERNYM_TYPES,
-		:meronym	=> MERONYM_TYPES,
-		:holonym	=> HOLONYM_TYPES,
-		:member		=> MEMBER_TYPES,
-		:domain		=> DOMAIN_TYPES,
+		hyponym: HYPONYM_TYPES,
+		hypernym: HYPERNYM_TYPES,
+		meronym: MERONYM_TYPES,
+		holonym: HOLONYM_TYPES,
+		member: MEMBER_TYPES,
+		domain: DOMAIN_TYPES,
 	}
 
 

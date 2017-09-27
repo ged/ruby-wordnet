@@ -12,19 +12,19 @@ class WordNet::Sense < WordNet::Model( :senses )
 
 	##
 	# The Synset this is a Sense for
-	many_to_one :synset, :key => :synsetid
+	many_to_one :synset, key: :synsetid
 
 	##
 	# The Word this is a Sense for
-	many_to_one :word, :key => :wordid
+	many_to_one :word, key: :wordid
 
 	##
 	# The lexical links between this sense and its related Synsets.
 	# Sense -> [ LexicalLinks ] -> [ Synsets ]
 	one_to_many :lexlinks,
-		:class       => :"WordNet::LexicalLink",
-		:key         => [ :synset1id, :word1id ],
-		:primary_key => [ :synsetid, :wordid ]
+		class: 'WordNet::LexicalLink',
+		key: [ :synset1id, :word1id ],
+		primary_key: [ :synsetid, :wordid ]
 
 
 	### Generate a method that will return Synsets related by the given lexical pointer
@@ -37,8 +37,8 @@ class WordNet::Sense < WordNet::Model( :senses )
 		method_body = Proc.new do
 			linkinfo = WordNet::Synset.linktypes[ typekey ] or
 				raise ScriptError, "no such link type %p" % [ typekey ]
-			ssids = self.lexlinks_dataset.filter( :linkid => linkinfo[:id] ).select( :synset2id )
-			self.class.filter( :synsetid => ssids )
+			ssids = self.lexlinks_dataset.filter( linkid: linkinfo[:id] ).select( :synset2id )
+			self.class.filter( synsetid: ssids )
 		end
 
 		define_method( type, &method_body )
