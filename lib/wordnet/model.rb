@@ -16,7 +16,7 @@ module WordNet
 
 
 	# The base WordNet database-backed domain class. It's a subclass of Sequel::Model, so
-	# you'll first need to be familiar with Sequel (http://sequel.rubyforge.org/) and
+	# you'll first need to be familiar with Sequel (http://sequel.jeremyevans.net/) and
 	# especially its Sequel::Model ORM.
 	class Model
 		extend Loggability
