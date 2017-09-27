@@ -4,9 +4,9 @@
 require 'loggability'
 require 'sequel'
 
-# This is a Ruby interface to the WordNet® lexical database. It uses the WordNet-SQL
-# project's databases instead of reading from the canonical flatfiles for speed and
-# easy modification.
+# This is a Ruby interface to the WordNet® lexical database. It uses the SqlUNet
+# project's databases instead of reading from the canonical flatfiles for speed,
+# easy modification, and correlation with other linguistic lexicons.
 module WordNet
 	extend Loggability
 
@@ -19,10 +19,6 @@ module WordNet
 
 	# VCS revision
 	REVISION = %q$Revision: $
-
-	# Abort if not >=2.2.0
-	abort "This version of WordNet requires Ruby 2.2.0 or greater." unless
-		RUBY_VERSION >= '2.2.0'
 
 
 	### Lexicon exception - something has gone wrong in the internals of the
@@ -38,7 +34,6 @@ module WordNet
 	include WordNet::Constants
 
 	### Get the WordNet version.
-	### @return [String] the library's version
 	def self::version_string( include_buildnum=false )
 		vstring = "%s %s" % [ self.name, VERSION ]
 		vstring << " (build %s)" % [ REVISION[/: ([[:xdigit:]]+)/, 1] || '0' ] if include_buildnum
@@ -77,7 +72,6 @@ module WordNet
 
 	# Backward-compatibility constant
 	Other     = :s
-
 
 
 end # module WordNet
