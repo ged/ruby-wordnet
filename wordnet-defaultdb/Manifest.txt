@@ -1,5 +1,14 @@
 History.rdoc
-LICENSE-WORDNET.txt
+LICENSE-sqlunet.txt
+LICENSE-bnc.txt
+LICENSE-fn.txt
+LICENSE-legacy.txt
+LICENSE-pb.txt
+LICENSE-pm.txt
+LICENSE-sumo.txt
+LICENSE-vn.txt
+LICENSE-wn.txt
+LICENSE-xwn.txt
 Manifest.txt
 README.rdoc
 Rakefile

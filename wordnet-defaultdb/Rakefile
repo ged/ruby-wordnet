@@ -12,19 +12,21 @@ require 'rake/clean'
 
 $trace = Rake.application.options.trace
 
-WNSQL_VERSION  = '1.0.1'
+SQLUNET_VERSION = '5.2.0-31'
+SQLUNET_SHORT_VERSION = SQLUNET_VERSION[ /\A([^-]+)/ ]
 
-# http://downloads.sourceforge.net/project/wnsql/wnsql-1.0.1/wordnet30-sqlite-1.0.1.zip?r=http%3A%2F%2Fsourceforge.net%2Fprojects%2Fwnsql%2Ffiles%2Fwnsql-1.0.1%2F&ts=1335825137&use_mirror=cdnetworks-us-1
+# https://versaweb.dl.sourceforge.net/project/sqlunet/5.2.0/sqlite/sqlite-5.2.0-31-all.zip
 
-WNSQL_BASE_URI = 'http://downloads.sourceforge.net/project/wnsql'
-WNSQL_ZIPFILE  = "wordnet30-sqlite-#{WNSQL_VERSION}.zip"
-WNSQL_URI      = "#{WNSQL_BASE_URI}/wnsql-#{WNSQL_VERSION}/#{WNSQL_ZIPFILE}"
+SQLUNET_BASE_URI = 'https://versaweb.dl.sourceforge.net/project/sqlunet'
+SQLUNET_ZIPFILE  = "sqlite-#{SQLUNET_VERSION}-all.zip"
+SQLUNET_URI      = "#{SQLUNET_BASE_URI}/#{SQLUNET_SHORT_VERSION}/#{SQLUNET_ZIPFILE}"
 
-BASEDIR        = Pathname( __FILE__ ).dirname.relative_path_from( Pathname.pwd )
-DATADIR        = BASEDIR + 'data'
-DBDIR          = DATADIR + 'wordnet-defaultdb'
-WNSQL_DB_FILE  = DBDIR + 'wordnet30.sqlite'
-WNSQL_LICENSE  = BASEDIR + 'LICENSE-WORDNET.txt'
+BASEDIR = Pathname( __FILE__ ).dirname.relative_path_from( Pathname.pwd )
+DATADIR = BASEDIR + 'data'
+DBDIR   = DATADIR + 'wordnet-defaultdb'
+
+ORIGINAL_DBFILE = 'sqlite-31.db'
+DEST_DBFILE     = DBDIR + 'wordnet31.sqlite'
 
 Hoe.plugin :mercurial
 Hoe.plugin :signing
@@ -35,15 +37,16 @@ hoespec = Hoe.spec 'wordnet-defaultdb' do
 	self.readme_file = 'README.rdoc'
 	self.history_file = 'History.rdoc'
 	self.extra_rdoc_files = FileList[ '*.rdoc' ]
+	self.license 'BSD-3-Clause'
 
 	self.developer 'Michael Granger', 'ged@FaerieMUD.org'
 
-	self.dependency 'wordnet', '~> 1.0'
+	self.dependency 'wordnet', '~> 1.1'
 	self.dependency 'sqlite3', '~> 1.3'
-	self.dependency 'rubyzip', '~> 0.9', :developer
 
-	self.spec_extras[:licenses] = ["BSD"]
-	self.require_ruby_version( '>=1.9.3' )
+	self.dependency 'rubyzip', '~> 1.2', :developer
+
+	self.require_ruby_version( '>=2.3' )
 end
 
 ENV['VERSION'] ||= hoespec.spec.version.to_s
@@ -103,43 +106,39 @@ ensure
 end
 
 
-### Extract the contents of the specified +zipfile+ into the given +targetdir+.
-def unzip( zipfile, targetdir, *files )
-	require 'zip/zip'
-	targetdir = Pathname( targetdir )
-	raise "No such directory: #{targetdir}" unless targetdir.directory?
+### Extract the given +sourcepath+ of the specified +zipfile+ into the given +destpath+.
+def unzip( zipfile, sourcepath, destpath )
+	require 'zip'
 
-	Zip::ZipFile.foreach( zipfile ) do |entry|
-		# $stderr.puts "  entry is: %p, looking for: %p" % [ entry.name, files ]
-		next unless files.empty? || files.include?( entry.name )
-		target_path = targetdir + entry.name
-		$stderr.puts "  extracting: %s" % [ target_path ]
-		entry.extract( target_path ) { true }
-		files.delete( entry.name )
-		break if files.empty?
-	end
+	zf = Zip::File.open( zipfile )
+	ent = zf.get_entry( sourcepath )
 
-	raise "Couldn't unzip: %p: not found in %s" % [ files, zipfile ] unless files.empty?
+	ent.extract( destpath )
 end
 
 
 # Download the database zipfile
-file WNSQL_ZIPFILE.to_s do |task|
-	download WNSQL_URI, task.name
+file SQLUNET_ZIPFILE.to_s do |task|
+	download SQLUNET_URI, task.name
 end
-CLOBBER.include( WNSQL_ZIPFILE.to_s )
+CLOBBER.include( SQLUNET_ZIPFILE.to_s )
 
 # Extract the database from the downloaded zipfile
-file WNSQL_DB_FILE.to_s => [WNSQL_ZIPFILE.to_s] do |task|
-	mkdir_p( WNSQL_DB_FILE.dirname, :verbose => $trace )
-	unzip task.prerequisites.first, WNSQL_DB_FILE.dirname.to_s, WNSQL_DB_FILE.basename.to_s
+file DEST_DBFILE.to_s => [SQLUNET_ZIPFILE.to_s] do |task|
+	mkdir_p( DEST_DBFILE.dirname, :verbose => $trace )
+	unzip task.prerequisites.first, ORIGINAL_DBFILE, DEST_DBFILE.to_s
 end
-CLOBBER.include( WNSQL_DB_FILE.to_s, DATADIR.to_s )
+CLEAN.include( DEST_DBFILE.to_s )
+CLOBBER.include( DATADIR.to_s )
 
-# Extract the license file from the downloaded zipfile
-file WNSQL_LICENSE.to_s => [WNSQL_ZIPFILE.to_s] do |task|
-	mkdir_p( WNSQL_LICENSE.dirname, :verbose => $trace )
-	unzip task.prerequisites.first, WNSQL_LICENSE.dirname.to_s, WNSQL_LICENSE.basename.to_s
+# Extract the license files from the downloaded zipfile
+rule( /^LICENSE-(\w+)\.txt$/ => [ SQLUNET_ZIPFILE.to_s ]) do |task|
+	if task.name.include?( 'sqlunet' )
+		unzip task.prerequisites.first, "legal/LICENSE", task.name
+	else
+		unzip task.prerequisites.first, "legal/#{task.name}", task.name
+	end
 end
-CLOBBER.include( WNSQL_LICENSE.to_s )
+
+CLOBBER.include( 'LICENSE-*.txt' )
 

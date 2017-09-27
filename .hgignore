@@ -7,8 +7,8 @@ pkg/
 ^wordnet-defaultdb/pkg/
 ^wordnet-defaultdb/data/wordnet\-defaultdb/wordnet31\.sqlite$
 ^wordnet-defaultdb/commit\-msg\.txt$
-^wordnet-defaultdb/LICENSE-WORDNET.txt$
-^wordnet-defaultdb/sqlunet-sqlite-4\.0\.0-31-all\.zip$
+^wordnet-defaultdb/LICENSE-.*\.txt$
+^wordnet-defaultdb/.*\.zip$
 ^ChangeLog$
 ^doc/
 \.(pdf|svg)$
