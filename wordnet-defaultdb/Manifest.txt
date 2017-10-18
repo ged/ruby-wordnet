@@ -14,3 +14,4 @@ README.rdoc
 Rakefile
 data/wordnet-defaultdb/wordnet31.sqlite
 lib/wordnet-defaultdb.rb
+lib/wordnet/defaultdb.rb

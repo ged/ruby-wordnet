@@ -4,6 +4,8 @@ ruby-wordnet/
 pkg/
 ^data/wordnet\-defaultdb/wordnet30\.sqlite$
 ^commit\-msg\.txt$
+^wordnet-defaultdb/.rspec
+^wordnet-defaultdb/ChangeLog
 ^wordnet-defaultdb/pkg/
 ^wordnet-defaultdb/data/wordnet\-defaultdb/wordnet31\.sqlite$
 ^wordnet-defaultdb/commit\-msg\.txt$

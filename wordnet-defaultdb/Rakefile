@@ -17,9 +17,9 @@ SQLUNET_SHORT_VERSION = SQLUNET_VERSION[ /\A([^-]+)/ ]
 
 # https://versaweb.dl.sourceforge.net/project/sqlunet/5.2.0/sqlite/sqlite-5.2.0-31-all.zip
 
-SQLUNET_BASE_URI = 'https://versaweb.dl.sourceforge.net/project/sqlunet'
+SQLUNET_BASE_URI = "https://downloads.sourceforge.net/project/sqlunet/"
 SQLUNET_ZIPFILE  = "sqlite-#{SQLUNET_VERSION}-all.zip"
-SQLUNET_URI      = "#{SQLUNET_BASE_URI}/#{SQLUNET_SHORT_VERSION}/#{SQLUNET_ZIPFILE}"
+SQLUNET_URI      = "#{SQLUNET_BASE_URI}/#{SQLUNET_SHORT_VERSION}/sqlite/#{SQLUNET_ZIPFILE}"
 
 BASEDIR = Pathname( __FILE__ ).dirname.relative_path_from( Pathname.pwd )
 DATADIR = BASEDIR + 'data'
@@ -53,6 +53,7 @@ ENV['VERSION'] ||= hoespec.spec.version.to_s
 
 task :default => :gem
 
+task :build => hoespec.spec.files
 
 ### Make the ChangeLog update if the repo has changed since it was last built
 file '.hg/branch'
@@ -140,5 +141,5 @@ rule( /^LICENSE-(\w+)\.txt$/ => [ SQLUNET_ZIPFILE.to_s ]) do |task|
 	end
 end
 
-CLOBBER.include( 'LICENSE-*.txt' )
+CLEAN.include( 'LICENSE-*.txt' )
 
