@@ -4,10 +4,14 @@ BEGIN {
 	require 'pathname'
 	$stderr.puts "__FILE__ is: #{__FILE__}"
 	basedir = Pathname.new( __FILE__ ).dirname.expand_path
-	libdir = basedir + "lib"
+	libdir = basedir + 'lib'
+	dblibdir = basedir + 'wordnet-defaultdb/lib'
 
 	puts ">>> Adding #{libdir} to load path..."
 	$LOAD_PATH.unshift( libdir.to_s )
+
+	puts ">>> Adding #{dblibdir} to load path..."
+	$LOAD_PATH.unshift( dblibdir.to_s )
 }
 
 begin
