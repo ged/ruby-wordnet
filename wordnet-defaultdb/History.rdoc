@@ -1,4 +1,9 @@
-== 1.0.1 [2011-07-14] Michael Granger <ged@FaerieMUD.org>
+== v2.0.0 [2017-10-06] Michael Granger <ged@FaerieMUD.org>
+
+Update to WordNet 3.1 via SQLUNet 5.2.0.
+
+
+== v1.0.1 [2011-07-14] Michael Granger <ged@FaerieMUD.org>
 
 Initial release, based on WordNetSQL 1.0.1.
 
