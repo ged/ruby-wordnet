@@ -9,6 +9,13 @@ require 'wordnet' unless defined?( WordNet )
 require 'wordnet/constants'
 require 'wordnet/model'
 
+# Try to load the default database gem, ignoring it if it's not installed.
+begin
+	require 'wordnet-defaultdb'
+rescue LoadError
+	# No-op
+end
+
 
 # WordNet lexicon class - provides access to the WordNet lexical
 # database, and provides factory methods for looking up words[rdoc-ref:WordNet::Word]
@@ -129,30 +136,8 @@ class WordNet::Lexicon
 
 	### Get the Sequel URI of the default database, if it's installed.
 	def self::default_db_uri
-		self.log.debug "Fetching the default db URI"
-
-		# Try to load the default database gem, ignoring it if it's not installed.
-		begin
-			gem 'wordnet-defaultdb'
-		rescue Gem::LoadError
-		end
-
-		# Now try the gem datadir first, and fall back to a local installation of the
-		# default db
-		datadir = nil
-		if Gem.datadir( 'wordnet-defaultdb' )
-			datadir = Pathname( Gem.datadir('wordnet-defaultdb') )
-		else
-			self.log.warn "  no defaultdb gem; looking for the development database"
-			datadir = Pathname( __FILE__ ).dirname.parent.parent +
-				'wordnet-defaultdb/data/wordnet-defaultdb'
-		end
-
-		dbfile = datadir + 'wordnet31.sqlite'
-		self.log.debug "  dbfile is: %s" % [ dbfile ]
-
-		if dbfile.exist?
-			return "sqlite:#{dbfile}"
+		if defined?( WordNet::DefaultDB )
+			return WordNet::DefaultDB.uri
 		else
 			return nil
 		end
