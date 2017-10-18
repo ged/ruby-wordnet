@@ -1,6 +1,6 @@
 = Ruby-WordNet
 
-* http://deveiate.org/projects/Ruby-WordNet
+* https://bitbucket.org/ged/ruby-wordnet/
 
 == Description
 
@@ -72,7 +72,7 @@ for at minimum VerbNet, FrameNet, and PropBank.
 
 == License
 
-Copyright (c) 2002-2017, The FaerieMUD Consortium
+Copyright (c) 2002-2017, Michael Granger
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
