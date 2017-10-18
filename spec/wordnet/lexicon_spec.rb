@@ -16,44 +16,9 @@ describe WordNet::Lexicon do
 	end
 
 
-	context "the default_db_uri method" do
-
-		it "uses the wordnet-defaultdb database gem (if available)" do
-			expect( Gem ).to receive( :datadir ).with( 'wordnet-defaultdb' ).at_least( :once ).
-				and_return( '/tmp/foo' )
-			expect( FileTest ).to receive( :exist? ).with( '/tmp/foo/wordnet31.sqlite' ).
-				and_return( true )
-
-			expect( WordNet::Lexicon.default_db_uri ).to eq( "sqlite:/tmp/foo/wordnet31.sqlite" )
-		end
-
-		it "uses the development version of the wordnet-defaultdb database gem if it's " +
-		   "not installed" do
-			expect( Gem ).to receive( :datadir ).with( 'wordnet-defaultdb' ).
-				and_return( nil )
-			expect( FileTest ).to receive( :exist? ).with( devdb.to_s ).
-				and_return( true )
-
-			expect( WordNet::Lexicon.default_db_uri ).to eq( "sqlite:#{devdb}" )
-		end
-
-		it "returns nil if there is no default database" do
-			expect( Gem ).to receive( :datadir ).with( 'wordnet-defaultdb' ).
-				and_return( nil )
-			expect( FileTest ).to receive( :exist? ).with( devdb.to_s ).
-				and_return( false )
-
-			expect( WordNet::Lexicon.default_db_uri ).to be_nil()
-		end
-
-	end
-
-
 	it "raises an exception if created with no arguments and no defaultdb is available" do
-		expect( Gem ).to receive( :datadir ).with( 'wordnet-defaultdb' ).at_least( :once ).
+		expect( WordNet::DefaultDB ).to receive( :uri ).at_least( :once ).
 			and_return( nil )
-		expect( FileTest ).to receive( :exist? ).with( devdb.to_s ).
-			and_return( false )
 
 		expect {
 			WordNet::Lexicon.new

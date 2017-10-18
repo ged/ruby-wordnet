@@ -15,7 +15,7 @@ module WordNet
 
 
 	# Release version
-	VERSION = '1.0.1'
+	VERSION = '1.1.0'
 
 	# VCS revision
 	REVISION = %q$Revision: $

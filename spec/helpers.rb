@@ -5,9 +5,12 @@
 # SimpleCov test coverage reporting; enable this using the :coverage rake task
 require 'simplecov' if ENV['COVERAGE']
 
+$LOAD_PATH.unshift( 'wordnet-defaultdb/lib' )
+
 require 'rspec'
 require 'loggability/spechelpers'
 require 'wordnet'
+require 'wordnet/defaultdb'
 
 
 ### RSpec helper functions.
