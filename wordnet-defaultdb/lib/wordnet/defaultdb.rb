@@ -13,7 +13,7 @@ require 'pathname'
 module WordNet::DefaultDB
 
 	# Library version constant
-	VERSION = '2.0.0'
+	VERSION = '2.0.1'
 
 	# Version-control revision constant
 	REVISION = %q$Revision$
@@ -21,8 +21,9 @@ module WordNet::DefaultDB
 	# The data directory which contains the database file
 	DATA_DIR = if ENV['WORDNET_DEFAULTDB_DATADIR']
 			Pathname( ENV['WORDNET_DEFAULTDB_DATADIR'] )
-		elsif Gem.datadir( 'wordnet-defaultdb' ) && File.directory?( Gem.datadir('wordnet-defaultdb') )
-			Pathname( Gem.datadir('wordnet-defaultdb') )
+		elsif Gem.loaded_specs['wordnet-defaultdb'] &&
+			  File.directory?( Gem.loaded_specs['wordnet-defaultdb'].datadir )
+			Pathname( Gem.loaded_specs['wordnet-defaultdb'].datadir )
 		else
 			Pathname( __FILE__ ).dirname.parent.parent + 'data/wordnet-defaultdb'
 		end
