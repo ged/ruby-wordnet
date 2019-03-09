@@ -17,7 +17,7 @@ SQLUNET_SHORT_VERSION = SQLUNET_VERSION[ /\A([^-]+)/ ]
 
 # https://versaweb.dl.sourceforge.net/project/sqlunet/5.2.0/sqlite/sqlite-5.2.0-31-all.zip
 
-SQLUNET_BASE_URI = "https://downloads.sourceforge.net/project/sqlunet/"
+SQLUNET_BASE_URI = "https://downloads.sourceforge.net/project/sqlunet"
 SQLUNET_ZIPFILE  = "sqlite-#{SQLUNET_VERSION}-all.zip"
 SQLUNET_URI      = "#{SQLUNET_BASE_URI}/#{SQLUNET_SHORT_VERSION}/sqlite/#{SQLUNET_ZIPFILE}"
 
@@ -52,6 +52,7 @@ end
 ENV['VERSION'] ||= hoespec.spec.version.to_s
 
 task :default => :gem
+task :spec => DEST_DBFILE
 
 task :build => hoespec.spec.files
 

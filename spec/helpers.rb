@@ -29,7 +29,7 @@ RSpec.configure do |config|
 	config.example_status_persistence_file_path = "spec/.state"
 
 	if Gem::Specification.find_all_by_name( 'pg' ).any?
-		$dburi = 'postgres:/wordnet31'
+		$dburi = 'postgres:/sqlunet50'
 	else
 		config.filter_run_excluding( :requires_pg )
 		unless (( $dburi = WordNet::Lexicon.default_db_uri ))
