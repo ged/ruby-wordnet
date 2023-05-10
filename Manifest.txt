@@ -1,4 +1,4 @@
-History.rdoc
+History.md
 README.md
 WordNet30-license.txt
 lib/wordnet.rb
