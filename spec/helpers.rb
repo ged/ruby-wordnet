@@ -1,9 +1,14 @@
 # -*- ruby -*-
-#encoding: utf-8
-# coding: utf-8
 
 # SimpleCov test coverage reporting; enable this using the :coverage rake task
-require 'simplecov' if ENV['COVERAGE']
+if ENV['COVERAGE']
+	require 'simplecov'
+	SimpleCov.start do
+		add_filter 'spec/'
+		enable_coverage :branch
+	end
+end
+
 
 $LOAD_PATH.unshift( 'wordnet-defaultdb/lib' )
 
@@ -29,8 +34,15 @@ RSpec.configure do |config|
 	config.example_status_persistence_file_path = "spec/.state"
 
 	if Gem::Specification.find_all_by_name( 'pg' ).any?
-		$dburi = 'postgres:/sqlunet50'
-	else
+		begin
+			dburi = 'postgres:/sqlunet50'
+			Sequel.connect( dburi )
+			$dburi = dburi
+		rescue
+		end
+	end
+
+	if ! $dburi
 		config.filter_run_excluding( :requires_pg )
 		unless (( $dburi = WordNet::Lexicon.default_db_uri ))
 			config.filter_run_excluding( :requires_database )

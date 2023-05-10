@@ -1,5 +1,4 @@
 # -*- ruby -*-
-#encoding: utf-8
 
 require 'loggability'
 require 'sequel'
@@ -37,7 +36,6 @@ module WordNet
 
 
 		### Reset the database connection that all model objects will use.
-		### @param [Sequel::Database] newdb  the new database object.
 		def self::db=( newdb )
 			Loggability.with_level( :fatal ) do
 				super

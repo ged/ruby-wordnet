@@ -1,5 +1,4 @@
 # -*- ruby -*-
-#encoding: utf-8
 
 require 'wordnet' unless defined?( WordNet )
 require 'wordnet/synset' unless defined?( WordNet::Synset )

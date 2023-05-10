@@ -18,19 +18,25 @@ begin
 	$stderr.puts "Loading WordNet..."
 	require 'loggability'
 	require 'wordnet'
-
-	Loggability.level = :debug if $DEBUG
-
-	if Gem::Specification.find_all_by_name( 'pg' ).any?
-		puts "Instantiating the lexicon against the PostgreSQL (wordnet31) DB as $lex"
-		$lex = WordNet::Lexicon.new( 'postgres:/wordnet31' )
-	else
-		puts "Instantiating the lexicon against the default DB as $lex"
-		$lex = WordNet::Lexicon.new
-	end
 rescue Exception => e
 	$stderr.puts "Ack! WordNet failed to load: #{e.message}\n\t" +
 		e.backtrace.join( "\n\t" )
+end
+
+Loggability.level = :debug if $DEBUG
+
+if Gem::Specification.find_all_by_name( 'pg' ).any?
+	begin
+		puts "Instantiating the lexicon against the PostgreSQL (wordnet31) DB as $lex"
+		$lex = WordNet::Lexicon.new( 'postgres:/wordnet31' )
+	rescue => err
+		puts "That didn't work."
+	end
+end
+
+unless $lex
+	puts "Instantiating the lexicon against the default DB as $lex"
+	$lex = WordNet::Lexicon.new
 end
 
 

@@ -1,5 +1,4 @@
 # -*- ruby -*-
-#encoding: utf-8
 
 require 'wordnet' unless defined?( WordNet )
 require 'wordnet/constants'
@@ -353,7 +352,7 @@ class WordNet::Synset < WordNet::Model( :synsets )
 	### Return the table of part-of-speech types, keyed by letter identifier.
 	def self::postype_table
 		@postype_table ||= self.db[:postypes].inject({}) do |hash, row|
-			hash[ row[:pos].untaint.to_sym ] = row[:posname]
+			hash[ row[:pos].to_sym ] = row[:posname]
 			hash
 		end
 	end

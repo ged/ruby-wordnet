@@ -1,5 +1,4 @@
 # -*- ruby -*-
-#encoding: utf-8
 
 require 'wordnet'
 require 'pathname'
@@ -14,9 +13,6 @@ module WordNet::DefaultDB
 
 	# Library version constant
 	VERSION = '2.0.1'
-
-	# Version-control revision constant
-	REVISION = %q$Revision$
 
 	# The data directory which contains the database file
 	DATA_DIR = if ENV['WORDNET_DEFAULTDB_DATADIR']

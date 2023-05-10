@@ -1,5 +1,4 @@
 # -*- ruby -*-
-#encoding: utf-8
 
 require 'wordnet' unless defined?( WordNet )
 require 'wordnet/model'
@@ -22,6 +21,15 @@ class WordNet::Morph < WordNet::Model( :morphs )
 
 	set_primary_key :morphid
 
+
+	##
+	# :method: morphid
+	# The Integer ID of the morph
+
+	##
+	# :method: morph
+	# The text of the morph
+
 	#                 Table "public.morphmaps"
 	#  Column  |     Type     |           Modifiers
 	# ---------+--------------+-------------------------------
@@ -35,6 +43,9 @@ class WordNet::Morph < WordNet::Model( :morphs )
 	# Foreign-key constraints:
 	#     "fk_morphmaps_morphid" FOREIGN KEY (morphid) REFERENCES morphs(morphid)
 	#     "fk_morphmaps_wordid" FOREIGN KEY (wordid) REFERENCES words(wordid)
+
+	##
+	# The WordNet::Word entries associated with this Morph
 	many_to_many :words,
 		join_table: :morphmaps,
 		right_key: :wordid,

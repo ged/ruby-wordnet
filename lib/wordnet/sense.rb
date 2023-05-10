@@ -1,5 +1,4 @@
 # -*- ruby -*-
-#encoding: utf-8
 
 require 'wordnet' unless defined?( WordNet )
 require 'wordnet/model'
@@ -9,6 +8,50 @@ class WordNet::Sense < WordNet::Model( :senses )
 	include WordNet::Constants
 
 	set_primary_key :senseid
+
+	#                              Table "wn.senses"
+	#    Column    |          Type          | Collation | Nullable |   Default
+	# -------------+------------------------+-----------+----------+-------------
+	#  wordid      | bigint                 |           | not null | '0'::bigint
+	#  casedwordid | bigint                 |           |          |
+	#  synsetid    | bigint                 |           | not null | '0'::bigint
+	#  senseid     | bigint                 |           |          |
+	#  sensenum    | bigint                 |           | not null | '0'::bigint
+	#  lexid       | bigint                 |           | not null | '0'::bigint
+	#  tagcount    | bigint                 |           |          |
+	#  sensekey    | character varying(100) |           |          |
+	# Indexes:
+	#     "idx_192341_primary" PRIMARY KEY, btree (wordid, synsetid)
+	#     "k_senses_lexid" btree (lexid)
+	#     "k_senses_synsetid" btree (synsetid)
+	#     "k_senses_wordid" btree (wordid)
+	#     "unq_senses_senseid" UNIQUE, btree (senseid)
+	#     "unq_senses_sensekey" UNIQUE, btree (sensekey)
+	# Foreign-key constraints:
+	#     "senses_synsetid_fkey" FOREIGN KEY (synsetid) REFERENCES synsets(synsetid)
+	#     "senses_wordid_fkey" FOREIGN KEY (wordid) REFERENCES words(wordid)
+	#
+
+	##
+	# :method: wordid
+	# The integer ID of the WordNet::Word this Sense is linked to
+
+	##
+	# :method: synsetid
+	# The integer ID Of the WordNet::Synset this Sense is linked to.
+
+	##
+	# :method: senseid
+	# The unique integer ID of the Sense.
+
+	##
+	# :method: sensenum
+	# The index of this Sense in relation to its Synset
+
+	##
+	# :method: sensekey
+	# The raw sense key as it appeared in the sources
+
 
 	##
 	# The Synset this is a Sense for

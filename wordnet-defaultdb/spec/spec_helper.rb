@@ -18,15 +18,16 @@ RSpec.configure do |config|
 		mocks.verify_partial_doubles = true
 	end
 
-	config.shared_context_metadata_behavior = :apply_to_host_groups
-
-	config.filter_run_when_matching :focus
-	config.example_status_persistence_file_path = "spec/.state"
 	config.disable_monkey_patching!
+	config.example_status_persistence_file_path = "spec/.state"
+	config.filter_run :focus
+	config.filter_run_when_matching :focus
+	config.order = :random
+	config.profile_examples = 5
+	config.run_all_when_everything_filtered = true
+	config.shared_context_metadata_behavior = :apply_to_host_groups
 	config.warnings = true
 
-	config.profile_examples = 10
-	config.order = :random
-	Kernel.srand config.seed
+	Kernel.srand( config.seed )
 end
 

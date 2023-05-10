@@ -1,20 +1,6 @@
-.gems
-.ruby-gemset
-.ruby-version
-.simplecov
-ChangeLog
-Gemfile
 History.rdoc
-LICENSE
-Manifest.txt
 README.md
-README.rdoc
-Rakefile
-TODO
 WordNet30-license.txt
-certs/ged.pem
-examples/gcs.rb
-examples/hypernym_tree.rb
 lib/wordnet.rb
 lib/wordnet/constants.rb
 lib/wordnet/lexicallink.rb
@@ -34,4 +20,3 @@ spec/wordnet/sense_spec.rb
 spec/wordnet/synset_spec.rb
 spec/wordnet/word_spec.rb
 spec/wordnet_spec.rb
-wordnet.gemspec

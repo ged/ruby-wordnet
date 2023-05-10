@@ -1,5 +1,4 @@
 # -*- ruby -*-
-#encoding: utf-8
 #
 # Trying to find a minimal testcase for reproducing the error that happens with
 # the new '~i' and '@i' synset pointer types.

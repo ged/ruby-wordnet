@@ -1,5 +1,4 @@
 # -*- ruby -*-
-#encoding: utf-8
 
 require 'wordnet' unless defined?( WordNet )
 require 'wordnet/constants'
@@ -12,11 +11,19 @@ class WordNet::SemanticLink < WordNet::Model( :semlinks )
 
 	set_primary_key [:synset1id, :synset2id, :linkid]
 
+	##
+	# :method: linkid
+	# The ID of this semlink
+
+	##
+	# The "origin" WordNet::Synset associated with this SemanticLink
 	many_to_one :origin,
 		class: 'WordNet::Synset',
 		key: :synset1id,
 		primary_key: :synsetid
 
+	##
+	# The "target" WordNet::Synset associated with this SemanticLink
 	one_to_one :target,
 		class: 'WordNet::Synset',
 		key: :synsetid,

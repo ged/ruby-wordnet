@@ -1,5 +1,4 @@
 #!/usr/bin/env ruby
-#encoding: utf-8
 
 #
 #	Find least general hypernymial synsets between all noun senses of two words.

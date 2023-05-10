@@ -1,5 +1,4 @@
 #!/usr/bin/env ruby
-#encoding: utf-8
 
 #
 #	Find all the hypernyms of all senses of a given noun and display them in a

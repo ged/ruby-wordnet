@@ -1,5 +1,4 @@
 # -*- ruby -*-
-#encoding: utf-8
 
 require 'pathname'
 require 'loggability'
@@ -224,11 +223,13 @@ class WordNet::Lexicon
 	### #lookup_synsets instead.
 	###
 	### The +word+ can be one of:
-	### [Integer]
+	###
+	### [+Integer+]
 	###   Looks up the corresponding Word or Synset by ID. This assumes that all Synset IDs are
 	###   all 9 digits or greater, which is true as of WordNet 3.1. Any additional +args+ are
 	###   ignored.
-	### [Symbol, String]
+	###
+	### [+Symbol+, +String+]
 	###   Look up a Word by its gloss using #lookup_synsets, passing any additional +args+,
 	###   and return the first one that is found.
 	def []( word, *args )
@@ -250,13 +251,13 @@ class WordNet::Lexicon
 	###
 	### The *args* can contain:
 	###
-	### [Integer, Range]
+	### [+Integer+, +Range+]
 	###   The sense/s of the Word (1-indexed) to use when searching for Synsets. If not specified,
 	###   all senses of the +word+ are used.
-	### [Regexp]
+	### [+Regexp+]
 	###   The Word's Synsets are filtered by definition using an RLIKE filter. Note that not all
 	###   databases (including the default one, sqlite3) support RLIKE.
-	### [Symbol, String]
+	### [+Symbol+, +String+]
 	###   If it matches one of either a lexical domain (e.g., "verb.motion") or a part of
 	###   speech (e.g., "adjective", :noun, :v), the resulting Synsets are filtered by that
 	###   criteria.
